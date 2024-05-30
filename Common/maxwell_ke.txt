@@ -1,0 +1,9 @@
+## Fitting equation of Maxwell-Boltzmann Distribution of K.E for a single frame at a certain T (equivalent to velocity)
+## Used to correlate atomic vels (in a frame) with T or
+## in random assignment of vels to atoms acc to a given T
+
+# x = K.E of atom
+# y = f(K.E) -> probabilty of finding an atom with this K.E, or fractional population 
+# a0: KbT (thermal energy, in units of energy)
+
+y = (2 / sqrt(Pi * (a0 ^ 3))) * sqrt(x) * exp(-x / a0)

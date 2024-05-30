@@ -1,0 +1,230 @@
+Charm++: standalone mode (not using charmrun)
+Info: NAMD 2.6 for Linux-amd64
+Info: 
+Info: Please visit http://www.ks.uiuc.edu/Research/namd/
+Info: and send feedback or bug reports to namd@ks.uiuc.edu
+Info: 
+Info: Please cite Phillips et al., J. Comp. Chem. 26:1781-1802 (2005)
+Info: in all publications reporting results obtained with NAMD.
+Info: 
+Info: Based on Charm++/Converse 50900 for net-linux-amd64-iccstatic
+Info: Built Wed Aug 30 12:54:51 CDT 2006 by jim on belfast.ks.uiuc.edu
+Info: 1 NAMD  2.6  Linux-amd64  1    tbgl-work3.physics.uiuc.edu  david
+Info: Running on 1 processors.
+Info: 7476 kB of memory in use.
+Info: Memory usage based on mallinfo
+Info: Configuration file is rot-c-short.namd
+TCL: Suspending until startup complete.
+Info: EXTENDED SYSTEM FILE   ../common/rot-eq-2.xsc
+Info: SIMULATION PARAMETERS:
+Info: TIMESTEP               1
+Info: NUMBER OF STEPS        100
+Info: STEPS PER CYCLE        20
+Info: PERIODIC CELL BASIS 1  50 0 0
+Info: PERIODIC CELL BASIS 2  0 50 0
+Info: PERIODIC CELL BASIS 3  0 0 50
+Info: PERIODIC CELL CENTER   0 0 0
+Info: LOAD BALANCE STRATEGY  Other
+Info: LDB PERIOD             4000 steps
+Info: FIRST LDB TIMESTEP     100
+Info: LDB BACKGROUND SCALING 1
+Info: HOM BACKGROUND SCALING 1
+Info: PME BACKGROUND SCALING 1
+Info: MAX SELF PARTITIONS    50
+Info: MAX PAIR PARTITIONS    20
+Info: SELF PARTITION ATOMS   125
+Info: PAIR PARTITION ATOMS   200
+Info: PAIR2 PARTITION ATOMS  400
+Info: MIN ATOMS PER PATCH    100
+Info: VELOCITY FILE          ../common/rot-eq-2.vel
+Info: CENTER OF MASS MOVING INITIALLY? NO
+Info: DIELECTRIC             1
+Info: EXCLUDE                SCALED ONE-FOUR
+Info: 1-4 SCALE FACTOR       1
+Info: DCD FILENAME           rot-c-short.dcd
+Info: DCD FREQUENCY          100
+Info: DCD FIRST STEP         100
+Info: DCD FILE WILL CONTAIN UNIT CELL DATA
+Info: XST FILENAME           rot-c-short.xst
+Info: XST FREQUENCY          100
+Info: NO VELOCITY DCD OUTPUT
+Info: OUTPUT FILENAME        rot-c-short
+Info: BINARY OUTPUT FILES WILL BE USED
+Info: RESTART FILENAME       rot-c-short.restart
+Info: RESTART FREQUENCY      100
+Info: BINARY RESTART FILES WILL BE USED
+Info: SWITCHING ACTIVE
+Info: SWITCHING ON           10
+Info: SWITCHING OFF          12
+Info: PAIRLIST DISTANCE      14
+Info: PAIRLIST SHRINK RATE   0.01
+Info: PAIRLIST GROW RATE     0.01
+Info: PAIRLIST TRIGGER       0.3
+Info: PAIRLISTS PER CYCLE    2
+Info: PAIRLISTS ENABLED
+Info: MARGIN                 5
+Info: HYDROGEN GROUP CUTOFF  2.5
+Info: PATCH DIMENSION        21.5
+Info: ENERGY OUTPUT STEPS    100
+Info: CROSSTERM ENERGY INCLUDED IN DIHEDRAL
+Info: TIMING OUTPUT STEPS    100
+Info: TCL GLOBAL FORCES ACTIVE
+Info: TCL GLOBAL FORCES SCRIPT   rot-c.tcl
+Info: LANGEVIN DYNAMICS ACTIVE
+Info: LANGEVIN TEMPERATURE   288
+Info: LANGEVIN DAMPING COEFFICIENT IS 1 INVERSE PS
+Info: LANGEVIN DYNAMICS NOT APPLIED TO HYDROGENS
+Info: PARTICLE MESH EWALD (PME) ACTIVE
+Info: PME TOLERANCE               1e-06
+Info: PME EWALD COEFFICIENT       0.257952
+Info: PME INTERPOLATION ORDER     4
+Info: PME GRID DIMENSIONS         48 48 48
+Info: PME MAXIMUM GRID SPACING    1.5
+Info: Attempting to read FFTW data from FFTW_NAMD_2.6_Linux-amd64.txt
+Info: Optimizing 6 FFT steps.  1... 2... 3... 4... 5... 6...   Done.
+Info: Writing FFTW data to FFTW_NAMD_2.6_Linux-amd64.txt
+Info: FULL ELECTROSTATIC EVALUATION FREQUENCY      4
+Info: USING VERLET I (r-RESPA) MTS SCHEME.
+Info: C1 SPLITTING OF LONG RANGE ELECTROSTATICS
+Info: PLACING ATOMS IN PATCHES BY HYDROGEN GROUPS
+Info: NONBONDED FORCES EVALUATED EVERY 2 STEPS
+Info: RANDOM NUMBER SEED     1173743550
+Info: USE HYDROGEN BONDS?    NO
+Info: COORDINATE PDB         ../common/ubiquitin_solvate.pdb
+Info: STRUCTURE FILE         ../common/ubiquitin_solvate.psf
+Info: PARAMETER file: CHARMM format! 
+Info: PARAMETERS             ../common/par_all27_na.inp
+Info: PARAMETERS             ../common/par_all27_prot_lipid.inp
+Info: USING ARITHMETIC MEAN TO COMBINE L-J SIGMA PARAMETERS
+Info: BINARY COORDINATES     ../common/rot-eq-2.coor
+
+Warning: DUPLICATE ANGLE ENTRY FOR CPH1-NR1-CPH2
+PREVIOUS VALUES  k=130  theta0=107 k_ub=0 r_ub=0
+   USING VALUES  k=130  theta0=107.5 k_ub=0 r_ub=0
+Warning: DUPLICATE vdW ENTRY FOR DUM
+PREVIOUS VALUES  sigma=1.7818 epsilon=0 sigma14=1.7818 epsilon14=0
+   USING VALUES  sigma=0 epsilon=0 sigma14=0 epsilon14=0
+Info: SUMMARY OF PARAMETERS:
+Info: 298 BONDS
+Info: 729 ANGLES
+Info: 1145 DIHEDRAL
+Info: 84 IMPROPER
+Info: 0 CROSSTERM
+Info: 168 VDW
+Info: 0 VDW_PAIRS
+Info: ****************************
+Info: STRUCTURE SUMMARY:
+Info: 11317 ATOMS
+Info: 7961 BONDS
+Info: 5619 ANGLES
+Info: 3293 DIHEDRALS
+Info: 204 IMPROPERS
+Info: 0 CROSSTERMS
+Info: 0 EXCLUSIONS
+Info: 33951 DEGREES OF FREEDOM
+Info: 3964 HYDROGEN GROUPS
+Info: TOTAL MASS = 69132.6 amu
+Info: TOTAL CHARGE = 1.0021e-06 e
+Info: *****************************
+Info: Entering startup phase 0 with 7476 kB of memory in use.
+Info: Entering startup phase 1 with 7476 kB of memory in use.
+Info: Entering startup phase 2 with 8096 kB of memory in use.
+Info: Entering startup phase 3 with 8096 kB of memory in use.
+Info: PATCH GRID IS 2 (PERIODIC) BY 2 (PERIODIC) BY 2 (PERIODIC)
+Info: REMOVING COM VELOCITY -0.0715685 0.0080218 -0.0901703
+Info: LARGEST PATCH (7) HAS 1504 ATOMS
+Info: CREATING 1927 COMPUTE OBJECTS
+Info: Entering startup phase 4 with 10260 kB of memory in use.
+Info: PME using 1 and 1 processors for FFT and reciprocal sum.
+Info: PME GRID LOCATIONS: 0
+Info: PME TRANS LOCATIONS: 0
+Info: Optimizing 4 FFT steps.  1... 2... 3... 4...   Done.
+Info: Entering startup phase 5 with 10260 kB of memory in use.
+Info: Entering startup phase 6 with 10260 kB of memory in use.
+Measuring processor speeds... Done.
+Info: Entering startup phase 7 with 10260 kB of memory in use.
+Info: CREATING 1927 COMPUTE OBJECTS
+Info: NONBONDED TABLE R-SQUARED SPACING: 0.0625
+Info: NONBONDED TABLE SIZE: 769 POINTS
+TCL: Linear acceleration applied: (10 0 0) Ang*ps^-2
+TCL: Angular acceleration applied: (0 0 1) Rad*ps^-2
+Info: Entering startup phase 8 with 14412 kB of memory in use.
+Info: Finished startup with 15108 kB of memory in use.
+TCL: Recalculating forces at 0
+TCL: Center of mass = -0.192638367627 0.243249895589 -0.11600245128
+TCL: atom 1: phi = -0.593067026911
+TCL: Step 0: Recalculated 305 forces
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP         TOTAL2         TOTAL3        TEMPAVG            PRESSURE      GPRESSURE         VOLUME       PRESSAVG      GPRESSAVG
+
+ENERGY:       0      3320.9226      2485.4973       369.2281        41.8925         -45062.6110      4213.7486         0.0000         0.0000      9511.9860         -25119.3360       281.9740    -24978.2455    -24978.2455       281.9740            452.0847     -1933.5270    125000.0000       452.0847     -1933.5270
+
+OPENING EXTENDED SYSTEM TRAJECTORY FILE
+TCL: Adding atoms prior to reconfiguring forces at 9
+TCL: Recalculating forces at 10
+TCL: Center of mass = -0.191176087636 0.241651412656 -0.115671904146
+TCL: atom 1: phi = -0.588427995046
+TCL: Step 10: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 19
+TCL: Recalculating forces at 20
+TCL: Center of mass = -0.187265785376 0.24047635594 -0.115041034361
+TCL: atom 1: phi = -0.595701933167
+TCL: Step 20: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 29
+TCL: Recalculating forces at 30
+TCL: Center of mass = -0.185011837567 0.240568687494 -0.11493560727
+TCL: atom 1: phi = -0.600225965469
+TCL: Step 30: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 39
+TCL: Recalculating forces at 40
+TCL: Center of mass = -0.184176170047 0.240281496355 -0.114936028982
+TCL: atom 1: phi = -0.605475219436
+TCL: Step 40: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 49
+TCL: Recalculating forces at 50
+TCL: Center of mass = -0.182107057555 0.237704245451 -0.114130797981
+TCL: atom 1: phi = -0.608787199807
+TCL: Step 50: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 59
+TCL: Recalculating forces at 60
+TCL: Center of mass = -0.180757392164 0.234340508432 -0.11400975931
+TCL: atom 1: phi = -0.609103858754
+TCL: Step 60: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 69
+TCL: Recalculating forces at 70
+TCL: Center of mass = -0.178390191519 0.232978068328 -0.11382738661
+TCL: atom 1: phi = -0.603998413468
+TCL: Step 70: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 79
+TCL: Recalculating forces at 80
+TCL: Center of mass = -0.176240703105 0.233004431548 -0.113214744472
+TCL: atom 1: phi = -0.599146342368
+TCL: Step 80: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 89
+TCL: Recalculating forces at 90
+TCL: Center of mass = -0.173688611778 0.232014946792 -0.114435835169
+TCL: atom 1: phi = -0.609469844636
+TCL: Step 90: Recalculated 305 forces
+TCL: Adding atoms prior to reconfiguring forces at 99
+TCL: Recalculating forces at 100
+TCL: Center of mass = -0.170131956351 0.229400344101 -0.116172354322
+TCL: atom 1: phi = -0.608192229573
+TCL: Step 100: Recalculated 305 forces
+Info: Initial time: 1 CPUs 0.164623 s/step 1.90535 days/ns 52200 kB memory
+TIMING: 100  CPU: 16.8134, 0.161435/step  Wall: 17.1621, 0.164659/step, 0 hours remaining, 52200 kB of memory in use.
+ENERGY:     100      3347.2241      2400.7056       376.8084        36.9826         -44895.3719      4133.5538         0.0000         0.0000      9475.2153         -25124.8821       280.8839    -24982.9912    -24982.7064       281.0238            631.6267     -1799.0313    125000.0000     -1753.4054     -1752.8517
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 100
+OPENING COORDINATE DCD FILE
+WRITING COORDINATES TO DCD FILE AT STEP 100
+WRITING COORDINATES TO RESTART FILE AT STEP 100
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 100
+FINISHED WRITING RESTART VELOCITIES
+WRITING EXTENDED SYSTEM TO OUTPUT FILE AT STEP 100
+CLOSING EXTENDED SYSTEM TRAJECTORY FILE
+WRITING COORDINATES TO OUTPUT FILE AT STEP 100
+CLOSING COORDINATE DCD FILE
+WRITING VELOCITIES TO OUTPUT FILE AT STEP 100
+==========================================
+WallClock: 37.437576  CPUTime: 36.755413  Memory: 52200 kB
+Program finished.

@@ -1,0 +1,60 @@
+numsteps			2000
+structure			../../tclForcesFiles/common/ubiquitin.psf
+coordinates			../../tclForcesFiles/common/ubiquitin.pdb
+outputName			push-grid
+
+set last			../../tclForcesFiles/common/push-eq-2.restart
+bincoordinates			${last}.coor
+binvelocities			${last}.vel
+extendedSystem			${last}.xsc
+
+#temperature			288
+
+langevin			on
+langevinDamping			1.0
+langevinTemp			288
+langevinHydrogen		off
+
+switching			on
+switchdist			10
+cutoff				12
+pairlistdist			14
+
+binaryOutput			yes
+binaryRestart			yes
+
+paraTypeCharmm			on
+
+parameters			../../tclForcesFiles/common/par_all27_prot_lipid.inp
+
+COMmotion			no
+
+outputEnergies			100
+outputTiming			100
+xstFreq				100
+dcdFreq				100
+restartFreq			100
+
+timestep			1
+nonBondedFreq			2
+fullElectFrequency		4
+stepsPerCycle			20
+
+exclude				scaled1-4
+1-4scaling			1
+
+Pme				on
+PmeGridSizeX			32
+PmeGridSizeY			32
+PmeGridSizeZ			32
+
+gridforce			on
+gridforcefile			ubiquitin-grid.pdb
+gridforcecol			B
+gridforcechargecol		O
+gridforcepotfile		constant.dx
+gridforcescale			1 1 1
+gridforcecont1			yes
+gridforcecont2			yes
+gridforcecont3			yes
+gridforcevoff			-2 0 0

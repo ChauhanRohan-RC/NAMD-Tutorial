@@ -1,0 +1,57 @@
+numsteps			20000
+structure			../common/ubiquitin_solvate.psf
+coordinates			../common/ubiquitin_solvate.pdb
+outputName			rot-c-long
+
+set last			../common/rot-eq-2
+bincoordinates			${last}.coor
+binvelocities			${last}.vel
+extendedSystem			${last}.xsc
+
+#temperature			288
+
+langevin			on
+langevinDamping			1.0
+langevinTemp			288
+langevinHydrogen		off
+
+switching			on
+switchdist			10
+cutoff				12
+pairlistdist			14
+margin				5
+
+binaryOutput			yes
+binaryRestart			yes
+
+paraTypeCharmm			on
+
+parameters			../common/par_all27_prot_lipid.inp
+
+COMmotion			no
+
+outputEnergies			100
+outputTiming			100
+xstFreq				100
+dcdFreq				100
+restartFreq			100
+
+timestep			1
+nonBondedFreq			2
+fullElectFrequency		4
+stepsPerCycle			20
+
+exclude				scaled1-4
+1-4scaling			1
+
+Pme				on
+PmeGridSizeX			48
+PmeGridSizeY			48
+PmeGridSizeZ			48
+
+tclforces			on
+set linaccel			"10 0 0"
+set angaccel			1
+set targetAtomPdb		../common/ubiquitin_solvate_backbone.pdb
+set forcesRecalcFreq		10
+tclforcesscript			rot-c.tcl

@@ -1,0 +1,5 @@
+## Fitting equation for Gaussian Distribution
+# a0: standard deviation
+# a1: mean
+
+y = (1 / (sqrt(2 * Pi) * a0)) * exp(-0.5 * ((x - a1) / a0) ^ 2)

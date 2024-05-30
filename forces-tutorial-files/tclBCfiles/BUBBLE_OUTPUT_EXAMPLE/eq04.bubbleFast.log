@@ -1,0 +1,3468 @@
+Info: NAMD 2.6 for Linux-i686
+Info: 
+Info: Please visit http://www.ks.uiuc.edu/Research/namd/
+Info: and send feedback or bug reports to namd@ks.uiuc.edu
+Info: 
+Info: Please cite Phillips et al., J. Comp. Chem. 26:1781-1802 (2005)
+Info: in all publications reporting results obtained with NAMD.
+Info: 
+Info: Based on Charm++/Converse 50900 for net-linux-iccstatic
+Info: Built Wed Aug 30 12:54:30 CDT 2006 by jim on kyoto.ks.uiuc.edu
+Info: 1 NAMD  2.6  Linux-i686  1    kyoto.ks.uiuc.edu  greg
+Info: Running on 1 processors.
+Info: 7368 kB of memory in use.
+Info: Memory usage based on mallinfo
+Info: Configuration file is eq04.bubbleFast.namd
+TCL: Suspending until startup complete.
+Info: EXTENDED SYSTEM FILE   ./eq03.waterbox40.restart.xsc
+Info: SIMULATION PARAMETERS:
+Info: TIMESTEP               1
+Info: NUMBER OF STEPS        3000
+Info: STEPS PER CYCLE        20
+Info: PERIODIC CELL BASIS 1  38.6481 0 0
+Info: PERIODIC CELL BASIS 2  0 38.6481 0
+Info: PERIODIC CELL BASIS 3  0 0 38.6481
+Info: PERIODIC CELL CENTER   0 0 0
+Info: WRAPPING ALL CLUSTERS AROUND PERIODIC BOUNDARIES ON OUTPUT.
+Info: WRAPPING TO IMAGE NEAREST TO PERIODIC CELL CENTER.
+Info: LOAD BALANCE STRATEGY  Other
+Info: LDB PERIOD             4000 steps
+Info: FIRST LDB TIMESTEP     100
+Info: LDB BACKGROUND SCALING 1
+Info: HOM BACKGROUND SCALING 1
+Info: PME BACKGROUND SCALING 1
+Info: MAX SELF PARTITIONS    50
+Info: MAX PAIR PARTITIONS    20
+Info: SELF PARTITION ATOMS   125
+Info: PAIR PARTITION ATOMS   200
+Info: PAIR2 PARTITION ATOMS  400
+Info: MIN ATOMS PER PATCH    100
+Info: VELOCITY FILE          ./eq03.waterbox40.restart.vel
+Info: CENTER OF MASS MOVING INITIALLY? NO
+Info: DIELECTRIC             1
+Info: EXCLUDE                SCALED ONE-FOUR
+Info: 1-4 SCALE FACTOR       1
+Info: DCD FILENAME           ./eq04.bubbleFast.dcd
+Info: DCD FREQUENCY          100
+Info: DCD FIRST STEP         100
+Info: DCD FILE WILL CONTAIN UNIT CELL DATA
+Info: XST FILENAME           ./eq04.bubbleFast.xst
+Info: XST FREQUENCY          100
+Info: NO VELOCITY DCD OUTPUT
+Info: OUTPUT FILENAME        ./eq04.bubbleFast
+Info: BINARY OUTPUT FILES WILL BE USED
+Info: RESTART FILENAME       ./eq04.bubbleFast.restart
+Info: RESTART FREQUENCY      100
+Info: BINARY RESTART FILES WILL BE USED
+Info: SWITCHING ACTIVE
+Info: SWITCHING ON           10
+Info: SWITCHING OFF          12
+Info: PAIRLIST DISTANCE      14
+Info: PAIRLIST SHRINK RATE   0.01
+Info: PAIRLIST GROW RATE     0.01
+Info: PAIRLIST TRIGGER       0.3
+Info: PAIRLISTS PER CYCLE    2
+Info: PAIRLISTS ENABLED
+Info: MARGIN                 3
+Info: HYDROGEN GROUP CUTOFF  2.5
+Info: PATCH DIMENSION        19.5
+Info: ENERGY OUTPUT STEPS    100
+Info: CROSSTERM ENERGY INCLUDED IN DIHEDRAL
+Info: TIMING OUTPUT STEPS    100
+Info: TCL BOUNDARY FORCES ACTIVE
+Info: TCL BOUNDARY FORCES SCRIPT   
+  set bubbleCenter    "0.0  0.0  0.0"
+  set tclBCScript     bubbleFast.tcl
+  source $tclBCScript
+
+Info: TCL BOUNDARY FORCES ARGS     0. 15. 0.01 5.
+Info: LANGEVIN DYNAMICS ACTIVE
+Info: LANGEVIN TEMPERATURE   295
+Info: LANGEVIN DAMPING COEFFICIENT IS 1 INVERSE PS
+Info: LANGEVIN DYNAMICS NOT APPLIED TO HYDROGENS
+Info: LANGEVIN PISTON PRESSURE CONTROL ACTIVE
+Info:        TARGET PRESSURE IS 1.01325 BAR
+Info:     OSCILLATION PERIOD IS 200 FS
+Info:             DECAY TIME IS 100 FS
+Info:     PISTON TEMPERATURE IS 295 K
+Info:       PRESSURE CONTROL IS ATOM-BASED
+Info:    INITIAL STRAIN RATE IS 6.47185e-06 6.47185e-06 6.47185e-06
+Info:       CELL FLUCTUATION IS ISOTROPIC
+Info: PARTICLE MESH EWALD (PME) ACTIVE
+Info: PME TOLERANCE               1e-06
+Info: PME EWALD COEFFICIENT       0.257952
+Info: PME INTERPOLATION ORDER     4
+Info: PME GRID DIMENSIONS         32 32 32
+Info: PME MAXIMUM GRID SPACING    1.5
+Info: Attempting to read FFTW data from FFTW_NAMD_2.6_Linux-i686.txt
+Info: Optimizing 6 FFT steps.  1... 2... 3... 4... 5... 6...   Done.
+Info: Writing FFTW data to FFTW_NAMD_2.6_Linux-i686.txt
+Info: FULL ELECTROSTATIC EVALUATION FREQUENCY      4
+Info: USING VERLET I (r-RESPA) MTS SCHEME.
+Info: C1 SPLITTING OF LONG RANGE ELECTROSTATICS
+Info: PLACING ATOMS IN PATCHES BY HYDROGEN GROUPS
+Info: NONBONDED FORCES EVALUATED EVERY 2 STEPS
+Info: RANDOM NUMBER SEED     1163181291
+Info: USE HYDROGEN BONDS?    NO
+Info: COORDINATE PDB         ./waterbox40.pdb
+Info: STRUCTURE FILE         ./waterbox40.psf
+Info: PARAMETER file: CHARMM format! 
+Info: PARAMETERS             ./par_all27_prot_na.inp
+Info: USING ARITHMETIC MEAN TO COMBINE L-J SIGMA PARAMETERS
+Info: BINARY COORDINATES     ./eq03.waterbox40.restart.coor
+Info: SUMMARY OF PARAMETERS:
+Info: 250 BONDS
+Info: 622 ANGLES
+Info: 1049 DIHEDRAL
+Info: 73 IMPROPER
+Info: 0 CROSSTERM
+Info: 130 VDW
+Info: 0 VDW_PAIRS
+Info: ****************************
+Info: STRUCTURE SUMMARY:
+Info: 5943 ATOMS
+Info: 3962 BONDS
+Info: 1981 ANGLES
+Info: 0 DIHEDRALS
+Info: 0 IMPROPERS
+Info: 0 CROSSTERMS
+Info: 0 EXCLUSIONS
+Info: 17829 DEGREES OF FREEDOM
+Info: 1981 HYDROGEN GROUPS
+Info: TOTAL MASS = 35688.5 amu
+Info: TOTAL CHARGE = 0 e
+Info: *****************************
+Info: Entering startup phase 0 with 7368 kB of memory in use.
+Info: Entering startup phase 1 with 7368 kB of memory in use.
+Info: Entering startup phase 2 with 7368 kB of memory in use.
+Info: Entering startup phase 3 with 7368 kB of memory in use.
+Info: PATCH GRID IS 1 (PERIODIC) BY 1 (PERIODIC) BY 1 (PERIODIC)
+Info: REMOVING COM VELOCITY 0.0971105 0.00929965 -0.0646766
+Info: LARGEST PATCH (0) HAS 5943 ATOMS
+Info: CREATING 322 COMPUTE OBJECTS
+Info: Entering startup phase 4 with 7964 kB of memory in use.
+Info: PME using 1 and 1 processors for FFT and reciprocal sum.
+Info: PME GRID LOCATIONS: 0
+Info: PME TRANS LOCATIONS: 0
+Info: Optimizing 4 FFT steps.  1... 2... 3... 4...   Done.
+Info: Entering startup phase 5 with 7964 kB of memory in use.
+Info: Entering startup phase 6 with 7964 kB of memory in use.
+Measuring processor speeds... Done.
+Info: Entering startup phase 7 with 7964 kB of memory in use.
+Info: CREATING 322 COMPUTE OBJECTS
+Info: NONBONDED TABLE R-SQUARED SPACING: 0.0625
+Info: NONBONDED TABLE SIZE: 769 POINTS
+Info: ABSOLUTE IMPRECISION IN FAST TABLE ENERGY: 4.3715e-16 AT 0.03125
+Info: RELATIVE IMPRECISION IN FAST TABLE ENERGY: 1.00929e-16 AT 0.231756
+Info: ABSOLUTE IMPRECISION IN FAST TABLE FORCE: 3.70577e-22 AT 11.9974
+Info: RELATIVE IMPRECISION IN FAST TABLE FORCE: 2.80873e-16 AT 11.9138
+Info: ABSOLUTE IMPRECISION IN SCOR TABLE ENERGY: 2.91168e-22 AT 11.9974
+Info: RELATIVE IMPRECISION IN SCOR TABLE ENERGY: 6.16001e-17 AT 11.9974
+Info: ABSOLUTE IMPRECISION IN SCOR TABLE FORCE: 1.98523e-22 AT 11.9974
+Info: RELATIVE IMPRECISION IN SCOR TABLE FORCE: 8.0593e-16 AT 11.9138
+Info: ABSOLUTE IMPRECISION IN VDWA TABLE ENERGY: 1.97215e-31 AT 11.8295
+Info: RELATIVE IMPRECISION IN VDWA TABLE ENERGY: 6.72641e-14 AT 11.9138
+Info: ABSOLUTE IMPRECISION IN VDWA TABLE FORCE: 8.32002e-32 AT 11.9974
+Info: RELATIVE IMPRECISION IN VDWA TABLE FORCE: 1.83939e-15 AT 11.9138
+Info: ABSOLUTE IMPRECISION IN VDWB TABLE ENERGY: 8.80495e-26 AT 11.9974
+Info: RELATIVE IMPRECISION IN VDWB TABLE ENERGY: 7.56853e-15 AT 11.9138
+Info: ABSOLUTE IMPRECISION IN VDWB TABLE FORCE: 5.16988e-26 AT 11.9138
+Info: RELATIVE IMPRECISION IN VDWB TABLE FORCE: 7.96546e-16 AT 11.9138
+Info: Entering startup phase 8 with 8496 kB of memory in use.
+Info: Finished startup with 8496 kB of memory in use.
+TCL: step 0, bubble radius = 0.0
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP         TOTAL2         TOTAL3        TEMPAVG            PRESSURE      GPRESSURE         VOLUME       PRESSAVG      GPRESSAVG
+
+ENERGY:       0      1786.0409      1121.7315         0.0000         0.0000         -24829.2957      2669.5660         0.0000         0.0000      5210.2755         -14041.6818       294.1197    -13960.0799    -13960.0799       294.1197           2491.7841      -436.8530     57727.7253      2491.7841      -436.8530
+
+OPENING EXTENDED SYSTEM TRAJECTORY FILE
+TCL: step 1, bubble radius = 0.01
+TCL: step 2, bubble radius = 0.02
+TCL: step 3, bubble radius = 0.03
+TCL: step 4, bubble radius = 0.04
+TCL: step 5, bubble radius = 0.05
+TCL: step 6, bubble radius = 0.06
+TCL: step 7, bubble radius = 0.07
+TCL: step 8, bubble radius = 0.08
+TCL: step 9, bubble radius = 0.09
+TCL: step 10, bubble radius = 0.1
+TCL: step 11, bubble radius = 0.11
+TCL: step 12, bubble radius = 0.12
+TCL: step 13, bubble radius = 0.13
+TCL: step 14, bubble radius = 0.14
+TCL: step 15, bubble radius = 0.15
+TCL: step 16, bubble radius = 0.16
+TCL: step 17, bubble radius = 0.17
+TCL: step 18, bubble radius = 0.18
+TCL: step 19, bubble radius = 0.19
+TCL: step 20, bubble radius = 0.2
+TCL: step 21, bubble radius = 0.21
+TCL: step 22, bubble radius = 0.22
+TCL: step 23, bubble radius = 0.23
+TCL: step 24, bubble radius = 0.24
+TCL: step 25, bubble radius = 0.25
+TCL: step 26, bubble radius = 0.26
+TCL: step 27, bubble radius = 0.27
+TCL: step 28, bubble radius = 0.28
+TCL: step 29, bubble radius = 0.29
+TCL: step 30, bubble radius = 0.3
+TCL: step 31, bubble radius = 0.31
+TCL: step 32, bubble radius = 0.32
+TCL: step 33, bubble radius = 0.33
+TCL: step 34, bubble radius = 0.34
+TCL: step 35, bubble radius = 0.35
+TCL: step 36, bubble radius = 0.36
+TCL: step 37, bubble radius = 0.37
+TCL: step 38, bubble radius = 0.38
+TCL: step 39, bubble radius = 0.39
+TCL: step 40, bubble radius = 0.4
+TCL: step 41, bubble radius = 0.41
+TCL: step 42, bubble radius = 0.42
+TCL: step 43, bubble radius = 0.43
+TCL: step 44, bubble radius = 0.44
+TCL: step 45, bubble radius = 0.45
+TCL: step 46, bubble radius = 0.46
+TCL: step 47, bubble radius = 0.47
+TCL: step 48, bubble radius = 0.48
+TCL: step 49, bubble radius = 0.49
+TCL: step 50, bubble radius = 0.5
+TCL: step 51, bubble radius = 0.51
+TCL: step 52, bubble radius = 0.52
+TCL: step 53, bubble radius = 0.53
+TCL: step 54, bubble radius = 0.54
+TCL: step 55, bubble radius = 0.55
+TCL: step 56, bubble radius = 0.56
+TCL: step 57, bubble radius = 0.57
+TCL: step 58, bubble radius = 0.58
+TCL: step 59, bubble radius = 0.59
+TCL: step 60, bubble radius = 0.6
+TCL: step 61, bubble radius = 0.61
+TCL: step 62, bubble radius = 0.62
+TCL: step 63, bubble radius = 0.63
+TCL: step 64, bubble radius = 0.64
+TCL: step 65, bubble radius = 0.65
+TCL: step 66, bubble radius = 0.66
+TCL: step 67, bubble radius = 0.67
+TCL: step 68, bubble radius = 0.68
+TCL: step 69, bubble radius = 0.69
+TCL: step 70, bubble radius = 0.7
+TCL: step 71, bubble radius = 0.71
+TCL: step 72, bubble radius = 0.72
+TCL: step 73, bubble radius = 0.73
+TCL: step 74, bubble radius = 0.74
+TCL: step 75, bubble radius = 0.75
+TCL: step 76, bubble radius = 0.76
+TCL: step 77, bubble radius = 0.77
+TCL: step 78, bubble radius = 0.78
+TCL: step 79, bubble radius = 0.79
+TCL: step 80, bubble radius = 0.8
+TCL: step 81, bubble radius = 0.81
+TCL: step 82, bubble radius = 0.82
+TCL: step 83, bubble radius = 0.83
+TCL: step 84, bubble radius = 0.84
+TCL: step 85, bubble radius = 0.85
+TCL: step 86, bubble radius = 0.86
+TCL: step 87, bubble radius = 0.87
+TCL: step 88, bubble radius = 0.88
+TCL: step 89, bubble radius = 0.89
+TCL: step 90, bubble radius = 0.9
+TCL: step 91, bubble radius = 0.91
+TCL: step 92, bubble radius = 0.92
+TCL: step 93, bubble radius = 0.93
+TCL: step 94, bubble radius = 0.94
+TCL: step 95, bubble radius = 0.95
+TCL: step 96, bubble radius = 0.96
+TCL: step 97, bubble radius = 0.97
+TCL: step 98, bubble radius = 0.98
+TCL: step 99, bubble radius = 0.99
+TCL: step 100, bubble radius = 1.0
+Info: Initial time: 1 CPUs 0.201998 s/step 2.33794 days/ns 27624 kB memory
+TIMING: 100  CPU: 21.27, 0.2019/step  Wall: 21.6915, 0.204971/step, 0.165116 hours remaining, 27624 kB of memory in use.
+ENERGY:     100      1821.1909      1132.0571         0.0000         0.0000         -24888.5023      2753.8406         0.0000         0.0000      5161.2108         -14020.2028       291.3500    -13940.3227    -13933.9384       291.7394           1918.7930       -21.2376     57481.9293       -29.2119       -20.4765
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 100
+OPENING COORDINATE DCD FILE
+WRITING COORDINATES TO DCD FILE AT STEP 100
+WRITING COORDINATES TO RESTART FILE AT STEP 100
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 100
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 101, bubble radius = 1.01
+TCL: step 102, bubble radius = 1.02
+TCL: step 103, bubble radius = 1.03
+TCL: step 104, bubble radius = 1.04
+TCL: step 105, bubble radius = 1.05
+TCL: step 106, bubble radius = 1.06
+TCL: step 107, bubble radius = 1.07
+TCL: step 108, bubble radius = 1.08
+TCL: step 109, bubble radius = 1.09
+TCL: step 110, bubble radius = 1.1
+TCL: step 111, bubble radius = 1.11
+TCL: step 112, bubble radius = 1.12
+TCL: step 113, bubble radius = 1.13
+TCL: step 114, bubble radius = 1.14
+TCL: step 115, bubble radius = 1.15
+TCL: step 116, bubble radius = 1.16
+TCL: step 117, bubble radius = 1.17
+TCL: step 118, bubble radius = 1.18
+TCL: step 119, bubble radius = 1.19
+TCL: step 120, bubble radius = 1.2
+TCL: step 121, bubble radius = 1.21
+TCL: step 122, bubble radius = 1.22
+TCL: step 123, bubble radius = 1.23
+TCL: step 124, bubble radius = 1.24
+TCL: step 125, bubble radius = 1.25
+TCL: step 126, bubble radius = 1.26
+TCL: step 127, bubble radius = 1.27
+TCL: step 128, bubble radius = 1.28
+TCL: step 129, bubble radius = 1.29
+TCL: step 130, bubble radius = 1.3
+TCL: step 131, bubble radius = 1.31
+TCL: step 132, bubble radius = 1.32
+TCL: step 133, bubble radius = 1.33
+TCL: step 134, bubble radius = 1.34
+TCL: step 135, bubble radius = 1.35
+TCL: step 136, bubble radius = 1.36
+TCL: step 137, bubble radius = 1.37
+TCL: step 138, bubble radius = 1.38
+TCL: step 139, bubble radius = 1.39
+TCL: step 140, bubble radius = 1.4
+TCL: step 141, bubble radius = 1.41
+TCL: step 142, bubble radius = 1.42
+TCL: step 143, bubble radius = 1.43
+TCL: step 144, bubble radius = 1.44
+TCL: step 145, bubble radius = 1.45
+TCL: step 146, bubble radius = 1.46
+TCL: step 147, bubble radius = 1.47
+TCL: step 148, bubble radius = 1.48
+TCL: step 149, bubble radius = 1.49
+TCL: step 150, bubble radius = 1.5
+TCL: step 151, bubble radius = 1.51
+TCL: step 152, bubble radius = 1.52
+TCL: step 153, bubble radius = 1.53
+TCL: step 154, bubble radius = 1.54
+TCL: step 155, bubble radius = 1.55
+TCL: step 156, bubble radius = 1.56
+TCL: step 157, bubble radius = 1.57
+TCL: step 158, bubble radius = 1.58
+TCL: step 159, bubble radius = 1.59
+TCL: step 160, bubble radius = 1.6
+TCL: step 161, bubble radius = 1.61
+TCL: step 162, bubble radius = 1.62
+TCL: step 163, bubble radius = 1.63
+TCL: step 164, bubble radius = 1.64
+TCL: step 165, bubble radius = 1.65
+TCL: step 166, bubble radius = 1.66
+TCL: step 167, bubble radius = 1.67
+TCL: step 168, bubble radius = 1.68
+TCL: step 169, bubble radius = 1.69
+TCL: step 170, bubble radius = 1.7
+TCL: step 171, bubble radius = 1.71
+TCL: step 172, bubble radius = 1.72
+TCL: step 173, bubble radius = 1.73
+TCL: step 174, bubble radius = 1.74
+TCL: step 175, bubble radius = 1.75
+TCL: step 176, bubble radius = 1.76
+TCL: step 177, bubble radius = 1.77
+TCL: step 178, bubble radius = 1.78
+TCL: step 179, bubble radius = 1.79
+TCL: step 180, bubble radius = 1.8
+TCL: step 181, bubble radius = 1.81
+TCL: step 182, bubble radius = 1.82
+TCL: step 183, bubble radius = 1.83
+TCL: step 184, bubble radius = 1.84
+TCL: step 185, bubble radius = 1.85
+TCL: step 186, bubble radius = 1.86
+TCL: step 187, bubble radius = 1.87
+TCL: step 188, bubble radius = 1.88
+TCL: step 189, bubble radius = 1.89
+TCL: step 190, bubble radius = 1.9
+TCL: step 191, bubble radius = 1.91
+TCL: step 192, bubble radius = 1.92
+TCL: step 193, bubble radius = 1.93
+TCL: step 194, bubble radius = 1.94
+TCL: step 195, bubble radius = 1.95
+TCL: step 196, bubble radius = 1.96
+TCL: step 197, bubble radius = 1.97
+TCL: step 198, bubble radius = 1.98
+TCL: step 199, bubble radius = 1.99
+TCL: step 200, bubble radius = 2.0
+Info: Initial time: 1 CPUs 0.222219 s/step 2.57198 days/ns 28688 kB memory
+TIMING: 200  CPU: 42.98, 0.2171/step  Wall: 44.2069, 0.225154/step, 0.17512 hours remaining, 28688 kB of memory in use.
+ENERGY:     200      1878.1053      1043.2259         0.0000         0.0000         -24866.0745      2700.0438         0.0000         0.0000      5217.7586         -14026.9409       294.5421    -13946.3076    -13944.0185       291.1911           1415.0274      -205.5140     57255.2983       -84.6356       -69.5145
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 200
+WRITING COORDINATES TO DCD FILE AT STEP 200
+WRITING COORDINATES TO RESTART FILE AT STEP 200
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 200
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 201, bubble radius = 2.01
+TCL: step 202, bubble radius = 2.02
+TCL: step 203, bubble radius = 2.03
+TCL: step 204, bubble radius = 2.04
+TCL: step 205, bubble radius = 2.05
+TCL: step 206, bubble radius = 2.06
+TCL: step 207, bubble radius = 2.07
+TCL: step 208, bubble radius = 2.08
+TCL: step 209, bubble radius = 2.09
+TCL: step 210, bubble radius = 2.1
+TCL: step 211, bubble radius = 2.11
+TCL: step 212, bubble radius = 2.12
+TCL: step 213, bubble radius = 2.13
+TCL: step 214, bubble radius = 2.14
+TCL: step 215, bubble radius = 2.15
+TCL: step 216, bubble radius = 2.16
+TCL: step 217, bubble radius = 2.17
+TCL: step 218, bubble radius = 2.18
+TCL: step 219, bubble radius = 2.19
+TCL: step 220, bubble radius = 2.2
+TCL: step 221, bubble radius = 2.21
+TCL: step 222, bubble radius = 2.22
+TCL: step 223, bubble radius = 2.23
+TCL: step 224, bubble radius = 2.24
+TCL: step 225, bubble radius = 2.25
+TCL: step 226, bubble radius = 2.26
+TCL: step 227, bubble radius = 2.27
+TCL: step 228, bubble radius = 2.28
+TCL: step 229, bubble radius = 2.29
+TCL: step 230, bubble radius = 2.3
+TCL: step 231, bubble radius = 2.31
+TCL: step 232, bubble radius = 2.32
+TCL: step 233, bubble radius = 2.33
+TCL: step 234, bubble radius = 2.34
+TCL: step 235, bubble radius = 2.35
+TCL: step 236, bubble radius = 2.36
+TCL: step 237, bubble radius = 2.37
+TCL: step 238, bubble radius = 2.38
+TCL: step 239, bubble radius = 2.39
+TCL: step 240, bubble radius = 2.4
+TCL: step 241, bubble radius = 2.41
+TCL: step 242, bubble radius = 2.42
+TCL: step 243, bubble radius = 2.43
+TCL: step 244, bubble radius = 2.44
+TCL: step 245, bubble radius = 2.45
+TCL: step 246, bubble radius = 2.46
+TCL: step 247, bubble radius = 2.47
+TCL: step 248, bubble radius = 2.48
+TCL: step 249, bubble radius = 2.49
+TCL: step 250, bubble radius = 2.5
+TCL: step 251, bubble radius = 2.51
+TCL: step 252, bubble radius = 2.52
+TCL: step 253, bubble radius = 2.53
+TCL: step 254, bubble radius = 2.54
+TCL: step 255, bubble radius = 2.55
+TCL: step 256, bubble radius = 2.56
+TCL: step 257, bubble radius = 2.57
+TCL: step 258, bubble radius = 2.58
+TCL: step 259, bubble radius = 2.59
+TCL: step 260, bubble radius = 2.6
+TCL: step 261, bubble radius = 2.61
+TCL: step 262, bubble radius = 2.62
+TCL: step 263, bubble radius = 2.63
+TCL: step 264, bubble radius = 2.64
+TCL: step 265, bubble radius = 2.65
+TCL: step 266, bubble radius = 2.66
+TCL: step 267, bubble radius = 2.67
+TCL: step 268, bubble radius = 2.68
+TCL: step 269, bubble radius = 2.69
+TCL: step 270, bubble radius = 2.7
+TCL: step 271, bubble radius = 2.71
+TCL: step 272, bubble radius = 2.72
+TCL: step 273, bubble radius = 2.73
+TCL: step 274, bubble radius = 2.74
+TCL: step 275, bubble radius = 2.75
+TCL: step 276, bubble radius = 2.76
+TCL: step 277, bubble radius = 2.77
+TCL: step 278, bubble radius = 2.78
+TCL: step 279, bubble radius = 2.79
+TCL: step 280, bubble radius = 2.8
+TCL: step 281, bubble radius = 2.81
+TCL: step 282, bubble radius = 2.82
+TCL: step 283, bubble radius = 2.83
+TCL: step 284, bubble radius = 2.84
+TCL: step 285, bubble radius = 2.85
+TCL: step 286, bubble radius = 2.86
+TCL: step 287, bubble radius = 2.87
+TCL: step 288, bubble radius = 2.88
+TCL: step 289, bubble radius = 2.89
+TCL: step 290, bubble radius = 2.9
+TCL: step 291, bubble radius = 2.91
+TCL: step 292, bubble radius = 2.92
+TCL: step 293, bubble radius = 2.93
+TCL: step 294, bubble radius = 2.94
+TCL: step 295, bubble radius = 2.95
+TCL: step 296, bubble radius = 2.96
+TCL: step 297, bubble radius = 2.97
+TCL: step 298, bubble radius = 2.98
+TCL: step 299, bubble radius = 2.99
+TCL: step 300, bubble radius = 3.0
+Info: Initial time: 1 CPUs 0.218384 s/step 2.52759 days/ns 28780 kB memory
+TIMING: 300  CPU: 64.67, 0.2169/step  Wall: 66.3434, 0.221365/step, 0.166024 hours remaining, 28780 kB of memory in use.
+ENERGY:     300      1795.8502      1099.9447         0.0000         0.0000         -24770.6447      2656.6626         0.0000         0.0000      5231.5196         -13986.6676       295.3189    -13906.5470    -13902.0286       293.5164           2167.5308      -325.6046     57418.7252        -3.4429         4.2334
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 300
+WRITING COORDINATES TO DCD FILE AT STEP 300
+WRITING COORDINATES TO RESTART FILE AT STEP 300
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 300
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 301, bubble radius = 3.01
+TCL: step 302, bubble radius = 3.02
+TCL: step 303, bubble radius = 3.03
+TCL: step 304, bubble radius = 3.04
+TCL: step 305, bubble radius = 3.05
+TCL: step 306, bubble radius = 3.06
+TCL: step 307, bubble radius = 3.07
+TCL: step 308, bubble radius = 3.08
+TCL: step 309, bubble radius = 3.09
+TCL: step 310, bubble radius = 3.1
+TCL: step 311, bubble radius = 3.11
+TCL: step 312, bubble radius = 3.12
+TCL: step 313, bubble radius = 3.13
+TCL: step 314, bubble radius = 3.14
+TCL: step 315, bubble radius = 3.15
+TCL: step 316, bubble radius = 3.16
+TCL: step 317, bubble radius = 3.17
+TCL: step 318, bubble radius = 3.18
+TCL: step 319, bubble radius = 3.19
+TCL: step 320, bubble radius = 3.2
+TCL: step 321, bubble radius = 3.21
+TCL: step 322, bubble radius = 3.22
+TCL: step 323, bubble radius = 3.23
+TCL: step 324, bubble radius = 3.24
+TCL: step 325, bubble radius = 3.25
+TCL: step 326, bubble radius = 3.26
+TCL: step 327, bubble radius = 3.27
+TCL: step 328, bubble radius = 3.28
+TCL: step 329, bubble radius = 3.29
+TCL: step 330, bubble radius = 3.3
+TCL: step 331, bubble radius = 3.31
+TCL: step 332, bubble radius = 3.32
+TCL: step 333, bubble radius = 3.33
+TCL: step 334, bubble radius = 3.34
+TCL: step 335, bubble radius = 3.35
+TCL: step 336, bubble radius = 3.36
+TCL: step 337, bubble radius = 3.37
+TCL: step 338, bubble radius = 3.38
+TCL: step 339, bubble radius = 3.39
+TCL: step 340, bubble radius = 3.4
+TCL: step 341, bubble radius = 3.41
+TCL: step 342, bubble radius = 3.42
+TCL: step 343, bubble radius = 3.43
+TCL: step 344, bubble radius = 3.44
+TCL: step 345, bubble radius = 3.45
+TCL: step 346, bubble radius = 3.46
+TCL: step 347, bubble radius = 3.47
+TCL: step 348, bubble radius = 3.48
+TCL: step 349, bubble radius = 3.49
+TCL: step 350, bubble radius = 3.5
+TCL: step 351, bubble radius = 3.51
+TCL: step 352, bubble radius = 3.52
+TCL: step 353, bubble radius = 3.53
+TCL: step 354, bubble radius = 3.54
+TCL: step 355, bubble radius = 3.55
+TCL: step 356, bubble radius = 3.56
+TCL: step 357, bubble radius = 3.57
+TCL: step 358, bubble radius = 3.58
+TCL: step 359, bubble radius = 3.59
+TCL: step 360, bubble radius = 3.6
+TCL: step 361, bubble radius = 3.61
+TCL: step 362, bubble radius = 3.62
+TCL: step 363, bubble radius = 3.63
+TCL: step 364, bubble radius = 3.64
+TCL: step 365, bubble radius = 3.65
+TCL: step 366, bubble radius = 3.66
+TCL: step 367, bubble radius = 3.67
+TCL: step 368, bubble radius = 3.68
+TCL: step 369, bubble radius = 3.69
+TCL: step 370, bubble radius = 3.7
+TCL: step 371, bubble radius = 3.71
+TCL: step 372, bubble radius = 3.72
+TCL: step 373, bubble radius = 3.73
+TCL: step 374, bubble radius = 3.74
+TCL: step 375, bubble radius = 3.75
+TCL: step 376, bubble radius = 3.76
+TCL: step 377, bubble radius = 3.77
+TCL: step 378, bubble radius = 3.78
+TCL: step 379, bubble radius = 3.79
+TCL: step 380, bubble radius = 3.8
+TCL: step 381, bubble radius = 3.81
+TCL: step 382, bubble radius = 3.82
+TCL: step 383, bubble radius = 3.83
+TCL: step 384, bubble radius = 3.84
+TCL: step 385, bubble radius = 3.85
+TCL: step 386, bubble radius = 3.86
+TCL: step 387, bubble radius = 3.87
+TCL: step 388, bubble radius = 3.88
+TCL: step 389, bubble radius = 3.89
+TCL: step 390, bubble radius = 3.9
+TCL: step 391, bubble radius = 3.91
+TCL: step 392, bubble radius = 3.92
+TCL: step 393, bubble radius = 3.93
+TCL: step 394, bubble radius = 3.94
+TCL: step 395, bubble radius = 3.95
+TCL: step 396, bubble radius = 3.96
+TCL: step 397, bubble radius = 3.97
+TCL: step 398, bubble radius = 3.98
+TCL: step 399, bubble radius = 3.99
+TCL: step 400, bubble radius = 4.0
+Info: Benchmark time: 1 CPUs 0.217569 s/step 2.51816 days/ns 28780 kB memory
+TIMING: 400  CPU: 86.29, 0.2162/step  Wall: 88.4006, 0.220571/step, 0.159302 hours remaining, 28780 kB of memory in use.
+ENERGY:     400      1760.5941      1116.8378         0.0000         0.0000         -24750.6823      2679.2114         0.0000         0.0000      5244.7556         -13949.2834       296.0661    -13868.5086    -13865.8570       295.3734           2818.1666      -207.1572     57658.5613        51.5906        48.6159
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 400
+WRITING COORDINATES TO DCD FILE AT STEP 400
+WRITING COORDINATES TO RESTART FILE AT STEP 400
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 400
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 401, bubble radius = 4.01
+TCL: step 402, bubble radius = 4.02
+TCL: step 403, bubble radius = 4.03
+TCL: step 404, bubble radius = 4.04
+TCL: step 405, bubble radius = 4.05
+TCL: step 406, bubble radius = 4.06
+TCL: step 407, bubble radius = 4.07
+TCL: step 408, bubble radius = 4.08
+TCL: step 409, bubble radius = 4.09
+TCL: step 410, bubble radius = 4.1
+TCL: step 411, bubble radius = 4.11
+TCL: step 412, bubble radius = 4.12
+TCL: step 413, bubble radius = 4.13
+TCL: step 414, bubble radius = 4.14
+TCL: step 415, bubble radius = 4.15
+TCL: step 416, bubble radius = 4.16
+TCL: step 417, bubble radius = 4.17
+TCL: step 418, bubble radius = 4.18
+TCL: step 419, bubble radius = 4.19
+TCL: step 420, bubble radius = 4.2
+TCL: step 421, bubble radius = 4.21
+TCL: step 422, bubble radius = 4.22
+TCL: step 423, bubble radius = 4.23
+TCL: step 424, bubble radius = 4.24
+TCL: step 425, bubble radius = 4.25
+TCL: step 426, bubble radius = 4.26
+TCL: step 427, bubble radius = 4.27
+TCL: step 428, bubble radius = 4.28
+TCL: step 429, bubble radius = 4.29
+TCL: step 430, bubble radius = 4.3
+TCL: step 431, bubble radius = 4.31
+TCL: step 432, bubble radius = 4.32
+TCL: step 433, bubble radius = 4.33
+TCL: step 434, bubble radius = 4.34
+TCL: step 435, bubble radius = 4.35
+TCL: step 436, bubble radius = 4.36
+TCL: step 437, bubble radius = 4.37
+TCL: step 438, bubble radius = 4.38
+TCL: step 439, bubble radius = 4.39
+TCL: step 440, bubble radius = 4.4
+TCL: step 441, bubble radius = 4.41
+TCL: step 442, bubble radius = 4.42
+TCL: step 443, bubble radius = 4.43
+TCL: step 444, bubble radius = 4.44
+TCL: step 445, bubble radius = 4.45
+TCL: step 446, bubble radius = 4.46
+TCL: step 447, bubble radius = 4.47
+TCL: step 448, bubble radius = 4.48
+TCL: step 449, bubble radius = 4.49
+TCL: step 450, bubble radius = 4.5
+TCL: step 451, bubble radius = 4.51
+TCL: step 452, bubble radius = 4.52
+TCL: step 453, bubble radius = 4.53
+TCL: step 454, bubble radius = 4.54
+TCL: step 455, bubble radius = 4.55
+TCL: step 456, bubble radius = 4.56
+TCL: step 457, bubble radius = 4.57
+TCL: step 458, bubble radius = 4.58
+TCL: step 459, bubble radius = 4.59
+TCL: step 460, bubble radius = 4.6
+TCL: step 461, bubble radius = 4.61
+TCL: step 462, bubble radius = 4.62
+TCL: step 463, bubble radius = 4.63
+TCL: step 464, bubble radius = 4.64
+TCL: step 465, bubble radius = 4.65
+TCL: step 466, bubble radius = 4.66
+TCL: step 467, bubble radius = 4.67
+TCL: step 468, bubble radius = 4.68
+TCL: step 469, bubble radius = 4.69
+TCL: step 470, bubble radius = 4.7
+TCL: step 471, bubble radius = 4.71
+TCL: step 472, bubble radius = 4.72
+TCL: step 473, bubble radius = 4.73
+TCL: step 474, bubble radius = 4.74
+TCL: step 475, bubble radius = 4.75
+TCL: step 476, bubble radius = 4.76
+TCL: step 477, bubble radius = 4.77
+TCL: step 478, bubble radius = 4.78
+TCL: step 479, bubble radius = 4.79
+TCL: step 480, bubble radius = 4.8
+TCL: step 481, bubble radius = 4.81
+TCL: step 482, bubble radius = 4.82
+TCL: step 483, bubble radius = 4.83
+TCL: step 484, bubble radius = 4.84
+TCL: step 485, bubble radius = 4.85
+TCL: step 486, bubble radius = 4.86
+TCL: step 487, bubble radius = 4.87
+TCL: step 488, bubble radius = 4.88
+TCL: step 489, bubble radius = 4.89
+TCL: step 490, bubble radius = 4.9
+TCL: step 491, bubble radius = 4.91
+TCL: step 492, bubble radius = 4.92
+TCL: step 493, bubble radius = 4.93
+TCL: step 494, bubble radius = 4.94
+TCL: step 495, bubble radius = 4.95
+TCL: step 496, bubble radius = 4.96
+TCL: step 497, bubble radius = 4.97
+TCL: step 498, bubble radius = 4.98
+TCL: step 499, bubble radius = 4.99
+TCL: step 500, bubble radius = 5.0
+Info: Benchmark time: 1 CPUs 0.216843 s/step 2.50976 days/ns 29012 kB memory
+TIMING: 500  CPU: 107.81, 0.2152/step  Wall: 110.086, 0.21685/step, 0.15059 hours remaining, 29012 kB of memory in use.
+ENERGY:     500      1788.5499      1049.6117         0.0000         0.0000         -24804.3427      2810.1934         0.0000         0.0000      5289.6129         -13866.3749       298.5983    -13782.5057    -13791.0742       296.7704           3954.9422       520.7623     57620.3680        29.6641        18.2128
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 500
+WRITING COORDINATES TO DCD FILE AT STEP 500
+WRITING COORDINATES TO RESTART FILE AT STEP 500
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 500
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 501, bubble radius = 5.01
+TCL: step 502, bubble radius = 5.02
+TCL: step 503, bubble radius = 5.03
+TCL: step 504, bubble radius = 5.04
+TCL: step 505, bubble radius = 5.05
+TCL: step 506, bubble radius = 5.06
+TCL: step 507, bubble radius = 5.07
+TCL: step 508, bubble radius = 5.08
+TCL: step 509, bubble radius = 5.09
+TCL: step 510, bubble radius = 5.1
+TCL: step 511, bubble radius = 5.11
+TCL: step 512, bubble radius = 5.12
+TCL: step 513, bubble radius = 5.13
+TCL: step 514, bubble radius = 5.14
+TCL: step 515, bubble radius = 5.15
+TCL: step 516, bubble radius = 5.16
+TCL: step 517, bubble radius = 5.17
+TCL: step 518, bubble radius = 5.18
+TCL: step 519, bubble radius = 5.19
+TCL: step 520, bubble radius = 5.2
+TCL: step 521, bubble radius = 5.21
+TCL: step 522, bubble radius = 5.22
+TCL: step 523, bubble radius = 5.23
+TCL: step 524, bubble radius = 5.24
+TCL: step 525, bubble radius = 5.25
+TCL: step 526, bubble radius = 5.26
+TCL: step 527, bubble radius = 5.27
+TCL: step 528, bubble radius = 5.28
+TCL: step 529, bubble radius = 5.29
+TCL: step 530, bubble radius = 5.3
+TCL: step 531, bubble radius = 5.31
+TCL: step 532, bubble radius = 5.32
+TCL: step 533, bubble radius = 5.33
+TCL: step 534, bubble radius = 5.34
+TCL: step 535, bubble radius = 5.35
+TCL: step 536, bubble radius = 5.36
+TCL: step 537, bubble radius = 5.37
+TCL: step 538, bubble radius = 5.38
+TCL: step 539, bubble radius = 5.39
+TCL: step 540, bubble radius = 5.4
+TCL: step 541, bubble radius = 5.41
+TCL: step 542, bubble radius = 5.42
+TCL: step 543, bubble radius = 5.43
+TCL: step 544, bubble radius = 5.44
+TCL: step 545, bubble radius = 5.45
+TCL: step 546, bubble radius = 5.46
+TCL: step 547, bubble radius = 5.47
+TCL: step 548, bubble radius = 5.48
+TCL: step 549, bubble radius = 5.49
+TCL: step 550, bubble radius = 5.5
+TCL: step 551, bubble radius = 5.51
+TCL: step 552, bubble radius = 5.52
+TCL: step 553, bubble radius = 5.53
+TCL: step 554, bubble radius = 5.54
+TCL: step 555, bubble radius = 5.55
+TCL: step 556, bubble radius = 5.56
+TCL: step 557, bubble radius = 5.57
+TCL: step 558, bubble radius = 5.58
+TCL: step 559, bubble radius = 5.59
+TCL: step 560, bubble radius = 5.6
+TCL: step 561, bubble radius = 5.61
+TCL: step 562, bubble radius = 5.62
+TCL: step 563, bubble radius = 5.63
+TCL: step 564, bubble radius = 5.64
+TCL: step 565, bubble radius = 5.65
+TCL: step 566, bubble radius = 5.66
+TCL: step 567, bubble radius = 5.67
+TCL: step 568, bubble radius = 5.68
+TCL: step 569, bubble radius = 5.69
+TCL: step 570, bubble radius = 5.7
+TCL: step 571, bubble radius = 5.71
+TCL: step 572, bubble radius = 5.72
+TCL: step 573, bubble radius = 5.73
+TCL: step 574, bubble radius = 5.74
+TCL: step 575, bubble radius = 5.75
+TCL: step 576, bubble radius = 5.76
+TCL: step 577, bubble radius = 5.77
+TCL: step 578, bubble radius = 5.78
+TCL: step 579, bubble radius = 5.79
+TCL: step 580, bubble radius = 5.8
+TCL: step 581, bubble radius = 5.81
+TCL: step 582, bubble radius = 5.82
+TCL: step 583, bubble radius = 5.83
+TCL: step 584, bubble radius = 5.84
+TCL: step 585, bubble radius = 5.85
+TCL: step 586, bubble radius = 5.86
+TCL: step 587, bubble radius = 5.87
+TCL: step 588, bubble radius = 5.88
+TCL: step 589, bubble radius = 5.89
+TCL: step 590, bubble radius = 5.9
+TCL: step 591, bubble radius = 5.91
+TCL: step 592, bubble radius = 5.92
+TCL: step 593, bubble radius = 5.93
+TCL: step 594, bubble radius = 5.94
+TCL: step 595, bubble radius = 5.95
+TCL: step 596, bubble radius = 5.96
+TCL: step 597, bubble radius = 5.97
+TCL: step 598, bubble radius = 5.98
+TCL: step 599, bubble radius = 5.99
+TCL: step 600, bubble radius = 6.0
+Info: Benchmark time: 1 CPUs 0.217086 s/step 2.51257 days/ns 29108 kB memory
+TIMING: 600  CPU: 129.4, 0.2159/step  Wall: 131.795, 0.217092/step, 0.144728 hours remaining, 29108 kB of memory in use.
+ENERGY:     600      1746.0674      1123.5829         0.0000         0.0000         -24700.2273      2739.8345         0.0000         0.0000      5376.1368         -13714.6058       303.4825    -13631.6621    -13637.2616       300.6432           3699.9610       253.2508     58022.4018       -48.5175       -51.3907
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 600
+WRITING COORDINATES TO DCD FILE AT STEP 600
+WRITING COORDINATES TO RESTART FILE AT STEP 600
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 600
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 601, bubble radius = 6.01
+TCL: step 602, bubble radius = 6.02
+TCL: step 603, bubble radius = 6.03
+TCL: step 604, bubble radius = 6.04
+TCL: step 605, bubble radius = 6.05
+TCL: step 606, bubble radius = 6.06
+TCL: step 607, bubble radius = 6.07
+TCL: step 608, bubble radius = 6.08
+TCL: step 609, bubble radius = 6.09
+TCL: step 610, bubble radius = 6.1
+TCL: step 611, bubble radius = 6.11
+TCL: step 612, bubble radius = 6.12
+TCL: step 613, bubble radius = 6.13
+TCL: step 614, bubble radius = 6.14
+TCL: step 615, bubble radius = 6.15
+TCL: step 616, bubble radius = 6.16
+TCL: step 617, bubble radius = 6.17
+TCL: step 618, bubble radius = 6.18
+TCL: step 619, bubble radius = 6.19
+TCL: step 620, bubble radius = 6.2
+TCL: step 621, bubble radius = 6.21
+TCL: step 622, bubble radius = 6.22
+TCL: step 623, bubble radius = 6.23
+TCL: step 624, bubble radius = 6.24
+TCL: step 625, bubble radius = 6.25
+TCL: step 626, bubble radius = 6.26
+TCL: step 627, bubble radius = 6.27
+TCL: step 628, bubble radius = 6.28
+TCL: step 629, bubble radius = 6.29
+TCL: step 630, bubble radius = 6.3
+TCL: step 631, bubble radius = 6.31
+TCL: step 632, bubble radius = 6.32
+TCL: step 633, bubble radius = 6.33
+TCL: step 634, bubble radius = 6.34
+TCL: step 635, bubble radius = 6.35
+TCL: step 636, bubble radius = 6.36
+TCL: step 637, bubble radius = 6.37
+TCL: step 638, bubble radius = 6.38
+TCL: step 639, bubble radius = 6.39
+TCL: step 640, bubble radius = 6.4
+TCL: step 641, bubble radius = 6.41
+TCL: step 642, bubble radius = 6.42
+TCL: step 643, bubble radius = 6.43
+TCL: step 644, bubble radius = 6.44
+TCL: step 645, bubble radius = 6.45
+TCL: step 646, bubble radius = 6.46
+TCL: step 647, bubble radius = 6.47
+TCL: step 648, bubble radius = 6.48
+TCL: step 649, bubble radius = 6.49
+TCL: step 650, bubble radius = 6.5
+TCL: step 651, bubble radius = 6.51
+TCL: step 652, bubble radius = 6.52
+TCL: step 653, bubble radius = 6.53
+TCL: step 654, bubble radius = 6.54
+TCL: step 655, bubble radius = 6.55
+TCL: step 656, bubble radius = 6.56
+TCL: step 657, bubble radius = 6.57
+TCL: step 658, bubble radius = 6.58
+TCL: step 659, bubble radius = 6.59
+TCL: step 660, bubble radius = 6.6
+TCL: step 661, bubble radius = 6.61
+TCL: step 662, bubble radius = 6.62
+TCL: step 663, bubble radius = 6.63
+TCL: step 664, bubble radius = 6.64
+TCL: step 665, bubble radius = 6.65
+TCL: step 666, bubble radius = 6.66
+TCL: step 667, bubble radius = 6.67
+TCL: step 668, bubble radius = 6.68
+TCL: step 669, bubble radius = 6.69
+TCL: step 670, bubble radius = 6.7
+TCL: step 671, bubble radius = 6.71
+TCL: step 672, bubble radius = 6.72
+TCL: step 673, bubble radius = 6.73
+TCL: step 674, bubble radius = 6.74
+TCL: step 675, bubble radius = 6.75
+TCL: step 676, bubble radius = 6.76
+TCL: step 677, bubble radius = 6.77
+TCL: step 678, bubble radius = 6.78
+TCL: step 679, bubble radius = 6.79
+TCL: step 680, bubble radius = 6.8
+TCL: step 681, bubble radius = 6.81
+TCL: step 682, bubble radius = 6.82
+TCL: step 683, bubble radius = 6.83
+TCL: step 684, bubble radius = 6.84
+TCL: step 685, bubble radius = 6.85
+TCL: step 686, bubble radius = 6.86
+TCL: step 687, bubble radius = 6.87
+TCL: step 688, bubble radius = 6.88
+TCL: step 689, bubble radius = 6.89
+TCL: step 690, bubble radius = 6.9
+TCL: step 691, bubble radius = 6.91
+TCL: step 692, bubble radius = 6.92
+TCL: step 693, bubble radius = 6.93
+TCL: step 694, bubble radius = 6.94
+TCL: step 695, bubble radius = 6.95
+TCL: step 696, bubble radius = 6.96
+TCL: step 697, bubble radius = 6.97
+TCL: step 698, bubble radius = 6.98
+TCL: step 699, bubble radius = 6.99
+TCL: step 700, bubble radius = 7.0
+TIMING: 700  CPU: 150.95, 0.2155/step  Wall: 153.482, 0.216877/step, 0.13856 hours remaining, 29208 kB of memory in use.
+ENERGY:     700      1720.6599      1118.3042         0.0000         0.0000         -24521.3186      2717.5383         0.0000         0.0000      5435.9466         -13528.8697       306.8588    -13444.3635    -13455.7964       305.9734           4459.8373       314.3525     58656.4487         9.3277       -10.0707
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 700
+WRITING COORDINATES TO DCD FILE AT STEP 700
+WRITING COORDINATES TO RESTART FILE AT STEP 700
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 700
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 701, bubble radius = 7.01
+TCL: step 702, bubble radius = 7.02
+TCL: step 703, bubble radius = 7.03
+TCL: step 704, bubble radius = 7.04
+TCL: step 705, bubble radius = 7.05
+TCL: step 706, bubble radius = 7.06
+TCL: step 707, bubble radius = 7.07
+TCL: step 708, bubble radius = 7.08
+TCL: step 709, bubble radius = 7.09
+TCL: step 710, bubble radius = 7.1
+TCL: step 711, bubble radius = 7.11
+TCL: step 712, bubble radius = 7.12
+TCL: step 713, bubble radius = 7.13
+TCL: step 714, bubble radius = 7.14
+TCL: step 715, bubble radius = 7.15
+TCL: step 716, bubble radius = 7.16
+TCL: step 717, bubble radius = 7.17
+TCL: step 718, bubble radius = 7.18
+TCL: step 719, bubble radius = 7.19
+TCL: step 720, bubble radius = 7.2
+TCL: step 721, bubble radius = 7.21
+TCL: step 722, bubble radius = 7.22
+TCL: step 723, bubble radius = 7.23
+TCL: step 724, bubble radius = 7.24
+TCL: step 725, bubble radius = 7.25
+TCL: step 726, bubble radius = 7.26
+TCL: step 727, bubble radius = 7.27
+TCL: step 728, bubble radius = 7.28
+TCL: step 729, bubble radius = 7.29
+TCL: step 730, bubble radius = 7.3
+TCL: step 731, bubble radius = 7.31
+TCL: step 732, bubble radius = 7.32
+TCL: step 733, bubble radius = 7.33
+TCL: step 734, bubble radius = 7.34
+TCL: step 735, bubble radius = 7.35
+TCL: step 736, bubble radius = 7.36
+TCL: step 737, bubble radius = 7.37
+TCL: step 738, bubble radius = 7.38
+TCL: step 739, bubble radius = 7.39
+TCL: step 740, bubble radius = 7.4
+TCL: step 741, bubble radius = 7.41
+TCL: step 742, bubble radius = 7.42
+TCL: step 743, bubble radius = 7.43
+TCL: step 744, bubble radius = 7.44
+TCL: step 745, bubble radius = 7.45
+TCL: step 746, bubble radius = 7.46
+TCL: step 747, bubble radius = 7.47
+TCL: step 748, bubble radius = 7.48
+TCL: step 749, bubble radius = 7.49
+TCL: step 750, bubble radius = 7.5
+TCL: step 751, bubble radius = 7.51
+TCL: step 752, bubble radius = 7.52
+TCL: step 753, bubble radius = 7.53
+TCL: step 754, bubble radius = 7.54
+TCL: step 755, bubble radius = 7.55
+TCL: step 756, bubble radius = 7.56
+TCL: step 757, bubble radius = 7.57
+TCL: step 758, bubble radius = 7.58
+TCL: step 759, bubble radius = 7.59
+TCL: step 760, bubble radius = 7.6
+TCL: step 761, bubble radius = 7.61
+TCL: step 762, bubble radius = 7.62
+TCL: step 763, bubble radius = 7.63
+TCL: step 764, bubble radius = 7.64
+TCL: step 765, bubble radius = 7.65
+TCL: step 766, bubble radius = 7.66
+TCL: step 767, bubble radius = 7.67
+TCL: step 768, bubble radius = 7.68
+TCL: step 769, bubble radius = 7.69
+TCL: step 770, bubble radius = 7.7
+TCL: step 771, bubble radius = 7.71
+TCL: step 772, bubble radius = 7.72
+TCL: step 773, bubble radius = 7.73
+TCL: step 774, bubble radius = 7.74
+TCL: step 775, bubble radius = 7.75
+TCL: step 776, bubble radius = 7.76
+TCL: step 777, bubble radius = 7.77
+TCL: step 778, bubble radius = 7.78
+TCL: step 779, bubble radius = 7.79
+TCL: step 780, bubble radius = 7.8
+TCL: step 781, bubble radius = 7.81
+TCL: step 782, bubble radius = 7.82
+TCL: step 783, bubble radius = 7.83
+TCL: step 784, bubble radius = 7.84
+TCL: step 785, bubble radius = 7.85
+TCL: step 786, bubble radius = 7.86
+TCL: step 787, bubble radius = 7.87
+TCL: step 788, bubble radius = 7.88
+TCL: step 789, bubble radius = 7.89
+TCL: step 790, bubble radius = 7.9
+TCL: step 791, bubble radius = 7.91
+TCL: step 792, bubble radius = 7.92
+TCL: step 793, bubble radius = 7.93
+TCL: step 794, bubble radius = 7.94
+TCL: step 795, bubble radius = 7.95
+TCL: step 796, bubble radius = 7.96
+TCL: step 797, bubble radius = 7.97
+TCL: step 798, bubble radius = 7.98
+TCL: step 799, bubble radius = 7.99
+TCL: step 800, bubble radius = 8.0
+TIMING: 800  CPU: 172.55, 0.216/step  Wall: 175.172, 0.216895/step, 0.132547 hours remaining, 29336 kB of memory in use.
+ENERGY:     800      1755.5780      1060.6430         0.0000         0.0000         -24229.7618      2555.7513         0.0000         0.0000      5524.8993         -13332.8902       311.8802    -13249.1304    -13257.7914       309.9944           3234.6224      -368.1464     59782.7794       249.6642       235.6654
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 800
+WRITING COORDINATES TO DCD FILE AT STEP 800
+WRITING COORDINATES TO RESTART FILE AT STEP 800
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 800
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 801, bubble radius = 8.01
+TCL: step 802, bubble radius = 8.02
+TCL: step 803, bubble radius = 8.03
+TCL: step 804, bubble radius = 8.04
+TCL: step 805, bubble radius = 8.05
+TCL: step 806, bubble radius = 8.06
+TCL: step 807, bubble radius = 8.07
+TCL: step 808, bubble radius = 8.08
+TCL: step 809, bubble radius = 8.09
+TCL: step 810, bubble radius = 8.1
+TCL: step 811, bubble radius = 8.11
+TCL: step 812, bubble radius = 8.12
+TCL: step 813, bubble radius = 8.13
+TCL: step 814, bubble radius = 8.14
+TCL: step 815, bubble radius = 8.15
+TCL: step 816, bubble radius = 8.16
+TCL: step 817, bubble radius = 8.17
+TCL: step 818, bubble radius = 8.18
+TCL: step 819, bubble radius = 8.19
+TCL: step 820, bubble radius = 8.2
+TCL: step 821, bubble radius = 8.21
+TCL: step 822, bubble radius = 8.22
+TCL: step 823, bubble radius = 8.23
+TCL: step 824, bubble radius = 8.24
+TCL: step 825, bubble radius = 8.25
+TCL: step 826, bubble radius = 8.26
+TCL: step 827, bubble radius = 8.27
+TCL: step 828, bubble radius = 8.28
+TCL: step 829, bubble radius = 8.29
+TCL: step 830, bubble radius = 8.3
+TCL: step 831, bubble radius = 8.31
+TCL: step 832, bubble radius = 8.32
+TCL: step 833, bubble radius = 8.33
+TCL: step 834, bubble radius = 8.34
+TCL: step 835, bubble radius = 8.35
+TCL: step 836, bubble radius = 8.36
+TCL: step 837, bubble radius = 8.37
+TCL: step 838, bubble radius = 8.38
+TCL: step 839, bubble radius = 8.39
+TCL: step 840, bubble radius = 8.4
+TCL: step 841, bubble radius = 8.41
+TCL: step 842, bubble radius = 8.42
+TCL: step 843, bubble radius = 8.43
+TCL: step 844, bubble radius = 8.44
+TCL: step 845, bubble radius = 8.45
+TCL: step 846, bubble radius = 8.46
+TCL: step 847, bubble radius = 8.47
+TCL: step 848, bubble radius = 8.48
+TCL: step 849, bubble radius = 8.49
+TCL: step 850, bubble radius = 8.5
+TCL: step 851, bubble radius = 8.51
+TCL: step 852, bubble radius = 8.52
+TCL: step 853, bubble radius = 8.53
+TCL: step 854, bubble radius = 8.54
+TCL: step 855, bubble radius = 8.55
+TCL: step 856, bubble radius = 8.56
+TCL: step 857, bubble radius = 8.57
+TCL: step 858, bubble radius = 8.58
+TCL: step 859, bubble radius = 8.59
+TCL: step 860, bubble radius = 8.6
+TCL: step 861, bubble radius = 8.61
+TCL: step 862, bubble radius = 8.62
+TCL: step 863, bubble radius = 8.63
+TCL: step 864, bubble radius = 8.64
+TCL: step 865, bubble radius = 8.65
+TCL: step 866, bubble radius = 8.66
+TCL: step 867, bubble radius = 8.67
+TCL: step 868, bubble radius = 8.68
+TCL: step 869, bubble radius = 8.69
+TCL: step 870, bubble radius = 8.7
+TCL: step 871, bubble radius = 8.71
+TCL: step 872, bubble radius = 8.72
+TCL: step 873, bubble radius = 8.73
+TCL: step 874, bubble radius = 8.74
+TCL: step 875, bubble radius = 8.75
+TCL: step 876, bubble radius = 8.76
+TCL: step 877, bubble radius = 8.77
+TCL: step 878, bubble radius = 8.78
+TCL: step 879, bubble radius = 8.79
+TCL: step 880, bubble radius = 8.8
+TCL: step 881, bubble radius = 8.81
+TCL: step 882, bubble radius = 8.82
+TCL: step 883, bubble radius = 8.83
+TCL: step 884, bubble radius = 8.84
+TCL: step 885, bubble radius = 8.85
+TCL: step 886, bubble radius = 8.86
+TCL: step 887, bubble radius = 8.87
+TCL: step 888, bubble radius = 8.88
+TCL: step 889, bubble radius = 8.89
+TCL: step 890, bubble radius = 8.9
+TCL: step 891, bubble radius = 8.91
+TCL: step 892, bubble radius = 8.92
+TCL: step 893, bubble radius = 8.93
+TCL: step 894, bubble radius = 8.94
+TCL: step 895, bubble radius = 8.95
+TCL: step 896, bubble radius = 8.96
+TCL: step 897, bubble radius = 8.97
+TCL: step 898, bubble radius = 8.98
+TCL: step 899, bubble radius = 8.99
+TCL: step 900, bubble radius = 9.0
+TIMING: 900  CPU: 194.13, 0.2158/step  Wall: 196.814, 0.216418/step, 0.126244 hours remaining, 29432 kB of memory in use.
+ENERGY:     900      1778.4407      1103.7537         0.0000         0.0000         -24203.6897      2564.8557         0.0000         0.0000      5709.3995         -13047.2401       322.2952    -12968.3225    -12959.9508       316.4618           1925.5186      -251.6011     60592.5553        84.4172        86.3232
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 900
+WRITING COORDINATES TO DCD FILE AT STEP 900
+WRITING COORDINATES TO RESTART FILE AT STEP 900
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 900
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 901, bubble radius = 9.01
+TCL: step 902, bubble radius = 9.02
+TCL: step 903, bubble radius = 9.03
+TCL: step 904, bubble radius = 9.04
+TCL: step 905, bubble radius = 9.05
+TCL: step 906, bubble radius = 9.06
+TCL: step 907, bubble radius = 9.07
+TCL: step 908, bubble radius = 9.08
+TCL: step 909, bubble radius = 9.09
+TCL: step 910, bubble radius = 9.1
+TCL: step 911, bubble radius = 9.11
+TCL: step 912, bubble radius = 9.12
+TCL: step 913, bubble radius = 9.13
+TCL: step 914, bubble radius = 9.14
+TCL: step 915, bubble radius = 9.15
+TCL: step 916, bubble radius = 9.16
+TCL: step 917, bubble radius = 9.17
+TCL: step 918, bubble radius = 9.18
+TCL: step 919, bubble radius = 9.19
+TCL: step 920, bubble radius = 9.2
+TCL: step 921, bubble radius = 9.21
+TCL: step 922, bubble radius = 9.22
+TCL: step 923, bubble radius = 9.23
+TCL: step 924, bubble radius = 9.24
+TCL: step 925, bubble radius = 9.25
+TCL: step 926, bubble radius = 9.26
+TCL: step 927, bubble radius = 9.27
+TCL: step 928, bubble radius = 9.28
+TCL: step 929, bubble radius = 9.29
+TCL: step 930, bubble radius = 9.3
+TCL: step 931, bubble radius = 9.31
+TCL: step 932, bubble radius = 9.32
+TCL: step 933, bubble radius = 9.33
+TCL: step 934, bubble radius = 9.34
+TCL: step 935, bubble radius = 9.35
+TCL: step 936, bubble radius = 9.36
+TCL: step 937, bubble radius = 9.37
+TCL: step 938, bubble radius = 9.38
+TCL: step 939, bubble radius = 9.39
+TCL: step 940, bubble radius = 9.4
+TCL: step 941, bubble radius = 9.41
+TCL: step 942, bubble radius = 9.42
+TCL: step 943, bubble radius = 9.43
+TCL: step 944, bubble radius = 9.44
+TCL: step 945, bubble radius = 9.45
+TCL: step 946, bubble radius = 9.46
+TCL: step 947, bubble radius = 9.47
+TCL: step 948, bubble radius = 9.48
+TCL: step 949, bubble radius = 9.49
+TCL: step 950, bubble radius = 9.5
+TCL: step 951, bubble radius = 9.51
+TCL: step 952, bubble radius = 9.52
+TCL: step 953, bubble radius = 9.53
+TCL: step 954, bubble radius = 9.54
+TCL: step 955, bubble radius = 9.55
+TCL: step 956, bubble radius = 9.56
+TCL: step 957, bubble radius = 9.57
+TCL: step 958, bubble radius = 9.58
+TCL: step 959, bubble radius = 9.59
+TCL: step 960, bubble radius = 9.6
+TCL: step 961, bubble radius = 9.61
+TCL: step 962, bubble radius = 9.62
+TCL: step 963, bubble radius = 9.63
+TCL: step 964, bubble radius = 9.64
+TCL: step 965, bubble radius = 9.65
+TCL: step 966, bubble radius = 9.66
+TCL: step 967, bubble radius = 9.67
+TCL: step 968, bubble radius = 9.68
+TCL: step 969, bubble radius = 9.69
+TCL: step 970, bubble radius = 9.7
+TCL: step 971, bubble radius = 9.71
+TCL: step 972, bubble radius = 9.72
+TCL: step 973, bubble radius = 9.73
+TCL: step 974, bubble radius = 9.74
+TCL: step 975, bubble radius = 9.75
+TCL: step 976, bubble radius = 9.76
+TCL: step 977, bubble radius = 9.77
+TCL: step 978, bubble radius = 9.78
+TCL: step 979, bubble radius = 9.79
+TCL: step 980, bubble radius = 9.8
+TCL: step 981, bubble radius = 9.81
+TCL: step 982, bubble radius = 9.82
+TCL: step 983, bubble radius = 9.83
+TCL: step 984, bubble radius = 9.84
+TCL: step 985, bubble radius = 9.85
+TCL: step 986, bubble radius = 9.86
+TCL: step 987, bubble radius = 9.87
+TCL: step 988, bubble radius = 9.88
+TCL: step 989, bubble radius = 9.89
+TCL: step 990, bubble radius = 9.9
+TCL: step 991, bubble radius = 9.91
+TCL: step 992, bubble radius = 9.92
+TCL: step 993, bubble radius = 9.93
+TCL: step 994, bubble radius = 9.94
+TCL: step 995, bubble radius = 9.95
+TCL: step 996, bubble radius = 9.96
+TCL: step 997, bubble radius = 9.97
+TCL: step 998, bubble radius = 9.98
+TCL: step 999, bubble radius = 9.99
+TCL: step 1000, bubble radius = 10.0
+TIMING: 1000  CPU: 215.69, 0.2156/step  Wall: 218.445, 0.21631/step, 0.120172 hours remaining, 29432 kB of memory in use.
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP         TOTAL2         TOTAL3        TEMPAVG            PRESSURE      GPRESSURE         VOLUME       PRESSAVG      GPRESSAVG
+
+ENERGY:    1000      1830.9313      1059.8743         0.0000         0.0000         -24097.2444      2570.4733         0.0000         0.0000      5801.3246         -12834.6410       327.4844    -12756.3944    -12746.6124       323.4088           1473.2263       -23.2062     61491.3537        31.2672        40.8799
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1000
+WRITING COORDINATES TO DCD FILE AT STEP 1000
+WRITING COORDINATES TO RESTART FILE AT STEP 1000
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1000
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1001, bubble radius = 10.01
+TCL: step 1002, bubble radius = 10.02
+TCL: step 1003, bubble radius = 10.03
+TCL: step 1004, bubble radius = 10.04
+TCL: step 1005, bubble radius = 10.05
+TCL: step 1006, bubble radius = 10.06
+TCL: step 1007, bubble radius = 10.07
+TCL: step 1008, bubble radius = 10.08
+TCL: step 1009, bubble radius = 10.09
+TCL: step 1010, bubble radius = 10.1
+TCL: step 1011, bubble radius = 10.11
+TCL: step 1012, bubble radius = 10.12
+TCL: step 1013, bubble radius = 10.13
+TCL: step 1014, bubble radius = 10.14
+TCL: step 1015, bubble radius = 10.15
+TCL: step 1016, bubble radius = 10.16
+TCL: step 1017, bubble radius = 10.17
+TCL: step 1018, bubble radius = 10.18
+TCL: step 1019, bubble radius = 10.19
+TCL: step 1020, bubble radius = 10.2
+TCL: step 1021, bubble radius = 10.21
+TCL: step 1022, bubble radius = 10.22
+TCL: step 1023, bubble radius = 10.23
+TCL: step 1024, bubble radius = 10.24
+TCL: step 1025, bubble radius = 10.25
+TCL: step 1026, bubble radius = 10.26
+TCL: step 1027, bubble radius = 10.27
+TCL: step 1028, bubble radius = 10.28
+TCL: step 1029, bubble radius = 10.29
+TCL: step 1030, bubble radius = 10.3
+TCL: step 1031, bubble radius = 10.31
+TCL: step 1032, bubble radius = 10.32
+TCL: step 1033, bubble radius = 10.33
+TCL: step 1034, bubble radius = 10.34
+TCL: step 1035, bubble radius = 10.35
+TCL: step 1036, bubble radius = 10.36
+TCL: step 1037, bubble radius = 10.37
+TCL: step 1038, bubble radius = 10.38
+TCL: step 1039, bubble radius = 10.39
+TCL: step 1040, bubble radius = 10.4
+TCL: step 1041, bubble radius = 10.41
+TCL: step 1042, bubble radius = 10.42
+TCL: step 1043, bubble radius = 10.43
+TCL: step 1044, bubble radius = 10.44
+TCL: step 1045, bubble radius = 10.45
+TCL: step 1046, bubble radius = 10.46
+TCL: step 1047, bubble radius = 10.47
+TCL: step 1048, bubble radius = 10.48
+TCL: step 1049, bubble radius = 10.49
+TCL: step 1050, bubble radius = 10.5
+TCL: step 1051, bubble radius = 10.51
+TCL: step 1052, bubble radius = 10.52
+TCL: step 1053, bubble radius = 10.53
+TCL: step 1054, bubble radius = 10.54
+TCL: step 1055, bubble radius = 10.55
+TCL: step 1056, bubble radius = 10.56
+TCL: step 1057, bubble radius = 10.57
+TCL: step 1058, bubble radius = 10.58
+TCL: step 1059, bubble radius = 10.59
+TCL: step 1060, bubble radius = 10.6
+TCL: step 1061, bubble radius = 10.61
+TCL: step 1062, bubble radius = 10.62
+TCL: step 1063, bubble radius = 10.63
+TCL: step 1064, bubble radius = 10.64
+TCL: step 1065, bubble radius = 10.65
+TCL: step 1066, bubble radius = 10.66
+TCL: step 1067, bubble radius = 10.67
+TCL: step 1068, bubble radius = 10.68
+TCL: step 1069, bubble radius = 10.69
+TCL: step 1070, bubble radius = 10.7
+TCL: step 1071, bubble radius = 10.71
+TCL: step 1072, bubble radius = 10.72
+TCL: step 1073, bubble radius = 10.73
+TCL: step 1074, bubble radius = 10.74
+TCL: step 1075, bubble radius = 10.75
+TCL: step 1076, bubble radius = 10.76
+TCL: step 1077, bubble radius = 10.77
+TCL: step 1078, bubble radius = 10.78
+TCL: step 1079, bubble radius = 10.79
+TCL: step 1080, bubble radius = 10.8
+TCL: step 1081, bubble radius = 10.81
+TCL: step 1082, bubble radius = 10.82
+TCL: step 1083, bubble radius = 10.83
+TCL: step 1084, bubble radius = 10.84
+TCL: step 1085, bubble radius = 10.85
+TCL: step 1086, bubble radius = 10.86
+TCL: step 1087, bubble radius = 10.87
+TCL: step 1088, bubble radius = 10.88
+TCL: step 1089, bubble radius = 10.89
+TCL: step 1090, bubble radius = 10.9
+TCL: step 1091, bubble radius = 10.91
+TCL: step 1092, bubble radius = 10.92
+TCL: step 1093, bubble radius = 10.93
+TCL: step 1094, bubble radius = 10.94
+TCL: step 1095, bubble radius = 10.95
+TCL: step 1096, bubble radius = 10.96
+TCL: step 1097, bubble radius = 10.97
+TCL: step 1098, bubble radius = 10.98
+TCL: step 1099, bubble radius = 10.99
+TCL: step 1100, bubble radius = 11.0
+TIMING: 1100  CPU: 237.23, 0.2154/step  Wall: 240.052, 0.216073/step, 0.114038 hours remaining, 29432 kB of memory in use.
+ENERGY:    1100      1835.6414      1045.4927         0.0000         0.0000         -23974.8000      2607.0861         0.0000         0.0000      5873.8496         -12612.7302       331.5784    -12534.1012    -12526.3694       328.6518           1524.6551       417.4130     62657.5258       169.6626       183.8301
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1100
+WRITING COORDINATES TO DCD FILE AT STEP 1100
+WRITING COORDINATES TO RESTART FILE AT STEP 1100
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1100
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1101, bubble radius = 11.01
+TCL: step 1102, bubble radius = 11.02
+TCL: step 1103, bubble radius = 11.03
+TCL: step 1104, bubble radius = 11.04
+TCL: step 1105, bubble radius = 11.05
+TCL: step 1106, bubble radius = 11.06
+TCL: step 1107, bubble radius = 11.07
+TCL: step 1108, bubble radius = 11.08
+TCL: step 1109, bubble radius = 11.09
+TCL: step 1110, bubble radius = 11.1
+TCL: step 1111, bubble radius = 11.11
+TCL: step 1112, bubble radius = 11.12
+TCL: step 1113, bubble radius = 11.13
+TCL: step 1114, bubble radius = 11.14
+TCL: step 1115, bubble radius = 11.15
+TCL: step 1116, bubble radius = 11.16
+TCL: step 1117, bubble radius = 11.17
+TCL: step 1118, bubble radius = 11.18
+TCL: step 1119, bubble radius = 11.19
+TCL: step 1120, bubble radius = 11.2
+TCL: step 1121, bubble radius = 11.21
+TCL: step 1122, bubble radius = 11.22
+TCL: step 1123, bubble radius = 11.23
+TCL: step 1124, bubble radius = 11.24
+TCL: step 1125, bubble radius = 11.25
+TCL: step 1126, bubble radius = 11.26
+TCL: step 1127, bubble radius = 11.27
+TCL: step 1128, bubble radius = 11.28
+TCL: step 1129, bubble radius = 11.29
+TCL: step 1130, bubble radius = 11.3
+TCL: step 1131, bubble radius = 11.31
+TCL: step 1132, bubble radius = 11.32
+TCL: step 1133, bubble radius = 11.33
+TCL: step 1134, bubble radius = 11.34
+TCL: step 1135, bubble radius = 11.35
+TCL: step 1136, bubble radius = 11.36
+TCL: step 1137, bubble radius = 11.37
+TCL: step 1138, bubble radius = 11.38
+TCL: step 1139, bubble radius = 11.39
+TCL: step 1140, bubble radius = 11.4
+TCL: step 1141, bubble radius = 11.41
+TCL: step 1142, bubble radius = 11.42
+TCL: step 1143, bubble radius = 11.43
+TCL: step 1144, bubble radius = 11.44
+TCL: step 1145, bubble radius = 11.45
+TCL: step 1146, bubble radius = 11.46
+TCL: step 1147, bubble radius = 11.47
+TCL: step 1148, bubble radius = 11.48
+TCL: step 1149, bubble radius = 11.49
+TCL: step 1150, bubble radius = 11.5
+TCL: step 1151, bubble radius = 11.51
+TCL: step 1152, bubble radius = 11.52
+TCL: step 1153, bubble radius = 11.53
+TCL: step 1154, bubble radius = 11.54
+TCL: step 1155, bubble radius = 11.55
+TCL: step 1156, bubble radius = 11.56
+TCL: step 1157, bubble radius = 11.57
+TCL: step 1158, bubble radius = 11.58
+TCL: step 1159, bubble radius = 11.59
+TCL: step 1160, bubble radius = 11.6
+TCL: step 1161, bubble radius = 11.61
+TCL: step 1162, bubble radius = 11.62
+TCL: step 1163, bubble radius = 11.63
+TCL: step 1164, bubble radius = 11.64
+TCL: step 1165, bubble radius = 11.65
+TCL: step 1166, bubble radius = 11.66
+TCL: step 1167, bubble radius = 11.67
+TCL: step 1168, bubble radius = 11.68
+TCL: step 1169, bubble radius = 11.69
+TCL: step 1170, bubble radius = 11.7
+TCL: step 1171, bubble radius = 11.71
+TCL: step 1172, bubble radius = 11.72
+TCL: step 1173, bubble radius = 11.73
+TCL: step 1174, bubble radius = 11.74
+TCL: step 1175, bubble radius = 11.75
+TCL: step 1176, bubble radius = 11.76
+TCL: step 1177, bubble radius = 11.77
+TCL: step 1178, bubble radius = 11.78
+TCL: step 1179, bubble radius = 11.79
+TCL: step 1180, bubble radius = 11.8
+TCL: step 1181, bubble radius = 11.81
+TCL: step 1182, bubble radius = 11.82
+TCL: step 1183, bubble radius = 11.83
+TCL: step 1184, bubble radius = 11.84
+TCL: step 1185, bubble radius = 11.85
+TCL: step 1186, bubble radius = 11.86
+TCL: step 1187, bubble radius = 11.87
+TCL: step 1188, bubble radius = 11.88
+TCL: step 1189, bubble radius = 11.89
+TCL: step 1190, bubble radius = 11.9
+TCL: step 1191, bubble radius = 11.91
+TCL: step 1192, bubble radius = 11.92
+TCL: step 1193, bubble radius = 11.93
+TCL: step 1194, bubble radius = 11.94
+TCL: step 1195, bubble radius = 11.95
+TCL: step 1196, bubble radius = 11.96
+TCL: step 1197, bubble radius = 11.97
+TCL: step 1198, bubble radius = 11.98
+TCL: step 1199, bubble radius = 11.99
+TCL: step 1200, bubble radius = 12.0
+TIMING: 1200  CPU: 258.76, 0.2153/step  Wall: 261.642, 0.215904/step, 0.107952 hours remaining, 29432 kB of memory in use.
+ENERGY:    1200      1756.3981      1044.0645         0.0000         0.0000         -23643.3492      2478.9029         0.0000         0.0000      5969.2412         -12394.7425       336.9632    -12315.5086    -12311.8136       333.3875           2326.6244       -16.9580     64511.7208       152.5660       152.7472
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1200
+WRITING COORDINATES TO DCD FILE AT STEP 1200
+WRITING COORDINATES TO RESTART FILE AT STEP 1200
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1200
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1201, bubble radius = 12.01
+TCL: step 1202, bubble radius = 12.02
+TCL: step 1203, bubble radius = 12.03
+TCL: step 1204, bubble radius = 12.04
+TCL: step 1205, bubble radius = 12.05
+TCL: step 1206, bubble radius = 12.06
+TCL: step 1207, bubble radius = 12.07
+TCL: step 1208, bubble radius = 12.08
+TCL: step 1209, bubble radius = 12.09
+TCL: step 1210, bubble radius = 12.1
+TCL: step 1211, bubble radius = 12.11
+TCL: step 1212, bubble radius = 12.12
+TCL: step 1213, bubble radius = 12.13
+TCL: step 1214, bubble radius = 12.14
+TCL: step 1215, bubble radius = 12.15
+TCL: step 1216, bubble radius = 12.16
+TCL: step 1217, bubble radius = 12.17
+TCL: step 1218, bubble radius = 12.18
+TCL: step 1219, bubble radius = 12.19
+TCL: step 1220, bubble radius = 12.2
+TCL: step 1221, bubble radius = 12.21
+TCL: step 1222, bubble radius = 12.22
+TCL: step 1223, bubble radius = 12.23
+TCL: step 1224, bubble radius = 12.24
+TCL: step 1225, bubble radius = 12.25
+TCL: step 1226, bubble radius = 12.26
+TCL: step 1227, bubble radius = 12.27
+TCL: step 1228, bubble radius = 12.28
+TCL: step 1229, bubble radius = 12.29
+TCL: step 1230, bubble radius = 12.3
+TCL: step 1231, bubble radius = 12.31
+TCL: step 1232, bubble radius = 12.32
+TCL: step 1233, bubble radius = 12.33
+TCL: step 1234, bubble radius = 12.34
+TCL: step 1235, bubble radius = 12.35
+TCL: step 1236, bubble radius = 12.36
+TCL: step 1237, bubble radius = 12.37
+TCL: step 1238, bubble radius = 12.38
+TCL: step 1239, bubble radius = 12.39
+TCL: step 1240, bubble radius = 12.4
+TCL: step 1241, bubble radius = 12.41
+TCL: step 1242, bubble radius = 12.42
+TCL: step 1243, bubble radius = 12.43
+TCL: step 1244, bubble radius = 12.44
+TCL: step 1245, bubble radius = 12.45
+TCL: step 1246, bubble radius = 12.46
+TCL: step 1247, bubble radius = 12.47
+TCL: step 1248, bubble radius = 12.48
+TCL: step 1249, bubble radius = 12.49
+TCL: step 1250, bubble radius = 12.5
+TCL: step 1251, bubble radius = 12.51
+TCL: step 1252, bubble radius = 12.52
+TCL: step 1253, bubble radius = 12.53
+TCL: step 1254, bubble radius = 12.54
+TCL: step 1255, bubble radius = 12.55
+TCL: step 1256, bubble radius = 12.56
+TCL: step 1257, bubble radius = 12.57
+TCL: step 1258, bubble radius = 12.58
+TCL: step 1259, bubble radius = 12.59
+TCL: step 1260, bubble radius = 12.6
+TCL: step 1261, bubble radius = 12.61
+TCL: step 1262, bubble radius = 12.62
+TCL: step 1263, bubble radius = 12.63
+TCL: step 1264, bubble radius = 12.64
+TCL: step 1265, bubble radius = 12.65
+TCL: step 1266, bubble radius = 12.66
+TCL: step 1267, bubble radius = 12.67
+TCL: step 1268, bubble radius = 12.68
+TCL: step 1269, bubble radius = 12.69
+TCL: step 1270, bubble radius = 12.7
+TCL: step 1271, bubble radius = 12.71
+TCL: step 1272, bubble radius = 12.72
+TCL: step 1273, bubble radius = 12.73
+TCL: step 1274, bubble radius = 12.74
+TCL: step 1275, bubble radius = 12.75
+TCL: step 1276, bubble radius = 12.76
+TCL: step 1277, bubble radius = 12.77
+TCL: step 1278, bubble radius = 12.78
+TCL: step 1279, bubble radius = 12.79
+TCL: step 1280, bubble radius = 12.8
+TCL: step 1281, bubble radius = 12.81
+TCL: step 1282, bubble radius = 12.82
+TCL: step 1283, bubble radius = 12.83
+TCL: step 1284, bubble radius = 12.84
+TCL: step 1285, bubble radius = 12.85
+TCL: step 1286, bubble radius = 12.86
+TCL: step 1287, bubble radius = 12.87
+TCL: step 1288, bubble radius = 12.88
+TCL: step 1289, bubble radius = 12.89
+TCL: step 1290, bubble radius = 12.9
+TCL: step 1291, bubble radius = 12.91
+TCL: step 1292, bubble radius = 12.92
+TCL: step 1293, bubble radius = 12.93
+TCL: step 1294, bubble radius = 12.94
+TCL: step 1295, bubble radius = 12.95
+TCL: step 1296, bubble radius = 12.96
+TCL: step 1297, bubble radius = 12.97
+TCL: step 1298, bubble radius = 12.98
+TCL: step 1299, bubble radius = 12.99
+TCL: step 1300, bubble radius = 13.0
+TIMING: 1300  CPU: 280.23, 0.2147/step  Wall: 283.28, 0.216373/step, 0.102176 hours remaining, 29432 kB of memory in use.
+ENERGY:    1300      1764.8333      1059.7971         0.0000         0.0000         -23389.4020      2452.8844         0.0000         0.0000      5956.7584         -12155.1289       336.2586    -12071.9156    -12084.5779       337.1567           3269.0598       -76.9068     66897.4647       145.1511       120.1236
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1300
+WRITING COORDINATES TO DCD FILE AT STEP 1300
+WRITING COORDINATES TO RESTART FILE AT STEP 1300
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1300
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1301, bubble radius = 13.01
+TCL: step 1302, bubble radius = 13.02
+TCL: step 1303, bubble radius = 13.03
+TCL: step 1304, bubble radius = 13.04
+TCL: step 1305, bubble radius = 13.05
+TCL: step 1306, bubble radius = 13.06
+TCL: step 1307, bubble radius = 13.07
+TCL: step 1308, bubble radius = 13.08
+TCL: step 1309, bubble radius = 13.09
+TCL: step 1310, bubble radius = 13.1
+TCL: step 1311, bubble radius = 13.11
+TCL: step 1312, bubble radius = 13.12
+TCL: step 1313, bubble radius = 13.13
+TCL: step 1314, bubble radius = 13.14
+TCL: step 1315, bubble radius = 13.15
+TCL: step 1316, bubble radius = 13.16
+TCL: step 1317, bubble radius = 13.17
+TCL: step 1318, bubble radius = 13.18
+TCL: step 1319, bubble radius = 13.19
+TCL: step 1320, bubble radius = 13.2
+TCL: step 1321, bubble radius = 13.21
+TCL: step 1322, bubble radius = 13.22
+TCL: step 1323, bubble radius = 13.23
+TCL: step 1324, bubble radius = 13.24
+TCL: step 1325, bubble radius = 13.25
+TCL: step 1326, bubble radius = 13.26
+TCL: step 1327, bubble radius = 13.27
+TCL: step 1328, bubble radius = 13.28
+TCL: step 1329, bubble radius = 13.29
+TCL: step 1330, bubble radius = 13.3
+TCL: step 1331, bubble radius = 13.31
+TCL: step 1332, bubble radius = 13.32
+TCL: step 1333, bubble radius = 13.33
+TCL: step 1334, bubble radius = 13.34
+TCL: step 1335, bubble radius = 13.35
+TCL: step 1336, bubble radius = 13.36
+TCL: step 1337, bubble radius = 13.37
+TCL: step 1338, bubble radius = 13.38
+TCL: step 1339, bubble radius = 13.39
+TCL: step 1340, bubble radius = 13.4
+TCL: step 1341, bubble radius = 13.41
+TCL: step 1342, bubble radius = 13.42
+TCL: step 1343, bubble radius = 13.43
+TCL: step 1344, bubble radius = 13.44
+TCL: step 1345, bubble radius = 13.45
+TCL: step 1346, bubble radius = 13.46
+TCL: step 1347, bubble radius = 13.47
+TCL: step 1348, bubble radius = 13.48
+TCL: step 1349, bubble radius = 13.49
+TCL: step 1350, bubble radius = 13.5
+TCL: step 1351, bubble radius = 13.51
+TCL: step 1352, bubble radius = 13.52
+TCL: step 1353, bubble radius = 13.53
+TCL: step 1354, bubble radius = 13.54
+TCL: step 1355, bubble radius = 13.55
+TCL: step 1356, bubble radius = 13.56
+TCL: step 1357, bubble radius = 13.57
+TCL: step 1358, bubble radius = 13.58
+TCL: step 1359, bubble radius = 13.59
+TCL: step 1360, bubble radius = 13.6
+TCL: step 1361, bubble radius = 13.61
+TCL: step 1362, bubble radius = 13.62
+TCL: step 1363, bubble radius = 13.63
+TCL: step 1364, bubble radius = 13.64
+TCL: step 1365, bubble radius = 13.65
+TCL: step 1366, bubble radius = 13.66
+TCL: step 1367, bubble radius = 13.67
+TCL: step 1368, bubble radius = 13.68
+TCL: step 1369, bubble radius = 13.69
+TCL: step 1370, bubble radius = 13.7
+TCL: step 1371, bubble radius = 13.71
+TCL: step 1372, bubble radius = 13.72
+TCL: step 1373, bubble radius = 13.73
+TCL: step 1374, bubble radius = 13.74
+TCL: step 1375, bubble radius = 13.75
+TCL: step 1376, bubble radius = 13.76
+TCL: step 1377, bubble radius = 13.77
+TCL: step 1378, bubble radius = 13.78
+TCL: step 1379, bubble radius = 13.79
+TCL: step 1380, bubble radius = 13.8
+TCL: step 1381, bubble radius = 13.81
+TCL: step 1382, bubble radius = 13.82
+TCL: step 1383, bubble radius = 13.83
+TCL: step 1384, bubble radius = 13.84
+TCL: step 1385, bubble radius = 13.85
+TCL: step 1386, bubble radius = 13.86
+TCL: step 1387, bubble radius = 13.87
+TCL: step 1388, bubble radius = 13.88
+TCL: step 1389, bubble radius = 13.89
+TCL: step 1390, bubble radius = 13.9
+TCL: step 1391, bubble radius = 13.91
+TCL: step 1392, bubble radius = 13.92
+TCL: step 1393, bubble radius = 13.93
+TCL: step 1394, bubble radius = 13.94
+TCL: step 1395, bubble radius = 13.95
+TCL: step 1396, bubble radius = 13.96
+TCL: step 1397, bubble radius = 13.97
+TCL: step 1398, bubble radius = 13.98
+TCL: step 1399, bubble radius = 13.99
+TCL: step 1400, bubble radius = 14.0
+TIMING: 1400  CPU: 301.74, 0.2151/step  Wall: 304.889, 0.216094/step, 0.0960418 hours remaining, 29524 kB of memory in use.
+ENERGY:    1400      1703.5310      1130.6751         0.0000         0.0000         -23356.2417      2459.3460         0.0000         0.0000      6141.7946         -11920.8950       346.7039    -11840.0932    -11843.0114       342.9663           3266.1977       -55.0668     69000.5275       213.5282       191.3554
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1400
+WRITING COORDINATES TO DCD FILE AT STEP 1400
+WRITING COORDINATES TO RESTART FILE AT STEP 1400
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1400
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1401, bubble radius = 14.01
+TCL: step 1402, bubble radius = 14.02
+TCL: step 1403, bubble radius = 14.03
+TCL: step 1404, bubble radius = 14.04
+TCL: step 1405, bubble radius = 14.05
+TCL: step 1406, bubble radius = 14.06
+TCL: step 1407, bubble radius = 14.07
+TCL: step 1408, bubble radius = 14.08
+TCL: step 1409, bubble radius = 14.09
+TCL: step 1410, bubble radius = 14.1
+TCL: step 1411, bubble radius = 14.11
+TCL: step 1412, bubble radius = 14.12
+TCL: step 1413, bubble radius = 14.13
+TCL: step 1414, bubble radius = 14.14
+TCL: step 1415, bubble radius = 14.15
+TCL: step 1416, bubble radius = 14.16
+TCL: step 1417, bubble radius = 14.17
+TCL: step 1418, bubble radius = 14.18
+TCL: step 1419, bubble radius = 14.19
+TCL: step 1420, bubble radius = 14.2
+TCL: step 1421, bubble radius = 14.21
+TCL: step 1422, bubble radius = 14.22
+TCL: step 1423, bubble radius = 14.23
+TCL: step 1424, bubble radius = 14.24
+TCL: step 1425, bubble radius = 14.25
+TCL: step 1426, bubble radius = 14.26
+TCL: step 1427, bubble radius = 14.27
+TCL: step 1428, bubble radius = 14.28
+TCL: step 1429, bubble radius = 14.29
+TCL: step 1430, bubble radius = 14.3
+TCL: step 1431, bubble radius = 14.31
+TCL: step 1432, bubble radius = 14.32
+TCL: step 1433, bubble radius = 14.33
+TCL: step 1434, bubble radius = 14.34
+TCL: step 1435, bubble radius = 14.35
+TCL: step 1436, bubble radius = 14.36
+TCL: step 1437, bubble radius = 14.37
+TCL: step 1438, bubble radius = 14.38
+TCL: step 1439, bubble radius = 14.39
+TCL: step 1440, bubble radius = 14.4
+TCL: step 1441, bubble radius = 14.41
+TCL: step 1442, bubble radius = 14.42
+TCL: step 1443, bubble radius = 14.43
+TCL: step 1444, bubble radius = 14.44
+TCL: step 1445, bubble radius = 14.45
+TCL: step 1446, bubble radius = 14.46
+TCL: step 1447, bubble radius = 14.47
+TCL: step 1448, bubble radius = 14.48
+TCL: step 1449, bubble radius = 14.49
+TCL: step 1450, bubble radius = 14.5
+TCL: step 1451, bubble radius = 14.51
+TCL: step 1452, bubble radius = 14.52
+TCL: step 1453, bubble radius = 14.53
+TCL: step 1454, bubble radius = 14.54
+TCL: step 1455, bubble radius = 14.55
+TCL: step 1456, bubble radius = 14.56
+TCL: step 1457, bubble radius = 14.57
+TCL: step 1458, bubble radius = 14.58
+TCL: step 1459, bubble radius = 14.59
+TCL: step 1460, bubble radius = 14.6
+TCL: step 1461, bubble radius = 14.61
+TCL: step 1462, bubble radius = 14.62
+TCL: step 1463, bubble radius = 14.63
+TCL: step 1464, bubble radius = 14.64
+TCL: step 1465, bubble radius = 14.65
+TCL: step 1466, bubble radius = 14.66
+TCL: step 1467, bubble radius = 14.67
+TCL: step 1468, bubble radius = 14.68
+TCL: step 1469, bubble radius = 14.69
+TCL: step 1470, bubble radius = 14.7
+TCL: step 1471, bubble radius = 14.71
+TCL: step 1472, bubble radius = 14.72
+TCL: step 1473, bubble radius = 14.73
+TCL: step 1474, bubble radius = 14.74
+TCL: step 1475, bubble radius = 14.75
+TCL: step 1476, bubble radius = 14.76
+TCL: step 1477, bubble radius = 14.77
+TCL: step 1478, bubble radius = 14.78
+TCL: step 1479, bubble radius = 14.79
+TCL: step 1480, bubble radius = 14.8
+TCL: step 1481, bubble radius = 14.81
+TCL: step 1482, bubble radius = 14.82
+TCL: step 1483, bubble radius = 14.83
+TCL: step 1484, bubble radius = 14.84
+TCL: step 1485, bubble radius = 14.85
+TCL: step 1486, bubble radius = 14.86
+TCL: step 1487, bubble radius = 14.87
+TCL: step 1488, bubble radius = 14.88
+TCL: step 1489, bubble radius = 14.89
+TCL: step 1490, bubble radius = 14.9
+TCL: step 1491, bubble radius = 14.91
+TCL: step 1492, bubble radius = 14.92
+TCL: step 1493, bubble radius = 14.93
+TCL: step 1494, bubble radius = 14.94
+TCL: step 1495, bubble radius = 14.95
+TCL: step 1496, bubble radius = 14.96
+TCL: step 1497, bubble radius = 14.97
+TCL: step 1498, bubble radius = 14.98
+TCL: step 1499, bubble radius = 14.99
+TCL: step 1500, bubble radius = 15.0
+TIMING: 1500  CPU: 323.22, 0.2148/step  Wall: 326.574, 0.21685/step, 0.0903544 hours remaining, 29616 kB of memory in use.
+ENERGY:    1500      1729.9562      1079.1500         0.0000         0.0000         -23281.0074      2530.7881         0.0000         0.0000      6308.9463         -11632.1668       356.1396    -11551.2033    -11555.2661       350.1902           2927.5136       474.4787     71289.3962       161.1332       145.0452
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1500
+WRITING COORDINATES TO DCD FILE AT STEP 1500
+WRITING COORDINATES TO RESTART FILE AT STEP 1500
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1500
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1501, bubble radius = 15.
+TCL: step 1502, bubble radius = 15.
+TCL: step 1503, bubble radius = 15.
+TCL: step 1504, bubble radius = 15.
+TCL: step 1505, bubble radius = 15.
+TCL: step 1506, bubble radius = 15.
+TCL: step 1507, bubble radius = 15.
+TCL: step 1508, bubble radius = 15.
+TCL: step 1509, bubble radius = 15.
+TCL: step 1510, bubble radius = 15.
+TCL: step 1511, bubble radius = 15.
+TCL: step 1512, bubble radius = 15.
+TCL: step 1513, bubble radius = 15.
+TCL: step 1514, bubble radius = 15.
+TCL: step 1515, bubble radius = 15.
+TCL: step 1516, bubble radius = 15.
+TCL: step 1517, bubble radius = 15.
+TCL: step 1518, bubble radius = 15.
+TCL: step 1519, bubble radius = 15.
+TCL: step 1520, bubble radius = 15.
+TCL: step 1521, bubble radius = 15.
+TCL: step 1522, bubble radius = 15.
+TCL: step 1523, bubble radius = 15.
+TCL: step 1524, bubble radius = 15.
+TCL: step 1525, bubble radius = 15.
+TCL: step 1526, bubble radius = 15.
+TCL: step 1527, bubble radius = 15.
+TCL: step 1528, bubble radius = 15.
+TCL: step 1529, bubble radius = 15.
+TCL: step 1530, bubble radius = 15.
+TCL: step 1531, bubble radius = 15.
+TCL: step 1532, bubble radius = 15.
+TCL: step 1533, bubble radius = 15.
+TCL: step 1534, bubble radius = 15.
+TCL: step 1535, bubble radius = 15.
+TCL: step 1536, bubble radius = 15.
+TCL: step 1537, bubble radius = 15.
+TCL: step 1538, bubble radius = 15.
+TCL: step 1539, bubble radius = 15.
+TCL: step 1540, bubble radius = 15.
+TCL: step 1541, bubble radius = 15.
+TCL: step 1542, bubble radius = 15.
+TCL: step 1543, bubble radius = 15.
+TCL: step 1544, bubble radius = 15.
+TCL: step 1545, bubble radius = 15.
+TCL: step 1546, bubble radius = 15.
+TCL: step 1547, bubble radius = 15.
+TCL: step 1548, bubble radius = 15.
+TCL: step 1549, bubble radius = 15.
+TCL: step 1550, bubble radius = 15.
+TCL: step 1551, bubble radius = 15.
+TCL: step 1552, bubble radius = 15.
+TCL: step 1553, bubble radius = 15.
+TCL: step 1554, bubble radius = 15.
+TCL: step 1555, bubble radius = 15.
+TCL: step 1556, bubble radius = 15.
+TCL: step 1557, bubble radius = 15.
+TCL: step 1558, bubble radius = 15.
+TCL: step 1559, bubble radius = 15.
+TCL: step 1560, bubble radius = 15.
+TCL: step 1561, bubble radius = 15.
+TCL: step 1562, bubble radius = 15.
+TCL: step 1563, bubble radius = 15.
+TCL: step 1564, bubble radius = 15.
+TCL: step 1565, bubble radius = 15.
+TCL: step 1566, bubble radius = 15.
+TCL: step 1567, bubble radius = 15.
+TCL: step 1568, bubble radius = 15.
+TCL: step 1569, bubble radius = 15.
+TCL: step 1570, bubble radius = 15.
+TCL: step 1571, bubble radius = 15.
+TCL: step 1572, bubble radius = 15.
+TCL: step 1573, bubble radius = 15.
+TCL: step 1574, bubble radius = 15.
+TCL: step 1575, bubble radius = 15.
+TCL: step 1576, bubble radius = 15.
+TCL: step 1577, bubble radius = 15.
+TCL: step 1578, bubble radius = 15.
+TCL: step 1579, bubble radius = 15.
+TCL: step 1580, bubble radius = 15.
+TCL: step 1581, bubble radius = 15.
+TCL: step 1582, bubble radius = 15.
+TCL: step 1583, bubble radius = 15.
+TCL: step 1584, bubble radius = 15.
+TCL: step 1585, bubble radius = 15.
+TCL: step 1586, bubble radius = 15.
+TCL: step 1587, bubble radius = 15.
+TCL: step 1588, bubble radius = 15.
+TCL: step 1589, bubble radius = 15.
+TCL: step 1590, bubble radius = 15.
+TCL: step 1591, bubble radius = 15.
+TCL: step 1592, bubble radius = 15.
+TCL: step 1593, bubble radius = 15.
+TCL: step 1594, bubble radius = 15.
+TCL: step 1595, bubble radius = 15.
+TCL: step 1596, bubble radius = 15.
+TCL: step 1597, bubble radius = 15.
+TCL: step 1598, bubble radius = 15.
+TCL: step 1599, bubble radius = 15.
+TCL: step 1600, bubble radius = 15.
+TIMING: 1600  CPU: 344.5, 0.2128/step  Wall: 348.004, 0.214296/step, 0.0833375 hours remaining, 29756 kB of memory in use.
+ENERGY:    1600      1747.2585      1063.8649         0.0000         0.0000         -22886.9568      2330.8862         0.0000         0.0000      6019.2474         -11725.6997       339.7861    -11648.9507    -11638.2380       348.6695           1046.6441      -365.3269     74069.0532       223.4702       230.9129
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1600
+WRITING COORDINATES TO DCD FILE AT STEP 1600
+WRITING COORDINATES TO RESTART FILE AT STEP 1600
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1600
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1601, bubble radius = 15.
+TCL: step 1602, bubble radius = 15.
+TCL: step 1603, bubble radius = 15.
+TCL: step 1604, bubble radius = 15.
+TCL: step 1605, bubble radius = 15.
+TCL: step 1606, bubble radius = 15.
+TCL: step 1607, bubble radius = 15.
+TCL: step 1608, bubble radius = 15.
+TCL: step 1609, bubble radius = 15.
+TCL: step 1610, bubble radius = 15.
+TCL: step 1611, bubble radius = 15.
+TCL: step 1612, bubble radius = 15.
+TCL: step 1613, bubble radius = 15.
+TCL: step 1614, bubble radius = 15.
+TCL: step 1615, bubble radius = 15.
+TCL: step 1616, bubble radius = 15.
+TCL: step 1617, bubble radius = 15.
+TCL: step 1618, bubble radius = 15.
+TCL: step 1619, bubble radius = 15.
+TCL: step 1620, bubble radius = 15.
+TCL: step 1621, bubble radius = 15.
+TCL: step 1622, bubble radius = 15.
+TCL: step 1623, bubble radius = 15.
+TCL: step 1624, bubble radius = 15.
+TCL: step 1625, bubble radius = 15.
+TCL: step 1626, bubble radius = 15.
+TCL: step 1627, bubble radius = 15.
+TCL: step 1628, bubble radius = 15.
+TCL: step 1629, bubble radius = 15.
+TCL: step 1630, bubble radius = 15.
+TCL: step 1631, bubble radius = 15.
+TCL: step 1632, bubble radius = 15.
+TCL: step 1633, bubble radius = 15.
+TCL: step 1634, bubble radius = 15.
+TCL: step 1635, bubble radius = 15.
+TCL: step 1636, bubble radius = 15.
+TCL: step 1637, bubble radius = 15.
+TCL: step 1638, bubble radius = 15.
+TCL: step 1639, bubble radius = 15.
+TCL: step 1640, bubble radius = 15.
+TCL: step 1641, bubble radius = 15.
+TCL: step 1642, bubble radius = 15.
+TCL: step 1643, bubble radius = 15.
+TCL: step 1644, bubble radius = 15.
+TCL: step 1645, bubble radius = 15.
+TCL: step 1646, bubble radius = 15.
+TCL: step 1647, bubble radius = 15.
+TCL: step 1648, bubble radius = 15.
+TCL: step 1649, bubble radius = 15.
+TCL: step 1650, bubble radius = 15.
+TCL: step 1651, bubble radius = 15.
+TCL: step 1652, bubble radius = 15.
+TCL: step 1653, bubble radius = 15.
+TCL: step 1654, bubble radius = 15.
+TCL: step 1655, bubble radius = 15.
+TCL: step 1656, bubble radius = 15.
+TCL: step 1657, bubble radius = 15.
+TCL: step 1658, bubble radius = 15.
+TCL: step 1659, bubble radius = 15.
+TCL: step 1660, bubble radius = 15.
+TCL: step 1661, bubble radius = 15.
+TCL: step 1662, bubble radius = 15.
+TCL: step 1663, bubble radius = 15.
+TCL: step 1664, bubble radius = 15.
+TCL: step 1665, bubble radius = 15.
+TCL: step 1666, bubble radius = 15.
+TCL: step 1667, bubble radius = 15.
+TCL: step 1668, bubble radius = 15.
+TCL: step 1669, bubble radius = 15.
+TCL: step 1670, bubble radius = 15.
+TCL: step 1671, bubble radius = 15.
+TCL: step 1672, bubble radius = 15.
+TCL: step 1673, bubble radius = 15.
+TCL: step 1674, bubble radius = 15.
+TCL: step 1675, bubble radius = 15.
+TCL: step 1676, bubble radius = 15.
+TCL: step 1677, bubble radius = 15.
+TCL: step 1678, bubble radius = 15.
+TCL: step 1679, bubble radius = 15.
+TCL: step 1680, bubble radius = 15.
+TCL: step 1681, bubble radius = 15.
+TCL: step 1682, bubble radius = 15.
+TCL: step 1683, bubble radius = 15.
+TCL: step 1684, bubble radius = 15.
+TCL: step 1685, bubble radius = 15.
+TCL: step 1686, bubble radius = 15.
+TCL: step 1687, bubble radius = 15.
+TCL: step 1688, bubble radius = 15.
+TCL: step 1689, bubble radius = 15.
+TCL: step 1690, bubble radius = 15.
+TCL: step 1691, bubble radius = 15.
+TCL: step 1692, bubble radius = 15.
+TCL: step 1693, bubble radius = 15.
+TCL: step 1694, bubble radius = 15.
+TCL: step 1695, bubble radius = 15.
+TCL: step 1696, bubble radius = 15.
+TCL: step 1697, bubble radius = 15.
+TCL: step 1698, bubble radius = 15.
+TCL: step 1699, bubble radius = 15.
+TCL: step 1700, bubble radius = 15.
+TIMING: 1700  CPU: 365.64, 0.2114/step  Wall: 369.394, 0.213897/step, 0.0772407 hours remaining, 29848 kB of memory in use.
+ENERGY:    1700      1811.0254      1122.1025         0.0000         0.0000         -23214.3849      2564.9266         0.0000         0.0000      5889.3643         -11826.9661       332.4542    -11748.7384    -11744.9149       337.8564           1513.8378       431.8944     74748.1955       -32.8208       -26.8370
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1700
+WRITING COORDINATES TO DCD FILE AT STEP 1700
+WRITING COORDINATES TO RESTART FILE AT STEP 1700
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1700
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1701, bubble radius = 15.
+TCL: step 1702, bubble radius = 15.
+TCL: step 1703, bubble radius = 15.
+TCL: step 1704, bubble radius = 15.
+TCL: step 1705, bubble radius = 15.
+TCL: step 1706, bubble radius = 15.
+TCL: step 1707, bubble radius = 15.
+TCL: step 1708, bubble radius = 15.
+TCL: step 1709, bubble radius = 15.
+TCL: step 1710, bubble radius = 15.
+TCL: step 1711, bubble radius = 15.
+TCL: step 1712, bubble radius = 15.
+TCL: step 1713, bubble radius = 15.
+TCL: step 1714, bubble radius = 15.
+TCL: step 1715, bubble radius = 15.
+TCL: step 1716, bubble radius = 15.
+TCL: step 1717, bubble radius = 15.
+TCL: step 1718, bubble radius = 15.
+TCL: step 1719, bubble radius = 15.
+TCL: step 1720, bubble radius = 15.
+TCL: step 1721, bubble radius = 15.
+TCL: step 1722, bubble radius = 15.
+TCL: step 1723, bubble radius = 15.
+TCL: step 1724, bubble radius = 15.
+TCL: step 1725, bubble radius = 15.
+TCL: step 1726, bubble radius = 15.
+TCL: step 1727, bubble radius = 15.
+TCL: step 1728, bubble radius = 15.
+TCL: step 1729, bubble radius = 15.
+TCL: step 1730, bubble radius = 15.
+TCL: step 1731, bubble radius = 15.
+TCL: step 1732, bubble radius = 15.
+TCL: step 1733, bubble radius = 15.
+TCL: step 1734, bubble radius = 15.
+TCL: step 1735, bubble radius = 15.
+TCL: step 1736, bubble radius = 15.
+TCL: step 1737, bubble radius = 15.
+TCL: step 1738, bubble radius = 15.
+TCL: step 1739, bubble radius = 15.
+TCL: step 1740, bubble radius = 15.
+TCL: step 1741, bubble radius = 15.
+TCL: step 1742, bubble radius = 15.
+TCL: step 1743, bubble radius = 15.
+TCL: step 1744, bubble radius = 15.
+TCL: step 1745, bubble radius = 15.
+TCL: step 1746, bubble radius = 15.
+TCL: step 1747, bubble radius = 15.
+TCL: step 1748, bubble radius = 15.
+TCL: step 1749, bubble radius = 15.
+TCL: step 1750, bubble radius = 15.
+TCL: step 1751, bubble radius = 15.
+TCL: step 1752, bubble radius = 15.
+TCL: step 1753, bubble radius = 15.
+TCL: step 1754, bubble radius = 15.
+TCL: step 1755, bubble radius = 15.
+TCL: step 1756, bubble radius = 15.
+TCL: step 1757, bubble radius = 15.
+TCL: step 1758, bubble radius = 15.
+TCL: step 1759, bubble radius = 15.
+TCL: step 1760, bubble radius = 15.
+TCL: step 1761, bubble radius = 15.
+TCL: step 1762, bubble radius = 15.
+TCL: step 1763, bubble radius = 15.
+TCL: step 1764, bubble radius = 15.
+TCL: step 1765, bubble radius = 15.
+TCL: step 1766, bubble radius = 15.
+TCL: step 1767, bubble radius = 15.
+TCL: step 1768, bubble radius = 15.
+TCL: step 1769, bubble radius = 15.
+TCL: step 1770, bubble radius = 15.
+TCL: step 1771, bubble radius = 15.
+TCL: step 1772, bubble radius = 15.
+TCL: step 1773, bubble radius = 15.
+TCL: step 1774, bubble radius = 15.
+TCL: step 1775, bubble radius = 15.
+TCL: step 1776, bubble radius = 15.
+TCL: step 1777, bubble radius = 15.
+TCL: step 1778, bubble radius = 15.
+TCL: step 1779, bubble radius = 15.
+TCL: step 1780, bubble radius = 15.
+TCL: step 1781, bubble radius = 15.
+TCL: step 1782, bubble radius = 15.
+TCL: step 1783, bubble radius = 15.
+TCL: step 1784, bubble radius = 15.
+TCL: step 1785, bubble radius = 15.
+TCL: step 1786, bubble radius = 15.
+TCL: step 1787, bubble radius = 15.
+TCL: step 1788, bubble radius = 15.
+TCL: step 1789, bubble radius = 15.
+TCL: step 1790, bubble radius = 15.
+TCL: step 1791, bubble radius = 15.
+TCL: step 1792, bubble radius = 15.
+TCL: step 1793, bubble radius = 15.
+TCL: step 1794, bubble radius = 15.
+TCL: step 1795, bubble radius = 15.
+TCL: step 1796, bubble radius = 15.
+TCL: step 1797, bubble radius = 15.
+TCL: step 1798, bubble radius = 15.
+TCL: step 1799, bubble radius = 15.
+TCL: step 1800, bubble radius = 15.
+TIMING: 1800  CPU: 386.65, 0.2101/step  Wall: 390.524, 0.211304/step, 0.0704346 hours remaining, 29848 kB of memory in use.
+ENERGY:    1800      1805.5219      1073.3865         0.0000         0.0000         -23079.7415      2504.7806         0.0000         0.0000      5764.0855         -11931.9670       325.3822    -11854.0798    -11848.3154       331.2907           1598.2395       172.9039     75932.4600       -59.4910       -67.2036
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1800
+WRITING COORDINATES TO DCD FILE AT STEP 1800
+WRITING COORDINATES TO RESTART FILE AT STEP 1800
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1800
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1801, bubble radius = 15.
+TCL: step 1802, bubble radius = 15.
+TCL: step 1803, bubble radius = 15.
+TCL: step 1804, bubble radius = 15.
+TCL: step 1805, bubble radius = 15.
+TCL: step 1806, bubble radius = 15.
+TCL: step 1807, bubble radius = 15.
+TCL: step 1808, bubble radius = 15.
+TCL: step 1809, bubble radius = 15.
+TCL: step 1810, bubble radius = 15.
+TCL: step 1811, bubble radius = 15.
+TCL: step 1812, bubble radius = 15.
+TCL: step 1813, bubble radius = 15.
+TCL: step 1814, bubble radius = 15.
+TCL: step 1815, bubble radius = 15.
+TCL: step 1816, bubble radius = 15.
+TCL: step 1817, bubble radius = 15.
+TCL: step 1818, bubble radius = 15.
+TCL: step 1819, bubble radius = 15.
+TCL: step 1820, bubble radius = 15.
+TCL: step 1821, bubble radius = 15.
+TCL: step 1822, bubble radius = 15.
+TCL: step 1823, bubble radius = 15.
+TCL: step 1824, bubble radius = 15.
+TCL: step 1825, bubble radius = 15.
+TCL: step 1826, bubble radius = 15.
+TCL: step 1827, bubble radius = 15.
+TCL: step 1828, bubble radius = 15.
+TCL: step 1829, bubble radius = 15.
+TCL: step 1830, bubble radius = 15.
+TCL: step 1831, bubble radius = 15.
+TCL: step 1832, bubble radius = 15.
+TCL: step 1833, bubble radius = 15.
+TCL: step 1834, bubble radius = 15.
+TCL: step 1835, bubble radius = 15.
+TCL: step 1836, bubble radius = 15.
+TCL: step 1837, bubble radius = 15.
+TCL: step 1838, bubble radius = 15.
+TCL: step 1839, bubble radius = 15.
+TCL: step 1840, bubble radius = 15.
+TCL: step 1841, bubble radius = 15.
+TCL: step 1842, bubble radius = 15.
+TCL: step 1843, bubble radius = 15.
+TCL: step 1844, bubble radius = 15.
+TCL: step 1845, bubble radius = 15.
+TCL: step 1846, bubble radius = 15.
+TCL: step 1847, bubble radius = 15.
+TCL: step 1848, bubble radius = 15.
+TCL: step 1849, bubble radius = 15.
+TCL: step 1850, bubble radius = 15.
+TCL: step 1851, bubble radius = 15.
+TCL: step 1852, bubble radius = 15.
+TCL: step 1853, bubble radius = 15.
+TCL: step 1854, bubble radius = 15.
+TCL: step 1855, bubble radius = 15.
+TCL: step 1856, bubble radius = 15.
+TCL: step 1857, bubble radius = 15.
+TCL: step 1858, bubble radius = 15.
+TCL: step 1859, bubble radius = 15.
+TCL: step 1860, bubble radius = 15.
+TCL: step 1861, bubble radius = 15.
+TCL: step 1862, bubble radius = 15.
+TCL: step 1863, bubble radius = 15.
+TCL: step 1864, bubble radius = 15.
+TCL: step 1865, bubble radius = 15.
+TCL: step 1866, bubble radius = 15.
+TCL: step 1867, bubble radius = 15.
+TCL: step 1868, bubble radius = 15.
+TCL: step 1869, bubble radius = 15.
+TCL: step 1870, bubble radius = 15.
+TCL: step 1871, bubble radius = 15.
+TCL: step 1872, bubble radius = 15.
+TCL: step 1873, bubble radius = 15.
+TCL: step 1874, bubble radius = 15.
+TCL: step 1875, bubble radius = 15.
+TCL: step 1876, bubble radius = 15.
+TCL: step 1877, bubble radius = 15.
+TCL: step 1878, bubble radius = 15.
+TCL: step 1879, bubble radius = 15.
+TCL: step 1880, bubble radius = 15.
+TCL: step 1881, bubble radius = 15.
+TCL: step 1882, bubble radius = 15.
+TCL: step 1883, bubble radius = 15.
+TCL: step 1884, bubble radius = 15.
+TCL: step 1885, bubble radius = 15.
+TCL: step 1886, bubble radius = 15.
+TCL: step 1887, bubble radius = 15.
+TCL: step 1888, bubble radius = 15.
+TCL: step 1889, bubble radius = 15.
+TCL: step 1890, bubble radius = 15.
+TCL: step 1891, bubble radius = 15.
+TCL: step 1892, bubble radius = 15.
+TCL: step 1893, bubble radius = 15.
+TCL: step 1894, bubble radius = 15.
+TCL: step 1895, bubble radius = 15.
+TCL: step 1896, bubble radius = 15.
+TCL: step 1897, bubble radius = 15.
+TCL: step 1898, bubble radius = 15.
+TCL: step 1899, bubble radius = 15.
+TCL: step 1900, bubble radius = 15.
+TIMING: 1900  CPU: 407.55, 0.209/step  Wall: 411.603, 0.210788/step, 0.0644075 hours remaining, 29940 kB of memory in use.
+ENERGY:    1900      1773.3373      1056.1467         0.0000         0.0000         -23099.0337      2526.1362         0.0000         0.0000      5750.4348         -11992.9787       324.6116    -11911.7937    -11918.6260       325.7282           2308.4628       243.5414     76441.9658       -18.5535       -13.0995
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 1900
+WRITING COORDINATES TO DCD FILE AT STEP 1900
+WRITING COORDINATES TO RESTART FILE AT STEP 1900
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 1900
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 1901, bubble radius = 15.
+TCL: step 1902, bubble radius = 15.
+TCL: step 1903, bubble radius = 15.
+TCL: step 1904, bubble radius = 15.
+TCL: step 1905, bubble radius = 15.
+TCL: step 1906, bubble radius = 15.
+TCL: step 1907, bubble radius = 15.
+TCL: step 1908, bubble radius = 15.
+TCL: step 1909, bubble radius = 15.
+TCL: step 1910, bubble radius = 15.
+TCL: step 1911, bubble radius = 15.
+TCL: step 1912, bubble radius = 15.
+TCL: step 1913, bubble radius = 15.
+TCL: step 1914, bubble radius = 15.
+TCL: step 1915, bubble radius = 15.
+TCL: step 1916, bubble radius = 15.
+TCL: step 1917, bubble radius = 15.
+TCL: step 1918, bubble radius = 15.
+TCL: step 1919, bubble radius = 15.
+TCL: step 1920, bubble radius = 15.
+TCL: step 1921, bubble radius = 15.
+TCL: step 1922, bubble radius = 15.
+TCL: step 1923, bubble radius = 15.
+TCL: step 1924, bubble radius = 15.
+TCL: step 1925, bubble radius = 15.
+TCL: step 1926, bubble radius = 15.
+TCL: step 1927, bubble radius = 15.
+TCL: step 1928, bubble radius = 15.
+TCL: step 1929, bubble radius = 15.
+TCL: step 1930, bubble radius = 15.
+TCL: step 1931, bubble radius = 15.
+TCL: step 1932, bubble radius = 15.
+TCL: step 1933, bubble radius = 15.
+TCL: step 1934, bubble radius = 15.
+TCL: step 1935, bubble radius = 15.
+TCL: step 1936, bubble radius = 15.
+TCL: step 1937, bubble radius = 15.
+TCL: step 1938, bubble radius = 15.
+TCL: step 1939, bubble radius = 15.
+TCL: step 1940, bubble radius = 15.
+TCL: step 1941, bubble radius = 15.
+TCL: step 1942, bubble radius = 15.
+TCL: step 1943, bubble radius = 15.
+TCL: step 1944, bubble radius = 15.
+TCL: step 1945, bubble radius = 15.
+TCL: step 1946, bubble radius = 15.
+TCL: step 1947, bubble radius = 15.
+TCL: step 1948, bubble radius = 15.
+TCL: step 1949, bubble radius = 15.
+TCL: step 1950, bubble radius = 15.
+TCL: step 1951, bubble radius = 15.
+TCL: step 1952, bubble radius = 15.
+TCL: step 1953, bubble radius = 15.
+TCL: step 1954, bubble radius = 15.
+TCL: step 1955, bubble radius = 15.
+TCL: step 1956, bubble radius = 15.
+TCL: step 1957, bubble radius = 15.
+TCL: step 1958, bubble radius = 15.
+TCL: step 1959, bubble radius = 15.
+TCL: step 1960, bubble radius = 15.
+TCL: step 1961, bubble radius = 15.
+TCL: step 1962, bubble radius = 15.
+TCL: step 1963, bubble radius = 15.
+TCL: step 1964, bubble radius = 15.
+TCL: step 1965, bubble radius = 15.
+TCL: step 1966, bubble radius = 15.
+TCL: step 1967, bubble radius = 15.
+TCL: step 1968, bubble radius = 15.
+TCL: step 1969, bubble radius = 15.
+TCL: step 1970, bubble radius = 15.
+TCL: step 1971, bubble radius = 15.
+TCL: step 1972, bubble radius = 15.
+TCL: step 1973, bubble radius = 15.
+TCL: step 1974, bubble radius = 15.
+TCL: step 1975, bubble radius = 15.
+TCL: step 1976, bubble radius = 15.
+TCL: step 1977, bubble radius = 15.
+TCL: step 1978, bubble radius = 15.
+TCL: step 1979, bubble radius = 15.
+TCL: step 1980, bubble radius = 15.
+TCL: step 1981, bubble radius = 15.
+TCL: step 1982, bubble radius = 15.
+TCL: step 1983, bubble radius = 15.
+TCL: step 1984, bubble radius = 15.
+TCL: step 1985, bubble radius = 15.
+TCL: step 1986, bubble radius = 15.
+TCL: step 1987, bubble radius = 15.
+TCL: step 1988, bubble radius = 15.
+TCL: step 1989, bubble radius = 15.
+TCL: step 1990, bubble radius = 15.
+TCL: step 1991, bubble radius = 15.
+TCL: step 1992, bubble radius = 15.
+TCL: step 1993, bubble radius = 15.
+TCL: step 1994, bubble radius = 15.
+TCL: step 1995, bubble radius = 15.
+TCL: step 1996, bubble radius = 15.
+TCL: step 1997, bubble radius = 15.
+TCL: step 1998, bubble radius = 15.
+TCL: step 1999, bubble radius = 15.
+TCL: step 2000, bubble radius = 15.
+TIMING: 2000  CPU: 428.46, 0.2091/step  Wall: 432.723, 0.211206/step, 0.0586683 hours remaining, 30032 kB of memory in use.
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP         TOTAL2         TOTAL3        TEMPAVG            PRESSURE      GPRESSURE         VOLUME       PRESSAVG      GPRESSAVG
+
+ENERGY:    2000      1739.7700      1112.8573         0.0000         0.0000         -23153.3524      2529.2400         0.0000         0.0000      5700.6191         -12070.8660       321.7995    -11990.2529    -11995.4385       322.2043           2678.6761        93.4404     77020.4163      -129.8031      -140.6649
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2000
+WRITING COORDINATES TO DCD FILE AT STEP 2000
+WRITING COORDINATES TO RESTART FILE AT STEP 2000
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2000
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2001, bubble radius = 15.
+TCL: step 2002, bubble radius = 15.
+TCL: step 2003, bubble radius = 15.
+TCL: step 2004, bubble radius = 15.
+TCL: step 2005, bubble radius = 15.
+TCL: step 2006, bubble radius = 15.
+TCL: step 2007, bubble radius = 15.
+TCL: step 2008, bubble radius = 15.
+TCL: step 2009, bubble radius = 15.
+TCL: step 2010, bubble radius = 15.
+TCL: step 2011, bubble radius = 15.
+TCL: step 2012, bubble radius = 15.
+TCL: step 2013, bubble radius = 15.
+TCL: step 2014, bubble radius = 15.
+TCL: step 2015, bubble radius = 15.
+TCL: step 2016, bubble radius = 15.
+TCL: step 2017, bubble radius = 15.
+TCL: step 2018, bubble radius = 15.
+TCL: step 2019, bubble radius = 15.
+TCL: step 2020, bubble radius = 15.
+TCL: step 2021, bubble radius = 15.
+TCL: step 2022, bubble radius = 15.
+TCL: step 2023, bubble radius = 15.
+TCL: step 2024, bubble radius = 15.
+TCL: step 2025, bubble radius = 15.
+TCL: step 2026, bubble radius = 15.
+TCL: step 2027, bubble radius = 15.
+TCL: step 2028, bubble radius = 15.
+TCL: step 2029, bubble radius = 15.
+TCL: step 2030, bubble radius = 15.
+TCL: step 2031, bubble radius = 15.
+TCL: step 2032, bubble radius = 15.
+TCL: step 2033, bubble radius = 15.
+TCL: step 2034, bubble radius = 15.
+TCL: step 2035, bubble radius = 15.
+TCL: step 2036, bubble radius = 15.
+TCL: step 2037, bubble radius = 15.
+TCL: step 2038, bubble radius = 15.
+TCL: step 2039, bubble radius = 15.
+TCL: step 2040, bubble radius = 15.
+TCL: step 2041, bubble radius = 15.
+TCL: step 2042, bubble radius = 15.
+TCL: step 2043, bubble radius = 15.
+TCL: step 2044, bubble radius = 15.
+TCL: step 2045, bubble radius = 15.
+TCL: step 2046, bubble radius = 15.
+TCL: step 2047, bubble radius = 15.
+TCL: step 2048, bubble radius = 15.
+TCL: step 2049, bubble radius = 15.
+TCL: step 2050, bubble radius = 15.
+TCL: step 2051, bubble radius = 15.
+TCL: step 2052, bubble radius = 15.
+TCL: step 2053, bubble radius = 15.
+TCL: step 2054, bubble radius = 15.
+TCL: step 2055, bubble radius = 15.
+TCL: step 2056, bubble radius = 15.
+TCL: step 2057, bubble radius = 15.
+TCL: step 2058, bubble radius = 15.
+TCL: step 2059, bubble radius = 15.
+TCL: step 2060, bubble radius = 15.
+TCL: step 2061, bubble radius = 15.
+TCL: step 2062, bubble radius = 15.
+TCL: step 2063, bubble radius = 15.
+TCL: step 2064, bubble radius = 15.
+TCL: step 2065, bubble radius = 15.
+TCL: step 2066, bubble radius = 15.
+TCL: step 2067, bubble radius = 15.
+TCL: step 2068, bubble radius = 15.
+TCL: step 2069, bubble radius = 15.
+TCL: step 2070, bubble radius = 15.
+TCL: step 2071, bubble radius = 15.
+TCL: step 2072, bubble radius = 15.
+TCL: step 2073, bubble radius = 15.
+TCL: step 2074, bubble radius = 15.
+TCL: step 2075, bubble radius = 15.
+TCL: step 2076, bubble radius = 15.
+TCL: step 2077, bubble radius = 15.
+TCL: step 2078, bubble radius = 15.
+TCL: step 2079, bubble radius = 15.
+TCL: step 2080, bubble radius = 15.
+TCL: step 2081, bubble radius = 15.
+TCL: step 2082, bubble radius = 15.
+TCL: step 2083, bubble radius = 15.
+TCL: step 2084, bubble radius = 15.
+TCL: step 2085, bubble radius = 15.
+TCL: step 2086, bubble radius = 15.
+TCL: step 2087, bubble radius = 15.
+TCL: step 2088, bubble radius = 15.
+TCL: step 2089, bubble radius = 15.
+TCL: step 2090, bubble radius = 15.
+TCL: step 2091, bubble radius = 15.
+TCL: step 2092, bubble radius = 15.
+TCL: step 2093, bubble radius = 15.
+TCL: step 2094, bubble radius = 15.
+TCL: step 2095, bubble radius = 15.
+TCL: step 2096, bubble radius = 15.
+TCL: step 2097, bubble radius = 15.
+TCL: step 2098, bubble radius = 15.
+TCL: step 2099, bubble radius = 15.
+TCL: step 2100, bubble radius = 15.
+TIMING: 2100  CPU: 449.34, 0.2088/step  Wall: 453.762, 0.210388/step, 0.0525969 hours remaining, 30124 kB of memory in use.
+ENERGY:    2100      1708.7843      1030.5462         0.0000         0.0000         -22917.2241      2386.4937         0.0000         0.0000      5642.6328         -12148.7671       318.5262    -12069.0041    -12069.6393       320.3031           2400.7673      -379.6638     77675.8356        24.4032        14.0878
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2100
+WRITING COORDINATES TO DCD FILE AT STEP 2100
+WRITING COORDINATES TO RESTART FILE AT STEP 2100
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2100
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2101, bubble radius = 15.
+TCL: step 2102, bubble radius = 15.
+TCL: step 2103, bubble radius = 15.
+TCL: step 2104, bubble radius = 15.
+TCL: step 2105, bubble radius = 15.
+TCL: step 2106, bubble radius = 15.
+TCL: step 2107, bubble radius = 15.
+TCL: step 2108, bubble radius = 15.
+TCL: step 2109, bubble radius = 15.
+TCL: step 2110, bubble radius = 15.
+TCL: step 2111, bubble radius = 15.
+TCL: step 2112, bubble radius = 15.
+TCL: step 2113, bubble radius = 15.
+TCL: step 2114, bubble radius = 15.
+TCL: step 2115, bubble radius = 15.
+TCL: step 2116, bubble radius = 15.
+TCL: step 2117, bubble radius = 15.
+TCL: step 2118, bubble radius = 15.
+TCL: step 2119, bubble radius = 15.
+TCL: step 2120, bubble radius = 15.
+TCL: step 2121, bubble radius = 15.
+TCL: step 2122, bubble radius = 15.
+TCL: step 2123, bubble radius = 15.
+TCL: step 2124, bubble radius = 15.
+TCL: step 2125, bubble radius = 15.
+TCL: step 2126, bubble radius = 15.
+TCL: step 2127, bubble radius = 15.
+TCL: step 2128, bubble radius = 15.
+TCL: step 2129, bubble radius = 15.
+TCL: step 2130, bubble radius = 15.
+TCL: step 2131, bubble radius = 15.
+TCL: step 2132, bubble radius = 15.
+TCL: step 2133, bubble radius = 15.
+TCL: step 2134, bubble radius = 15.
+TCL: step 2135, bubble radius = 15.
+TCL: step 2136, bubble radius = 15.
+TCL: step 2137, bubble radius = 15.
+TCL: step 2138, bubble radius = 15.
+TCL: step 2139, bubble radius = 15.
+TCL: step 2140, bubble radius = 15.
+TCL: step 2141, bubble radius = 15.
+TCL: step 2142, bubble radius = 15.
+TCL: step 2143, bubble radius = 15.
+TCL: step 2144, bubble radius = 15.
+TCL: step 2145, bubble radius = 15.
+TCL: step 2146, bubble radius = 15.
+TCL: step 2147, bubble radius = 15.
+TCL: step 2148, bubble radius = 15.
+TCL: step 2149, bubble radius = 15.
+TCL: step 2150, bubble radius = 15.
+TCL: step 2151, bubble radius = 15.
+TCL: step 2152, bubble radius = 15.
+TCL: step 2153, bubble radius = 15.
+TCL: step 2154, bubble radius = 15.
+TCL: step 2155, bubble radius = 15.
+TCL: step 2156, bubble radius = 15.
+TCL: step 2157, bubble radius = 15.
+TCL: step 2158, bubble radius = 15.
+TCL: step 2159, bubble radius = 15.
+TCL: step 2160, bubble radius = 15.
+TCL: step 2161, bubble radius = 15.
+TCL: step 2162, bubble radius = 15.
+TCL: step 2163, bubble radius = 15.
+TCL: step 2164, bubble radius = 15.
+TCL: step 2165, bubble radius = 15.
+TCL: step 2166, bubble radius = 15.
+TCL: step 2167, bubble radius = 15.
+TCL: step 2168, bubble radius = 15.
+TCL: step 2169, bubble radius = 15.
+TCL: step 2170, bubble radius = 15.
+TCL: step 2171, bubble radius = 15.
+TCL: step 2172, bubble radius = 15.
+TCL: step 2173, bubble radius = 15.
+TCL: step 2174, bubble radius = 15.
+TCL: step 2175, bubble radius = 15.
+TCL: step 2176, bubble radius = 15.
+TCL: step 2177, bubble radius = 15.
+TCL: step 2178, bubble radius = 15.
+TCL: step 2179, bubble radius = 15.
+TCL: step 2180, bubble radius = 15.
+TCL: step 2181, bubble radius = 15.
+TCL: step 2182, bubble radius = 15.
+TCL: step 2183, bubble radius = 15.
+TCL: step 2184, bubble radius = 15.
+TCL: step 2185, bubble radius = 15.
+TCL: step 2186, bubble radius = 15.
+TCL: step 2187, bubble radius = 15.
+TCL: step 2188, bubble radius = 15.
+TCL: step 2189, bubble radius = 15.
+TCL: step 2190, bubble radius = 15.
+TCL: step 2191, bubble radius = 15.
+TCL: step 2192, bubble radius = 15.
+TCL: step 2193, bubble radius = 15.
+TCL: step 2194, bubble radius = 15.
+TCL: step 2195, bubble radius = 15.
+TCL: step 2196, bubble radius = 15.
+TCL: step 2197, bubble radius = 15.
+TCL: step 2198, bubble radius = 15.
+TCL: step 2199, bubble radius = 15.
+TCL: step 2200, bubble radius = 15.
+TIMING: 2200  CPU: 470.24, 0.209/step  Wall: 474.791, 0.210288/step, 0.0467308 hours remaining, 30124 kB of memory in use.
+ENERGY:    2200      1745.1757      1129.8176         0.0000         0.0000         -23080.0293      2449.7947         0.0000         0.0000      5520.5003         -12234.7408       311.6319    -12153.5337    -12159.3730       317.2549           2058.4258      -103.3436     77340.4461       -39.9019       -40.4876
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2200
+WRITING COORDINATES TO DCD FILE AT STEP 2200
+WRITING COORDINATES TO RESTART FILE AT STEP 2200
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2200
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2201, bubble radius = 15.
+TCL: step 2202, bubble radius = 15.
+TCL: step 2203, bubble radius = 15.
+TCL: step 2204, bubble radius = 15.
+TCL: step 2205, bubble radius = 15.
+TCL: step 2206, bubble radius = 15.
+TCL: step 2207, bubble radius = 15.
+TCL: step 2208, bubble radius = 15.
+TCL: step 2209, bubble radius = 15.
+TCL: step 2210, bubble radius = 15.
+TCL: step 2211, bubble radius = 15.
+TCL: step 2212, bubble radius = 15.
+TCL: step 2213, bubble radius = 15.
+TCL: step 2214, bubble radius = 15.
+TCL: step 2215, bubble radius = 15.
+TCL: step 2216, bubble radius = 15.
+TCL: step 2217, bubble radius = 15.
+TCL: step 2218, bubble radius = 15.
+TCL: step 2219, bubble radius = 15.
+TCL: step 2220, bubble radius = 15.
+TCL: step 2221, bubble radius = 15.
+TCL: step 2222, bubble radius = 15.
+TCL: step 2223, bubble radius = 15.
+TCL: step 2224, bubble radius = 15.
+TCL: step 2225, bubble radius = 15.
+TCL: step 2226, bubble radius = 15.
+TCL: step 2227, bubble radius = 15.
+TCL: step 2228, bubble radius = 15.
+TCL: step 2229, bubble radius = 15.
+TCL: step 2230, bubble radius = 15.
+TCL: step 2231, bubble radius = 15.
+TCL: step 2232, bubble radius = 15.
+TCL: step 2233, bubble radius = 15.
+TCL: step 2234, bubble radius = 15.
+TCL: step 2235, bubble radius = 15.
+TCL: step 2236, bubble radius = 15.
+TCL: step 2237, bubble radius = 15.
+TCL: step 2238, bubble radius = 15.
+TCL: step 2239, bubble radius = 15.
+TCL: step 2240, bubble radius = 15.
+TCL: step 2241, bubble radius = 15.
+TCL: step 2242, bubble radius = 15.
+TCL: step 2243, bubble radius = 15.
+TCL: step 2244, bubble radius = 15.
+TCL: step 2245, bubble radius = 15.
+TCL: step 2246, bubble radius = 15.
+TCL: step 2247, bubble radius = 15.
+TCL: step 2248, bubble radius = 15.
+TCL: step 2249, bubble radius = 15.
+TCL: step 2250, bubble radius = 15.
+TCL: step 2251, bubble radius = 15.
+TCL: step 2252, bubble radius = 15.
+TCL: step 2253, bubble radius = 15.
+TCL: step 2254, bubble radius = 15.
+TCL: step 2255, bubble radius = 15.
+TCL: step 2256, bubble radius = 15.
+TCL: step 2257, bubble radius = 15.
+TCL: step 2258, bubble radius = 15.
+TCL: step 2259, bubble radius = 15.
+TCL: step 2260, bubble radius = 15.
+TCL: step 2261, bubble radius = 15.
+TCL: step 2262, bubble radius = 15.
+TCL: step 2263, bubble radius = 15.
+TCL: step 2264, bubble radius = 15.
+TCL: step 2265, bubble radius = 15.
+TCL: step 2266, bubble radius = 15.
+TCL: step 2267, bubble radius = 15.
+TCL: step 2268, bubble radius = 15.
+TCL: step 2269, bubble radius = 15.
+TCL: step 2270, bubble radius = 15.
+TCL: step 2271, bubble radius = 15.
+TCL: step 2272, bubble radius = 15.
+TCL: step 2273, bubble radius = 15.
+TCL: step 2274, bubble radius = 15.
+TCL: step 2275, bubble radius = 15.
+TCL: step 2276, bubble radius = 15.
+TCL: step 2277, bubble radius = 15.
+TCL: step 2278, bubble radius = 15.
+TCL: step 2279, bubble radius = 15.
+TCL: step 2280, bubble radius = 15.
+TCL: step 2281, bubble radius = 15.
+TCL: step 2282, bubble radius = 15.
+TCL: step 2283, bubble radius = 15.
+TCL: step 2284, bubble radius = 15.
+TCL: step 2285, bubble radius = 15.
+TCL: step 2286, bubble radius = 15.
+TCL: step 2287, bubble radius = 15.
+TCL: step 2288, bubble radius = 15.
+TCL: step 2289, bubble radius = 15.
+TCL: step 2290, bubble radius = 15.
+TCL: step 2291, bubble radius = 15.
+TCL: step 2292, bubble radius = 15.
+TCL: step 2293, bubble radius = 15.
+TCL: step 2294, bubble radius = 15.
+TCL: step 2295, bubble radius = 15.
+TCL: step 2296, bubble radius = 15.
+TCL: step 2297, bubble radius = 15.
+TCL: step 2298, bubble radius = 15.
+TCL: step 2299, bubble radius = 15.
+TCL: step 2300, bubble radius = 15.
+TIMING: 2300  CPU: 491.13, 0.2089/step  Wall: 495.772, 0.209806/step, 0.0407956 hours remaining, 30216 kB of memory in use.
+ENERGY:    2300      1773.4707      1091.1537         0.0000         0.0000         -23306.8726      2537.3930         0.0000         0.0000      5658.8752         -12245.9800       319.4431    -12166.6034    -12165.0569       317.8415           1982.6682        91.1604     77352.5330      -106.5764      -107.8113
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2300
+WRITING COORDINATES TO DCD FILE AT STEP 2300
+WRITING COORDINATES TO RESTART FILE AT STEP 2300
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2300
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2301, bubble radius = 15.
+TCL: step 2302, bubble radius = 15.
+TCL: step 2303, bubble radius = 15.
+TCL: step 2304, bubble radius = 15.
+TCL: step 2305, bubble radius = 15.
+TCL: step 2306, bubble radius = 15.
+TCL: step 2307, bubble radius = 15.
+TCL: step 2308, bubble radius = 15.
+TCL: step 2309, bubble radius = 15.
+TCL: step 2310, bubble radius = 15.
+TCL: step 2311, bubble radius = 15.
+TCL: step 2312, bubble radius = 15.
+TCL: step 2313, bubble radius = 15.
+TCL: step 2314, bubble radius = 15.
+TCL: step 2315, bubble radius = 15.
+TCL: step 2316, bubble radius = 15.
+TCL: step 2317, bubble radius = 15.
+TCL: step 2318, bubble radius = 15.
+TCL: step 2319, bubble radius = 15.
+TCL: step 2320, bubble radius = 15.
+TCL: step 2321, bubble radius = 15.
+TCL: step 2322, bubble radius = 15.
+TCL: step 2323, bubble radius = 15.
+TCL: step 2324, bubble radius = 15.
+TCL: step 2325, bubble radius = 15.
+TCL: step 2326, bubble radius = 15.
+TCL: step 2327, bubble radius = 15.
+TCL: step 2328, bubble radius = 15.
+TCL: step 2329, bubble radius = 15.
+TCL: step 2330, bubble radius = 15.
+TCL: step 2331, bubble radius = 15.
+TCL: step 2332, bubble radius = 15.
+TCL: step 2333, bubble radius = 15.
+TCL: step 2334, bubble radius = 15.
+TCL: step 2335, bubble radius = 15.
+TCL: step 2336, bubble radius = 15.
+TCL: step 2337, bubble radius = 15.
+TCL: step 2338, bubble radius = 15.
+TCL: step 2339, bubble radius = 15.
+TCL: step 2340, bubble radius = 15.
+TCL: step 2341, bubble radius = 15.
+TCL: step 2342, bubble radius = 15.
+TCL: step 2343, bubble radius = 15.
+TCL: step 2344, bubble radius = 15.
+TCL: step 2345, bubble radius = 15.
+TCL: step 2346, bubble radius = 15.
+TCL: step 2347, bubble radius = 15.
+TCL: step 2348, bubble radius = 15.
+TCL: step 2349, bubble radius = 15.
+TCL: step 2350, bubble radius = 15.
+TCL: step 2351, bubble radius = 15.
+TCL: step 2352, bubble radius = 15.
+TCL: step 2353, bubble radius = 15.
+TCL: step 2354, bubble radius = 15.
+TCL: step 2355, bubble radius = 15.
+TCL: step 2356, bubble radius = 15.
+TCL: step 2357, bubble radius = 15.
+TCL: step 2358, bubble radius = 15.
+TCL: step 2359, bubble radius = 15.
+TCL: step 2360, bubble radius = 15.
+TCL: step 2361, bubble radius = 15.
+TCL: step 2362, bubble radius = 15.
+TCL: step 2363, bubble radius = 15.
+TCL: step 2364, bubble radius = 15.
+TCL: step 2365, bubble radius = 15.
+TCL: step 2366, bubble radius = 15.
+TCL: step 2367, bubble radius = 15.
+TCL: step 2368, bubble radius = 15.
+TCL: step 2369, bubble radius = 15.
+TCL: step 2370, bubble radius = 15.
+TCL: step 2371, bubble radius = 15.
+TCL: step 2372, bubble radius = 15.
+TCL: step 2373, bubble radius = 15.
+TCL: step 2374, bubble radius = 15.
+TCL: step 2375, bubble radius = 15.
+TCL: step 2376, bubble radius = 15.
+TCL: step 2377, bubble radius = 15.
+TCL: step 2378, bubble radius = 15.
+TCL: step 2379, bubble radius = 15.
+TCL: step 2380, bubble radius = 15.
+TCL: step 2381, bubble radius = 15.
+TCL: step 2382, bubble radius = 15.
+TCL: step 2383, bubble radius = 15.
+TCL: step 2384, bubble radius = 15.
+TCL: step 2385, bubble radius = 15.
+TCL: step 2386, bubble radius = 15.
+TCL: step 2387, bubble radius = 15.
+TCL: step 2388, bubble radius = 15.
+TCL: step 2389, bubble radius = 15.
+TCL: step 2390, bubble radius = 15.
+TCL: step 2391, bubble radius = 15.
+TCL: step 2392, bubble radius = 15.
+TCL: step 2393, bubble radius = 15.
+TCL: step 2394, bubble radius = 15.
+TCL: step 2395, bubble radius = 15.
+TCL: step 2396, bubble radius = 15.
+TCL: step 2397, bubble radius = 15.
+TCL: step 2398, bubble radius = 15.
+TCL: step 2399, bubble radius = 15.
+TCL: step 2400, bubble radius = 15.
+TIMING: 2400  CPU: 512.05, 0.2092/step  Wall: 516.786, 0.210147/step, 0.0350245 hours remaining, 30312 kB of memory in use.
+ENERGY:    2400      1804.7016      1112.4452         0.0000         0.0000         -23329.3896      2492.6934         0.0000         0.0000      5645.0614         -12274.4881       318.6633    -12196.0672    -12189.9089       318.5683           1265.6161      -175.6443     77537.6704       -33.2082       -29.4278
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2400
+WRITING COORDINATES TO DCD FILE AT STEP 2400
+WRITING COORDINATES TO RESTART FILE AT STEP 2400
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2400
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2401, bubble radius = 15.
+TCL: step 2402, bubble radius = 15.
+TCL: step 2403, bubble radius = 15.
+TCL: step 2404, bubble radius = 15.
+TCL: step 2405, bubble radius = 15.
+TCL: step 2406, bubble radius = 15.
+TCL: step 2407, bubble radius = 15.
+TCL: step 2408, bubble radius = 15.
+TCL: step 2409, bubble radius = 15.
+TCL: step 2410, bubble radius = 15.
+TCL: step 2411, bubble radius = 15.
+TCL: step 2412, bubble radius = 15.
+TCL: step 2413, bubble radius = 15.
+TCL: step 2414, bubble radius = 15.
+TCL: step 2415, bubble radius = 15.
+TCL: step 2416, bubble radius = 15.
+TCL: step 2417, bubble radius = 15.
+TCL: step 2418, bubble radius = 15.
+TCL: step 2419, bubble radius = 15.
+TCL: step 2420, bubble radius = 15.
+TCL: step 2421, bubble radius = 15.
+TCL: step 2422, bubble radius = 15.
+TCL: step 2423, bubble radius = 15.
+TCL: step 2424, bubble radius = 15.
+TCL: step 2425, bubble radius = 15.
+TCL: step 2426, bubble radius = 15.
+TCL: step 2427, bubble radius = 15.
+TCL: step 2428, bubble radius = 15.
+TCL: step 2429, bubble radius = 15.
+TCL: step 2430, bubble radius = 15.
+TCL: step 2431, bubble radius = 15.
+TCL: step 2432, bubble radius = 15.
+TCL: step 2433, bubble radius = 15.
+TCL: step 2434, bubble radius = 15.
+TCL: step 2435, bubble radius = 15.
+TCL: step 2436, bubble radius = 15.
+TCL: step 2437, bubble radius = 15.
+TCL: step 2438, bubble radius = 15.
+TCL: step 2439, bubble radius = 15.
+TCL: step 2440, bubble radius = 15.
+TCL: step 2441, bubble radius = 15.
+TCL: step 2442, bubble radius = 15.
+TCL: step 2443, bubble radius = 15.
+TCL: step 2444, bubble radius = 15.
+TCL: step 2445, bubble radius = 15.
+TCL: step 2446, bubble radius = 15.
+TCL: step 2447, bubble radius = 15.
+TCL: step 2448, bubble radius = 15.
+TCL: step 2449, bubble radius = 15.
+TCL: step 2450, bubble radius = 15.
+TCL: step 2451, bubble radius = 15.
+TCL: step 2452, bubble radius = 15.
+TCL: step 2453, bubble radius = 15.
+TCL: step 2454, bubble radius = 15.
+TCL: step 2455, bubble radius = 15.
+TCL: step 2456, bubble radius = 15.
+TCL: step 2457, bubble radius = 15.
+TCL: step 2458, bubble radius = 15.
+TCL: step 2459, bubble radius = 15.
+TCL: step 2460, bubble radius = 15.
+TCL: step 2461, bubble radius = 15.
+TCL: step 2462, bubble radius = 15.
+TCL: step 2463, bubble radius = 15.
+TCL: step 2464, bubble radius = 15.
+TCL: step 2465, bubble radius = 15.
+TCL: step 2466, bubble radius = 15.
+TCL: step 2467, bubble radius = 15.
+TCL: step 2468, bubble radius = 15.
+TCL: step 2469, bubble radius = 15.
+TCL: step 2470, bubble radius = 15.
+TCL: step 2471, bubble radius = 15.
+TCL: step 2472, bubble radius = 15.
+TCL: step 2473, bubble radius = 15.
+TCL: step 2474, bubble radius = 15.
+TCL: step 2475, bubble radius = 15.
+TCL: step 2476, bubble radius = 15.
+TCL: step 2477, bubble radius = 15.
+TCL: step 2478, bubble radius = 15.
+TCL: step 2479, bubble radius = 15.
+TCL: step 2480, bubble radius = 15.
+TCL: step 2481, bubble radius = 15.
+TCL: step 2482, bubble radius = 15.
+TCL: step 2483, bubble radius = 15.
+TCL: step 2484, bubble radius = 15.
+TCL: step 2485, bubble radius = 15.
+TCL: step 2486, bubble radius = 15.
+TCL: step 2487, bubble radius = 15.
+TCL: step 2488, bubble radius = 15.
+TCL: step 2489, bubble radius = 15.
+TCL: step 2490, bubble radius = 15.
+TCL: step 2491, bubble radius = 15.
+TCL: step 2492, bubble radius = 15.
+TCL: step 2493, bubble radius = 15.
+TCL: step 2494, bubble radius = 15.
+TCL: step 2495, bubble radius = 15.
+TCL: step 2496, bubble radius = 15.
+TCL: step 2497, bubble radius = 15.
+TCL: step 2498, bubble radius = 15.
+TCL: step 2499, bubble radius = 15.
+TCL: step 2500, bubble radius = 15.
+TIMING: 2500  CPU: 532.81, 0.2076/step  Wall: 537.689, 0.209031/step, 0.029032 hours remaining, 30312 kB of memory in use.
+ENERGY:    2500      1833.9122      1062.2410         0.0000         0.0000         -23386.7982      2556.2816         0.0000         0.0000      5623.4085         -12310.9548       317.4410    -12232.5204    -12224.9555       317.4572            929.0432        63.9536     77477.7686        38.8620        47.5070
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2500
+WRITING COORDINATES TO DCD FILE AT STEP 2500
+WRITING COORDINATES TO RESTART FILE AT STEP 2500
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2500
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2501, bubble radius = 15.
+TCL: step 2502, bubble radius = 15.
+TCL: step 2503, bubble radius = 15.
+TCL: step 2504, bubble radius = 15.
+TCL: step 2505, bubble radius = 15.
+TCL: step 2506, bubble radius = 15.
+TCL: step 2507, bubble radius = 15.
+TCL: step 2508, bubble radius = 15.
+TCL: step 2509, bubble radius = 15.
+TCL: step 2510, bubble radius = 15.
+TCL: step 2511, bubble radius = 15.
+TCL: step 2512, bubble radius = 15.
+TCL: step 2513, bubble radius = 15.
+TCL: step 2514, bubble radius = 15.
+TCL: step 2515, bubble radius = 15.
+TCL: step 2516, bubble radius = 15.
+TCL: step 2517, bubble radius = 15.
+TCL: step 2518, bubble radius = 15.
+TCL: step 2519, bubble radius = 15.
+TCL: step 2520, bubble radius = 15.
+TCL: step 2521, bubble radius = 15.
+TCL: step 2522, bubble radius = 15.
+TCL: step 2523, bubble radius = 15.
+TCL: step 2524, bubble radius = 15.
+TCL: step 2525, bubble radius = 15.
+TCL: step 2526, bubble radius = 15.
+TCL: step 2527, bubble radius = 15.
+TCL: step 2528, bubble radius = 15.
+TCL: step 2529, bubble radius = 15.
+TCL: step 2530, bubble radius = 15.
+TCL: step 2531, bubble radius = 15.
+TCL: step 2532, bubble radius = 15.
+TCL: step 2533, bubble radius = 15.
+TCL: step 2534, bubble radius = 15.
+TCL: step 2535, bubble radius = 15.
+TCL: step 2536, bubble radius = 15.
+TCL: step 2537, bubble radius = 15.
+TCL: step 2538, bubble radius = 15.
+TCL: step 2539, bubble radius = 15.
+TCL: step 2540, bubble radius = 15.
+TCL: step 2541, bubble radius = 15.
+TCL: step 2542, bubble radius = 15.
+TCL: step 2543, bubble radius = 15.
+TCL: step 2544, bubble radius = 15.
+TCL: step 2545, bubble radius = 15.
+TCL: step 2546, bubble radius = 15.
+TCL: step 2547, bubble radius = 15.
+TCL: step 2548, bubble radius = 15.
+TCL: step 2549, bubble radius = 15.
+TCL: step 2550, bubble radius = 15.
+TCL: step 2551, bubble radius = 15.
+TCL: step 2552, bubble radius = 15.
+TCL: step 2553, bubble radius = 15.
+TCL: step 2554, bubble radius = 15.
+TCL: step 2555, bubble radius = 15.
+TCL: step 2556, bubble radius = 15.
+TCL: step 2557, bubble radius = 15.
+TCL: step 2558, bubble radius = 15.
+TCL: step 2559, bubble radius = 15.
+TCL: step 2560, bubble radius = 15.
+TCL: step 2561, bubble radius = 15.
+TCL: step 2562, bubble radius = 15.
+TCL: step 2563, bubble radius = 15.
+TCL: step 2564, bubble radius = 15.
+TCL: step 2565, bubble radius = 15.
+TCL: step 2566, bubble radius = 15.
+TCL: step 2567, bubble radius = 15.
+TCL: step 2568, bubble radius = 15.
+TCL: step 2569, bubble radius = 15.
+TCL: step 2570, bubble radius = 15.
+TCL: step 2571, bubble radius = 15.
+TCL: step 2572, bubble radius = 15.
+TCL: step 2573, bubble radius = 15.
+TCL: step 2574, bubble radius = 15.
+TCL: step 2575, bubble radius = 15.
+TCL: step 2576, bubble radius = 15.
+TCL: step 2577, bubble radius = 15.
+TCL: step 2578, bubble radius = 15.
+TCL: step 2579, bubble radius = 15.
+TCL: step 2580, bubble radius = 15.
+TCL: step 2581, bubble radius = 15.
+TCL: step 2582, bubble radius = 15.
+TCL: step 2583, bubble radius = 15.
+TCL: step 2584, bubble radius = 15.
+TCL: step 2585, bubble radius = 15.
+TCL: step 2586, bubble radius = 15.
+TCL: step 2587, bubble radius = 15.
+TCL: step 2588, bubble radius = 15.
+TCL: step 2589, bubble radius = 15.
+TCL: step 2590, bubble radius = 15.
+TCL: step 2591, bubble radius = 15.
+TCL: step 2592, bubble radius = 15.
+TCL: step 2593, bubble radius = 15.
+TCL: step 2594, bubble radius = 15.
+TCL: step 2595, bubble radius = 15.
+TCL: step 2596, bubble radius = 15.
+TCL: step 2597, bubble radius = 15.
+TCL: step 2598, bubble radius = 15.
+TCL: step 2599, bubble radius = 15.
+TCL: step 2600, bubble radius = 15.
+TIMING: 2600  CPU: 553.56, 0.2075/step  Wall: 558.525, 0.208361/step, 0.0231512 hours remaining, 30312 kB of memory in use.
+ENERGY:    2600      1827.8239      1140.0090         0.0000         0.0000         -23519.4764      2603.4763         0.0000         0.0000      5583.3865         -12364.7807       315.1818    -12286.4687    -12278.9428       316.7666           1349.2099       154.0701     76814.6156      -123.3568      -111.7564
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2600
+WRITING COORDINATES TO DCD FILE AT STEP 2600
+WRITING COORDINATES TO RESTART FILE AT STEP 2600
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2600
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2601, bubble radius = 15.
+TCL: step 2602, bubble radius = 15.
+TCL: step 2603, bubble radius = 15.
+TCL: step 2604, bubble radius = 15.
+TCL: step 2605, bubble radius = 15.
+TCL: step 2606, bubble radius = 15.
+TCL: step 2607, bubble radius = 15.
+TCL: step 2608, bubble radius = 15.
+TCL: step 2609, bubble radius = 15.
+TCL: step 2610, bubble radius = 15.
+TCL: step 2611, bubble radius = 15.
+TCL: step 2612, bubble radius = 15.
+TCL: step 2613, bubble radius = 15.
+TCL: step 2614, bubble radius = 15.
+TCL: step 2615, bubble radius = 15.
+TCL: step 2616, bubble radius = 15.
+TCL: step 2617, bubble radius = 15.
+TCL: step 2618, bubble radius = 15.
+TCL: step 2619, bubble radius = 15.
+TCL: step 2620, bubble radius = 15.
+TCL: step 2621, bubble radius = 15.
+TCL: step 2622, bubble radius = 15.
+TCL: step 2623, bubble radius = 15.
+TCL: step 2624, bubble radius = 15.
+TCL: step 2625, bubble radius = 15.
+TCL: step 2626, bubble radius = 15.
+TCL: step 2627, bubble radius = 15.
+TCL: step 2628, bubble radius = 15.
+TCL: step 2629, bubble radius = 15.
+TCL: step 2630, bubble radius = 15.
+TCL: step 2631, bubble radius = 15.
+TCL: step 2632, bubble radius = 15.
+TCL: step 2633, bubble radius = 15.
+TCL: step 2634, bubble radius = 15.
+TCL: step 2635, bubble radius = 15.
+TCL: step 2636, bubble radius = 15.
+TCL: step 2637, bubble radius = 15.
+TCL: step 2638, bubble radius = 15.
+TCL: step 2639, bubble radius = 15.
+TCL: step 2640, bubble radius = 15.
+TCL: step 2641, bubble radius = 15.
+TCL: step 2642, bubble radius = 15.
+TCL: step 2643, bubble radius = 15.
+TCL: step 2644, bubble radius = 15.
+TCL: step 2645, bubble radius = 15.
+TCL: step 2646, bubble radius = 15.
+TCL: step 2647, bubble radius = 15.
+TCL: step 2648, bubble radius = 15.
+TCL: step 2649, bubble radius = 15.
+TCL: step 2650, bubble radius = 15.
+TCL: step 2651, bubble radius = 15.
+TCL: step 2652, bubble radius = 15.
+TCL: step 2653, bubble radius = 15.
+TCL: step 2654, bubble radius = 15.
+TCL: step 2655, bubble radius = 15.
+TCL: step 2656, bubble radius = 15.
+TCL: step 2657, bubble radius = 15.
+TCL: step 2658, bubble radius = 15.
+TCL: step 2659, bubble radius = 15.
+TCL: step 2660, bubble radius = 15.
+TCL: step 2661, bubble radius = 15.
+TCL: step 2662, bubble radius = 15.
+TCL: step 2663, bubble radius = 15.
+TCL: step 2664, bubble radius = 15.
+TCL: step 2665, bubble radius = 15.
+TCL: step 2666, bubble radius = 15.
+TCL: step 2667, bubble radius = 15.
+TCL: step 2668, bubble radius = 15.
+TCL: step 2669, bubble radius = 15.
+TCL: step 2670, bubble radius = 15.
+TCL: step 2671, bubble radius = 15.
+TCL: step 2672, bubble radius = 15.
+TCL: step 2673, bubble radius = 15.
+TCL: step 2674, bubble radius = 15.
+TCL: step 2675, bubble radius = 15.
+TCL: step 2676, bubble radius = 15.
+TCL: step 2677, bubble radius = 15.
+TCL: step 2678, bubble radius = 15.
+TCL: step 2679, bubble radius = 15.
+TCL: step 2680, bubble radius = 15.
+TCL: step 2681, bubble radius = 15.
+TCL: step 2682, bubble radius = 15.
+TCL: step 2683, bubble radius = 15.
+TCL: step 2684, bubble radius = 15.
+TCL: step 2685, bubble radius = 15.
+TCL: step 2686, bubble radius = 15.
+TCL: step 2687, bubble radius = 15.
+TCL: step 2688, bubble radius = 15.
+TCL: step 2689, bubble radius = 15.
+TCL: step 2690, bubble radius = 15.
+TCL: step 2691, bubble radius = 15.
+TCL: step 2692, bubble radius = 15.
+TCL: step 2693, bubble radius = 15.
+TCL: step 2694, bubble radius = 15.
+TCL: step 2695, bubble radius = 15.
+TCL: step 2696, bubble radius = 15.
+TCL: step 2697, bubble radius = 15.
+TCL: step 2698, bubble radius = 15.
+TCL: step 2699, bubble radius = 15.
+TCL: step 2700, bubble radius = 15.
+TIMING: 2700  CPU: 574.42, 0.2086/step  Wall: 579.527, 0.210012/step, 0.017501 hours remaining, 30448 kB of memory in use.
+ENERGY:    2700      1806.7377      1103.7666         0.0000         0.0000         -23402.1140      2577.0842         0.0000         0.0000      5560.2703         -12354.2552       313.8769    -12274.0102    -12274.3058       316.0944           2132.8661       234.0418     76602.3380        21.7608        25.4828
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2700
+WRITING COORDINATES TO DCD FILE AT STEP 2700
+WRITING COORDINATES TO RESTART FILE AT STEP 2700
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2700
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2701, bubble radius = 15.
+TCL: step 2702, bubble radius = 15.
+TCL: step 2703, bubble radius = 15.
+TCL: step 2704, bubble radius = 15.
+TCL: step 2705, bubble radius = 15.
+TCL: step 2706, bubble radius = 15.
+TCL: step 2707, bubble radius = 15.
+TCL: step 2708, bubble radius = 15.
+TCL: step 2709, bubble radius = 15.
+TCL: step 2710, bubble radius = 15.
+TCL: step 2711, bubble radius = 15.
+TCL: step 2712, bubble radius = 15.
+TCL: step 2713, bubble radius = 15.
+TCL: step 2714, bubble radius = 15.
+TCL: step 2715, bubble radius = 15.
+TCL: step 2716, bubble radius = 15.
+TCL: step 2717, bubble radius = 15.
+TCL: step 2718, bubble radius = 15.
+TCL: step 2719, bubble radius = 15.
+TCL: step 2720, bubble radius = 15.
+TCL: step 2721, bubble radius = 15.
+TCL: step 2722, bubble radius = 15.
+TCL: step 2723, bubble radius = 15.
+TCL: step 2724, bubble radius = 15.
+TCL: step 2725, bubble radius = 15.
+TCL: step 2726, bubble radius = 15.
+TCL: step 2727, bubble radius = 15.
+TCL: step 2728, bubble radius = 15.
+TCL: step 2729, bubble radius = 15.
+TCL: step 2730, bubble radius = 15.
+TCL: step 2731, bubble radius = 15.
+TCL: step 2732, bubble radius = 15.
+TCL: step 2733, bubble radius = 15.
+TCL: step 2734, bubble radius = 15.
+TCL: step 2735, bubble radius = 15.
+TCL: step 2736, bubble radius = 15.
+TCL: step 2737, bubble radius = 15.
+TCL: step 2738, bubble radius = 15.
+TCL: step 2739, bubble radius = 15.
+TCL: step 2740, bubble radius = 15.
+TCL: step 2741, bubble radius = 15.
+TCL: step 2742, bubble radius = 15.
+TCL: step 2743, bubble radius = 15.
+TCL: step 2744, bubble radius = 15.
+TCL: step 2745, bubble radius = 15.
+TCL: step 2746, bubble radius = 15.
+TCL: step 2747, bubble radius = 15.
+TCL: step 2748, bubble radius = 15.
+TCL: step 2749, bubble radius = 15.
+TCL: step 2750, bubble radius = 15.
+TCL: step 2751, bubble radius = 15.
+TCL: step 2752, bubble radius = 15.
+TCL: step 2753, bubble radius = 15.
+TCL: step 2754, bubble radius = 15.
+TCL: step 2755, bubble radius = 15.
+TCL: step 2756, bubble radius = 15.
+TCL: step 2757, bubble radius = 15.
+TCL: step 2758, bubble radius = 15.
+TCL: step 2759, bubble radius = 15.
+TCL: step 2760, bubble radius = 15.
+TCL: step 2761, bubble radius = 15.
+TCL: step 2762, bubble radius = 15.
+TCL: step 2763, bubble radius = 15.
+TCL: step 2764, bubble radius = 15.
+TCL: step 2765, bubble radius = 15.
+TCL: step 2766, bubble radius = 15.
+TCL: step 2767, bubble radius = 15.
+TCL: step 2768, bubble radius = 15.
+TCL: step 2769, bubble radius = 15.
+TCL: step 2770, bubble radius = 15.
+TCL: step 2771, bubble radius = 15.
+TCL: step 2772, bubble radius = 15.
+TCL: step 2773, bubble radius = 15.
+TCL: step 2774, bubble radius = 15.
+TCL: step 2775, bubble radius = 15.
+TCL: step 2776, bubble radius = 15.
+TCL: step 2777, bubble radius = 15.
+TCL: step 2778, bubble radius = 15.
+TCL: step 2779, bubble radius = 15.
+TCL: step 2780, bubble radius = 15.
+TCL: step 2781, bubble radius = 15.
+TCL: step 2782, bubble radius = 15.
+TCL: step 2783, bubble radius = 15.
+TCL: step 2784, bubble radius = 15.
+TCL: step 2785, bubble radius = 15.
+TCL: step 2786, bubble radius = 15.
+TCL: step 2787, bubble radius = 15.
+TCL: step 2788, bubble radius = 15.
+TCL: step 2789, bubble radius = 15.
+TCL: step 2790, bubble radius = 15.
+TCL: step 2791, bubble radius = 15.
+TCL: step 2792, bubble radius = 15.
+TCL: step 2793, bubble radius = 15.
+TCL: step 2794, bubble radius = 15.
+TCL: step 2795, bubble radius = 15.
+TCL: step 2796, bubble radius = 15.
+TCL: step 2797, bubble radius = 15.
+TCL: step 2798, bubble radius = 15.
+TCL: step 2799, bubble radius = 15.
+TCL: step 2800, bubble radius = 15.
+TIMING: 2800  CPU: 595.28, 0.2086/step  Wall: 600.507, 0.209802/step, 0.0116556 hours remaining, 30448 kB of memory in use.
+ENERGY:    2800      1758.6987      1053.4025         0.0000         0.0000         -23423.4976      2533.7553         0.0000         0.0000      5674.7729         -12402.8681       320.3405    -12322.1166    -12323.3899       317.2676           2539.3339        -5.0729     76312.1539         2.3244        -8.9260
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2800
+WRITING COORDINATES TO DCD FILE AT STEP 2800
+WRITING COORDINATES TO RESTART FILE AT STEP 2800
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2800
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2801, bubble radius = 15.
+TCL: step 2802, bubble radius = 15.
+TCL: step 2803, bubble radius = 15.
+TCL: step 2804, bubble radius = 15.
+TCL: step 2805, bubble radius = 15.
+TCL: step 2806, bubble radius = 15.
+TCL: step 2807, bubble radius = 15.
+TCL: step 2808, bubble radius = 15.
+TCL: step 2809, bubble radius = 15.
+TCL: step 2810, bubble radius = 15.
+TCL: step 2811, bubble radius = 15.
+TCL: step 2812, bubble radius = 15.
+TCL: step 2813, bubble radius = 15.
+TCL: step 2814, bubble radius = 15.
+TCL: step 2815, bubble radius = 15.
+TCL: step 2816, bubble radius = 15.
+TCL: step 2817, bubble radius = 15.
+TCL: step 2818, bubble radius = 15.
+TCL: step 2819, bubble radius = 15.
+TCL: step 2820, bubble radius = 15.
+TCL: step 2821, bubble radius = 15.
+TCL: step 2822, bubble radius = 15.
+TCL: step 2823, bubble radius = 15.
+TCL: step 2824, bubble radius = 15.
+TCL: step 2825, bubble radius = 15.
+TCL: step 2826, bubble radius = 15.
+TCL: step 2827, bubble radius = 15.
+TCL: step 2828, bubble radius = 15.
+TCL: step 2829, bubble radius = 15.
+TCL: step 2830, bubble radius = 15.
+TCL: step 2831, bubble radius = 15.
+TCL: step 2832, bubble radius = 15.
+TCL: step 2833, bubble radius = 15.
+TCL: step 2834, bubble radius = 15.
+TCL: step 2835, bubble radius = 15.
+TCL: step 2836, bubble radius = 15.
+TCL: step 2837, bubble radius = 15.
+TCL: step 2838, bubble radius = 15.
+TCL: step 2839, bubble radius = 15.
+TCL: step 2840, bubble radius = 15.
+TCL: step 2841, bubble radius = 15.
+TCL: step 2842, bubble radius = 15.
+TCL: step 2843, bubble radius = 15.
+TCL: step 2844, bubble radius = 15.
+TCL: step 2845, bubble radius = 15.
+TCL: step 2846, bubble radius = 15.
+TCL: step 2847, bubble radius = 15.
+TCL: step 2848, bubble radius = 15.
+TCL: step 2849, bubble radius = 15.
+TCL: step 2850, bubble radius = 15.
+TCL: step 2851, bubble radius = 15.
+TCL: step 2852, bubble radius = 15.
+TCL: step 2853, bubble radius = 15.
+TCL: step 2854, bubble radius = 15.
+TCL: step 2855, bubble radius = 15.
+TCL: step 2856, bubble radius = 15.
+TCL: step 2857, bubble radius = 15.
+TCL: step 2858, bubble radius = 15.
+TCL: step 2859, bubble radius = 15.
+TCL: step 2860, bubble radius = 15.
+TCL: step 2861, bubble radius = 15.
+TCL: step 2862, bubble radius = 15.
+TCL: step 2863, bubble radius = 15.
+TCL: step 2864, bubble radius = 15.
+TCL: step 2865, bubble radius = 15.
+TCL: step 2866, bubble radius = 15.
+TCL: step 2867, bubble radius = 15.
+TCL: step 2868, bubble radius = 15.
+TCL: step 2869, bubble radius = 15.
+TCL: step 2870, bubble radius = 15.
+TCL: step 2871, bubble radius = 15.
+TCL: step 2872, bubble radius = 15.
+TCL: step 2873, bubble radius = 15.
+TCL: step 2874, bubble radius = 15.
+TCL: step 2875, bubble radius = 15.
+TCL: step 2876, bubble radius = 15.
+TCL: step 2877, bubble radius = 15.
+TCL: step 2878, bubble radius = 15.
+TCL: step 2879, bubble radius = 15.
+TCL: step 2880, bubble radius = 15.
+TCL: step 2881, bubble radius = 15.
+TCL: step 2882, bubble radius = 15.
+TCL: step 2883, bubble radius = 15.
+TCL: step 2884, bubble radius = 15.
+TCL: step 2885, bubble radius = 15.
+TCL: step 2886, bubble radius = 15.
+TCL: step 2887, bubble radius = 15.
+TCL: step 2888, bubble radius = 15.
+TCL: step 2889, bubble radius = 15.
+TCL: step 2890, bubble radius = 15.
+TCL: step 2891, bubble radius = 15.
+TCL: step 2892, bubble radius = 15.
+TCL: step 2893, bubble radius = 15.
+TCL: step 2894, bubble radius = 15.
+TCL: step 2895, bubble radius = 15.
+TCL: step 2896, bubble radius = 15.
+TCL: step 2897, bubble radius = 15.
+TCL: step 2898, bubble radius = 15.
+TCL: step 2899, bubble radius = 15.
+TCL: step 2900, bubble radius = 15.
+TIMING: 2900  CPU: 616.24, 0.2096/step  Wall: 621.582, 0.210755/step, 0.00585431 hours remaining, 30448 kB of memory in use.
+ENERGY:    2900      1794.6463      1099.4780         0.0000         0.0000         -23460.5638      2511.3533         0.0000         0.0000      5628.2637         -12426.8224       317.7151    -12346.0078    -12346.2885       318.3008           2014.6878       -98.9743     76038.8657         8.6974         6.7611
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 2900
+WRITING COORDINATES TO DCD FILE AT STEP 2900
+WRITING COORDINATES TO RESTART FILE AT STEP 2900
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 2900
+FINISHED WRITING RESTART VELOCITIES
+TCL: step 2901, bubble radius = 15.
+TCL: step 2902, bubble radius = 15.
+TCL: step 2903, bubble radius = 15.
+TCL: step 2904, bubble radius = 15.
+TCL: step 2905, bubble radius = 15.
+TCL: step 2906, bubble radius = 15.
+TCL: step 2907, bubble radius = 15.
+TCL: step 2908, bubble radius = 15.
+TCL: step 2909, bubble radius = 15.
+TCL: step 2910, bubble radius = 15.
+TCL: step 2911, bubble radius = 15.
+TCL: step 2912, bubble radius = 15.
+TCL: step 2913, bubble radius = 15.
+TCL: step 2914, bubble radius = 15.
+TCL: step 2915, bubble radius = 15.
+TCL: step 2916, bubble radius = 15.
+TCL: step 2917, bubble radius = 15.
+TCL: step 2918, bubble radius = 15.
+TCL: step 2919, bubble radius = 15.
+TCL: step 2920, bubble radius = 15.
+TCL: step 2921, bubble radius = 15.
+TCL: step 2922, bubble radius = 15.
+TCL: step 2923, bubble radius = 15.
+TCL: step 2924, bubble radius = 15.
+TCL: step 2925, bubble radius = 15.
+TCL: step 2926, bubble radius = 15.
+TCL: step 2927, bubble radius = 15.
+TCL: step 2928, bubble radius = 15.
+TCL: step 2929, bubble radius = 15.
+TCL: step 2930, bubble radius = 15.
+TCL: step 2931, bubble radius = 15.
+TCL: step 2932, bubble radius = 15.
+TCL: step 2933, bubble radius = 15.
+TCL: step 2934, bubble radius = 15.
+TCL: step 2935, bubble radius = 15.
+TCL: step 2936, bubble radius = 15.
+TCL: step 2937, bubble radius = 15.
+TCL: step 2938, bubble radius = 15.
+TCL: step 2939, bubble radius = 15.
+TCL: step 2940, bubble radius = 15.
+TCL: step 2941, bubble radius = 15.
+TCL: step 2942, bubble radius = 15.
+TCL: step 2943, bubble radius = 15.
+TCL: step 2944, bubble radius = 15.
+TCL: step 2945, bubble radius = 15.
+TCL: step 2946, bubble radius = 15.
+TCL: step 2947, bubble radius = 15.
+TCL: step 2948, bubble radius = 15.
+TCL: step 2949, bubble radius = 15.
+TCL: step 2950, bubble radius = 15.
+TCL: step 2951, bubble radius = 15.
+TCL: step 2952, bubble radius = 15.
+TCL: step 2953, bubble radius = 15.
+TCL: step 2954, bubble radius = 15.
+TCL: step 2955, bubble radius = 15.
+TCL: step 2956, bubble radius = 15.
+TCL: step 2957, bubble radius = 15.
+TCL: step 2958, bubble radius = 15.
+TCL: step 2959, bubble radius = 15.
+TCL: step 2960, bubble radius = 15.
+TCL: step 2961, bubble radius = 15.
+TCL: step 2962, bubble radius = 15.
+TCL: step 2963, bubble radius = 15.
+TCL: step 2964, bubble radius = 15.
+TCL: step 2965, bubble radius = 15.
+TCL: step 2966, bubble radius = 15.
+TCL: step 2967, bubble radius = 15.
+TCL: step 2968, bubble radius = 15.
+TCL: step 2969, bubble radius = 15.
+TCL: step 2970, bubble radius = 15.
+TCL: step 2971, bubble radius = 15.
+TCL: step 2972, bubble radius = 15.
+TCL: step 2973, bubble radius = 15.
+TCL: step 2974, bubble radius = 15.
+TCL: step 2975, bubble radius = 15.
+TCL: step 2976, bubble radius = 15.
+TCL: step 2977, bubble radius = 15.
+TCL: step 2978, bubble radius = 15.
+TCL: step 2979, bubble radius = 15.
+TCL: step 2980, bubble radius = 15.
+TCL: step 2981, bubble radius = 15.
+TCL: step 2982, bubble radius = 15.
+TCL: step 2983, bubble radius = 15.
+TCL: step 2984, bubble radius = 15.
+TCL: step 2985, bubble radius = 15.
+TCL: step 2986, bubble radius = 15.
+TCL: step 2987, bubble radius = 15.
+TCL: step 2988, bubble radius = 15.
+TCL: step 2989, bubble radius = 15.
+TCL: step 2990, bubble radius = 15.
+TCL: step 2991, bubble radius = 15.
+TCL: step 2992, bubble radius = 15.
+TCL: step 2993, bubble radius = 15.
+TCL: step 2994, bubble radius = 15.
+TCL: step 2995, bubble radius = 15.
+TCL: step 2996, bubble radius = 15.
+TCL: step 2997, bubble radius = 15.
+TCL: step 2998, bubble radius = 15.
+TCL: step 2999, bubble radius = 15.
+TCL: step 3000, bubble radius = 15.
+TIMING: 3000  CPU: 637.08, 0.2084/step  Wall: 642.565, 0.209823/step, 0 hours remaining, 30448 kB of memory in use.
+ETITLE:      TS           BOND          ANGLE          DIHED          IMPRP               ELECT            VDW       BOUNDARY           MISC        KINETIC               TOTAL           TEMP         TOTAL2         TOTAL3        TEMPAVG            PRESSURE      GPRESSURE         VOLUME       PRESSAVG      GPRESSAVG
+
+ENERGY:    3000      1799.8206      1149.0339         0.0000         0.0000         -23507.0856      2528.2859         0.0000         0.0000      5584.3665         -12445.5788       315.2371    -12365.5674    -12363.0867       317.3318           1754.3689       -32.7577     75500.3739      -117.1938      -122.2226
+
+WRITING EXTENDED SYSTEM TO RESTART FILE AT STEP 3000
+WRITING COORDINATES TO DCD FILE AT STEP 3000
+WRITING COORDINATES TO RESTART FILE AT STEP 3000
+FINISHED WRITING RESTART COORDINATES
+WRITING VELOCITIES TO RESTART FILE AT STEP 3000
+FINISHED WRITING RESTART VELOCITIES
+WRITING EXTENDED SYSTEM TO OUTPUT FILE AT STEP 3000
+CLOSING EXTENDED SYSTEM TRAJECTORY FILE
+WRITING COORDINATES TO OUTPUT FILE AT STEP 3000
+CLOSING COORDINATE DCD FILE
+WRITING VELOCITIES TO OUTPUT FILE AT STEP 3000
+==========================================
+WallClock: 652.979987  CPUTime: 647.060000  Memory: 30448 kB

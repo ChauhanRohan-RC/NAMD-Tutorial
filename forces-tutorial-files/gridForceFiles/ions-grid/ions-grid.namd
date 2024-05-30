@@ -1,0 +1,72 @@
+numsteps			10000
+structure			../../tclBCfiles/IONS/waterbox40-0.2M.psf
+coordinates			../../tclBCfiles/IONS/waterbox40-0.2M.pdb
+outputName			ions-grid
+
+set last			../../tclBCfiles/IONS/eq03.waterbox40-0.2M.restart
+bincoordinates			${last}.coor
+binvelocities			${last}.vel
+extendedSystem			${last}.xsc
+
+langevin                        on
+langevinDamping                 1.0
+langevinTemp                    295
+langevinHydrogen                off
+
+switching                       on
+switchDist                      10
+cutoff                          12
+pairlistdist                    14
+
+### common parameters
+
+binaryOutput                    yes
+binaryRestart                   yes
+
+parameters                      ../../tclForcesFiles/common/par_all27_prot_lipid.inp
+paraTypeCharmm                  on
+
+wrapAll                         on
+wrapNearest                     on
+wrapWater                       off
+
+COMmotion                       no
+
+outputEnergies                 100
+outputTiming                   100
+xstFreq                        100
+dcdFreq                        100
+restartFreq                    100
+
+timestep                        1
+nonBondedFreq                   2
+fullElectFrequency              4
+stepsPerCycle                   20
+
+Pme                             on
+PmeGridSizeX                    32
+PmeGridSizeY                    32
+PmeGridSizeZ                    32
+
+exclude                         scaled1-4
+1-4scaling                      1
+
+set scale			30
+mgridforce			on
+mgridforcefile		POT	potassium.pdb
+mgridforcecol		POT	B
+mgridforcechargecol	POT	O
+mgridforcepotfile	POT	potassium.dx
+mgridforcescale		POT	$scale $scale $scale
+mgridforcecont1		POT	yes
+mgridforcecont2		POT	yes
+mgridforcecont3		POT	yes
+mgridforcefile		CLA	chloride.pdb
+mgridforcecol		CLA	B
+mgridforcechargecol	CLA	O
+mgridforcepotfile	CLA	chloride.dx
+mgridforcescale		CLA	$scale $scale $scale
+mgridforcecont1		CLA	yes
+mgridforcecont2		CLA	yes
+mgridforcecont3		CLA	yes
+

@@ -1,0 +1,91 @@
+set homeDir   	.
+set outputDir   .
+set commonDir 	.
+
+set baseFile  waterbox40-0.2M
+
+set prevJob   eq03.$baseFile
+set thisJob   eq04.concentrateIonsBrief
+
+### run specific parameters
+
+numsteps            5000
+
+structure           $homeDir/$baseFile.psf
+coordinates         $homeDir/$baseFile.pdb
+
+outputName          $outputDir/$thisJob
+XSTfile             $outputDir/$thisJob.xst
+
+# set up cell size or bincoordinates and extended system
+
+bincoordinates      $outputDir/$prevJob.restart.coor
+binvelocities       $outputDir/$prevJob.restart.vel
+extendedSystem      $outputDir/$prevJob.restart.xsc
+
+### equilibration specific parameters
+
+langevin                        on
+langevinTemp                    295
+langevinDamping                 1.
+langevinHydrogen                off
+
+# pressure control
+
+#langevinPiston                  on
+#langevinPistonTarget            1.01325
+#langevinPistonTemp              295
+#langevinPistonDecay             100
+#langevinPistonPeriod            200
+
+switching                       on
+switchDist                      10
+cutoff                          12
+pairlistdist                    14
+margin                          3
+
+### common parameters
+
+binaryOutput                    yes
+binaryRestart                   yes
+
+parameters                      $commonDir/par_all27_prot_na.inp
+paraTypeCharmm                  on
+
+wrapAll                         on
+wrapNearest                     on
+wrapWater                       off
+
+COMmotion                       no
+
+outputEnergies                 100
+outputTiming                   100
+xstFreq                        100
+dcdFreq                        100
+restartFreq                    100
+
+timestep                        1
+nonBondedFreq                   2
+fullElectFrequency              4
+stepsPerCycle                   20
+
+Pme                             on
+PmeGridSizeX                    32
+PmeGridSizeY                    32
+PmeGridSizeZ                    32
+
+exclude                         scaled1-4
+1-4scaling                      1
+
+####################################################################
+
+tclBC on
+tclBCScript {
+  set sphereCenter    "0.0  0.0  0.0"
+  set sphereRadius    10.0
+  set maxForce         5.0
+  set pdbSource       waterbox40-0.2M.pdb
+  set tclBCScript     concentrateIonsBrief.tcl
+  source $tclBCScript
+} 
+tclBCArgs { }
