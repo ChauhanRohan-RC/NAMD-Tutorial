@@ -1,161 +1,170 @@
 ## Script to calculate RMSF of each residue of a molecule over each timestep (TS) in VMD
 ## NOTE: the function also sets the "user" field of each atom to the RMSF value for its residue (Like a TAG)
 
-# 1. Load the .psf and .dcd in VMD
-# 2. Go to Extensions > Tk Console
-# 3. enter command: source rmsf.tcl
+### USAGE-------------------
+# 1. Copy this script in working dir 
+# 2. Load the .psf and .dcd in VMD
+# 3. Go to Extensions > Tk Console
+# 4. enter command: "source rmsf.tcl"
+# 5. enter MOL_ID, BASE_SELECTION and RESIDUE_SELECTION
+# 6. enter FRAME indices
+# 7. Generates output file "rmsd.dat"
 
-# 4. TO CALCULATE RMSF OF ALL RESIDUES: call function rmsf_all <mol> [out_file_name] [delimiter]
-#--------------------- Example -----------------------------------------
-#	source rmsf.tcl
-#	rmsf_all 0 "rmsf_all.dat" "," (0: mol_id, optional file name and delimiter)
-#	(generates output file "rmsf.dat" by default)
-#-----------------------------------------------------------------------
+# ======================= CONFIG ===========================
+set out_file_name "rmsf.dat";
+set out_delimiter " \t ";
 
-# 5. TO CALCULATE RMSF OF SPECIFIC RESIDUES: call function rmsf <mol> <res_ids>
-#--------------------- Example -----------------------------------------
-#	source rmsf.tcl
-#	set residue_ids {1 5 9}
-#	rmsf top residue_ids rmsf_3.dat (optional file name and delimiter)
-#	(generates output file "rmsf.dat" by default)
-#-----------------------------------------------------------------------
+# open output file ofor writing
+set out_file [open $out_file_name w]
 
-# 5. TO CALCULATE RMSF OF SINGLE RESIDUE: call function rmsf_res <mol> <res_id>
-#--------------------- Example -----------------------------------------
-#	source rmsf.tcl
-#	set residue_id 5
-#	rmsf_res top residue_id
-#-----------------------------------------------------------------------
+proc log2file { msg } { 
+	global out_file;
+	puts $out_file $msg;	# to output file
+}
 
-proc all_res_ids {{mol top}} {
-	# get residue_id of each alpha C-atom in the protein (since there is only 1 alpha C in each residue)
-	set res_ids [[atomselect $mol "protein and alpha"] get resid];
+proc log { msg } { 
+	global out_file;
+	puts $msg; flush stdout;		# to stdout
+	log2file $msg;					# to output file
+}
+
+log "#=============  RMSF  ================="
+
+## Molecule ID (defaults to top, can be int)
+puts -nonewline " -> set Molecule ID (default: top): "; flush stdout; 
+set mol_id [gets stdin]
+if { [string trim $mol_id] eq ""} { set mol_id top }
+puts ""
+
+### BASE SELECTION (for each frame) --------------
+# Examples: "protein", "nucleic", "lipid", "all not water"
+
+puts "---------------- BASE SELECTION ---------------"
+puts " Used to select the part of system conating residues"
+puts " Examples: \"protein, \"nucleic\", \"lipid\", \"all not water\""
+puts ""
+puts -nonewline " -> set BASE SELECTION for each frame: "; flush stdout; 
+set base_selection [gets stdin]
+puts ""
+
+puts "--------------- RESIDUE SELECTION --------------"
+puts " Used to get RESIDUE_ID's of residues within BASE_SELECTION for which RMSF is required"
+puts " Examples: "
+# FOR PROTEIN: "protein and alpha" -> get residue_id of each alpha C-atom in the protein (since there is only 1 alpha C per residue)
+# FOR NUCLEIC Acids: "nucleic and name C1'" get residue_id of each C1'-atom of nucleotide sugar (since there is only 1 C1' per nucleotide)
+puts "   1. for Protein all residues: \"protein and alpha\" or \"protein and name CA\"" 
+puts "   2. for Nucleic all residues: \"nucleic and name C1'\""
+puts "   3. for RESIDUE RANGE, append \"and (resid <start> to <end>)\" or \"and (resid <one> <two>)\""
+puts "      Example: \"protein and alpha and (resid 10 to 14)\", \"nucleic and name C1'\" and not (resid 11 15)"
+puts ""
+puts -nonewline " -> set RESIDUE SELECTION: "; flush stdout; 
+set residue_selection [gets stdin]
+puts ""
+
+### FRAMES INPUT ---------------------------
+# Number of frames
+set nf [molinfo $mol_id get numframes]
+set last_index [expr $nf - 1]
+
+puts "----------------- Frame Indices ------------------"
+puts "INFO: Total Frames: $nf";
+puts "Frame index must be in range \[0, ${last_index}\], or -ve for back indices"
+puts ""
+puts -nonewline " -> Reference Frame Index: "; flush stdout; set ref_frame_index [gets stdin]
+puts -nonewline " -> START Frame Index: "; flush stdout; set start_frame_index [gets stdin]
+puts -nonewline " -> END Frame Index: "; flush stdout; set end_frame_index [gets stdin]
+puts ""
+
+if {$ref_frame_index >= $nf} { set ref_frame_index [expr $ref_frame_index % $nf] }
+if {$start_frame_index >= $nf} { set start_frame_index [expr $start_frame_index % $nf] }
+if {$end_frame_index >= $nf} { set end_frame_index [expr $end_frame_index % $nf] }
+
+if {$ref_frame_index < 0} { set ref_frame_index [expr $last_index + (($ref_frame_index + 1) % -$nf)] }
+if {$start_frame_index < 0} { set start_frame_index [expr $last_index + (($start_frame_index + 1) % -$nf)] }
+if {$end_frame_index < 0} { set end_frame_index [expr $last_index + (($end_frame_index + 1) % -$nf)] }
+
+# =========================  MAIN  ==================================
+puts "----------------------------"
+log "#LOG: Mol ID: $mol_id";
+log "#LOG: BASE SELECTION: '${base_selection}'"
+log "#LOG: RESIDUE SELECTION: '${residue_selection}'"
+log2file "#----------------------------"
+log "#LOG: Frame Count: ${nf}";
+log "#LOG: REFERENCE Frame Index: ${ref_frame_index}";
+log "#LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for RMSF: [expr ${end_frame_index} - ${start_frame_index} + 1]"
+
+set res_ids [[atomselect $mol_id $residue_selection] get resid];
+set res_count [llength $res_ids];
+log "#LOG: Calculating RMSF for $res_count RESIDUES";
+puts "LOG: RESIDUE ID's: $res_ids";
+log "#----------------------------"
+
+# Reference Frame
+set ref_frame [atomselect $mol_id $base_selection frame $ref_frame_index]
+
+# Current frame (no frame yet)
+set cur_frame [atomselect $mol_id $base_selection]
+
+# make a selection with all atoms
+set all_atoms [atomselect $mol_id all]
+
+# Initialize rmsf array
+foreach r $res_ids {
+	set rmsf_arr($r) 0
+}
+
+# loop over all frames in the trajectory
+for { set i $start_frame_index } { $i <= $end_frame_index } { incr i } {
+	#puts "INFO: processing Frame $i";
+
+	# get the current frame
+	$cur_frame frame $i
+	$all_atoms frame $i
 	
-	return $res_ids;
-}
-
-proc rmsf_all {{mol top} {out_file_name rmsf.dat} {delimiter " \t "}} {
-	return [rmsf $mol [all_res_ids $mol] $out_file_name $delimiter]
-}
-
-###
-# Calculates the RMSF of given residues over all frames
-#
-# @param mol: the molecule id, defaults to "top" if not given
-# @param res_ids: array of residue ids
-# @returns: array containing RMSF of the given residues over all simulation frames
-###
-proc rmsf {{mol top} res_ids {out_file_name rmsf.dat} {delimiter " \t "}} {
-    #global out_file_name;
-    
-    # use frame 0 for the reference
-    set ref_frame [atomselect $mol "protein" frame 0]
-    # the current frame
-    set cur_frame [atomselect $mol "protein"]
-    # make a selection with all atoms
-    set all_atoms [atomselect top all]
-    
-    # get the number of frames
-    set nf [molinfo $mol get numframes]
-    
-    # Initialize rmsf array
-    foreach r $res_ids {
-		set rmsf_arr($r) 0
-    }
-    
-    # loop over all frames in the trajectory
-    for { set frame 0 } { $frame < $nf } { incr frame } {
-    	puts "info: processing Frame $frame";
-    
-		# get the correct frame
-		$cur_frame frame $frame
-		$all_atoms frame $frame
-		
-		# compute the transformation
-		set trans_mat [measure fit $cur_frame $ref_frame]
-		# do the alignment
-		$all_atoms move $trans_mat
-		
-		# compute the contribution to RMSF
-		# loop through all residues
-		foreach r $res_ids {
-			set ref [atomselect $mol "protein and resid $r and noh" frame 0]
-			set cur [atomselect $mol "protein and resid $r and noh" frame $frame]
-			set rmsf_arr($r) [expr $rmsf_arr($r) + [measure rmsd $cur $ref]]
-			$cur delete;	# gc
-			$ref delete;	# gc
-		}
-    }
-    
-    
-    # open output file for writing
-    set out_file [ open $out_file_name w ]
-    
-    set average_rmsf 0
-    
-    puts "";
-    puts "RES_ID${delimiter}RMSF";	# console header
+	# compute the transformation
+	set trans_mat [measure fit $cur_frame $ref_frame]
+	# do the alignment
+	$all_atoms move $trans_mat
+	
+	# compute the contribution to RMSF
+	# loop through all residues
 	foreach r $res_ids {
-	    set rmsf_arr($r) [ expr $rmsf_arr($r) / $nf ]
-	    
-	    # print the RMSF and save in out_file
-	    set log "$r${delimiter}$rmsf_arr($r)"
-	    puts "$log"
-	    puts $out_file $log
-	    
-	    # Computing average RMSF
-	    set average_rmsf [expr $average_rmsf + $rmsf_arr($r)]
-	    
-	    # Set the "user" field (of atoms of the residue) to RMSF value 
-	    set res_atoms [atomselect $mol "resid $r"] 
-        $res_atoms set user $rmsf_arr($r)
-        $res_atoms delete;	# gc
+		set ref [atomselect $mol_id "${base_selection} and resid $r and noh" frame $ref_frame_index]
+		set cur [atomselect $mol_id "${base_selection} and resid $r and noh" frame $i]
+		set rmsf_arr($r) [expr $rmsf_arr($r) + [measure rmsd $cur $ref]]
+		$cur delete;	# gc
+		$ref delete;	# gc
 	}
-	
-    set average_rmsf [ expr $average_rmsf / [llength $res_ids] ]
-    puts "";
-    puts "Average RMSF per residue : $average_rmsf"
-    
-    close $out_file
-    puts "";
-    puts "info: RMSF data saved to '$out_file_name' with delimiter '$delimiter'";
-    
-    #return [array get rmsf_arr]
 }
 
 
-###
-# Calculates the RMSF of a given residue over all frames
-# @param mol: the molecule id, defaults to "top" if not given
-# @param res_id: residue id
-# @returns: RMSF of a given residue over all simulation frames 
-###
-proc rmsf_res {{mol top} res_id} {
-    
-    # use frame 0 for the reference
-    set ref [atomselect $mol "protein and resid $res_id and noh" frame 0]
-    
-    # the frame being compared
-    set cur [atomselect $mol "protein and resid $res_id and noh"]
+# output header
+set out_header "#RES_ID${out_delimiter}RMSF";
+puts "";
+log $out_header;
 
-    #get the number of frames
-    set nf [molinfo $mol get numframes]
+set average_rmsf 0
+foreach r $res_ids {
+    set rmsf_arr($r) [ expr $rmsf_arr($r) / $nf ]
     
-    # RMSF
-    set rmsf 0
+    # print the RMSF and save in out_file
+    log "$r${out_delimiter}$rmsf_arr($r)"
     
-    #loop over all frames in the trajectory
-    for {set frame 1} {$frame < $nf} { incr frame } {
-		# get the correct frame
-		$cur frame $frame
-		
-		# compute the transformation and  do the alignment
-		#$cur move [measure fit $cur $ref]
-		
-		# compute the RMSF contribution of this frame (RMSD of each atom within the residue)
-		set rmsf [ expr $rmsf + [measure rmsd $cur $ref]]
-    }
+    # Computing average RMSF
+    set average_rmsf [expr $average_rmsf + $rmsf_arr($r)]
     
-    set rmsf [ expr $rmsf / $nf ]
-    puts "RMSF of residue $res_id : $rmsf"
+    # Set the "user" field (of atoms of the residue) to RMSF value 
+    set res_atoms [atomselect $mol_id "${base_selection} and resid $r"] 
+    $res_atoms set user $rmsf_arr($r)
+    $res_atoms delete;	# gc
 }
+
+set average_rmsf [ expr $average_rmsf / $res_count ]
+puts ""
+log "#----------------------------"
+log "#INFO: Average RMSF per residue : $average_rmsf"
+
+close $out_file
+puts "";
+puts "---------------------------------"
+puts "FINISHED. Output File: ${out_file_name}, delimiter: '$out_delimiter'"
