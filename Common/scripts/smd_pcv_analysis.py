@@ -90,7 +90,7 @@ def analyze_smd_pcv(namd_log_files: [str, list],
                     pull_dir_vec: tuple = None,
                     fixed_atoms_com_pos: tuple = None,
                     out_file: str = "smd_pcv_force_displacement.csv",
-                    out_file_delimiter: str = "\t"):
+                    out_file_delimiter: str = " \t "):
     """
     Extracts and analyzes Constant-Velocity Pull (pcv) SMD information from NAMD .log file
 
@@ -115,7 +115,7 @@ def analyze_smd_pcv(namd_log_files: [str, list],
     """
 
     # Handling arguments --------------------------------------
-    if type(namd_log_files) == str:
+    if isinstance(namd_log_files, str):
         namd_log_files = [namd_log_files]
 
     if is_vec_nonzero(pull_dir_vec):
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     fixed_atoms_com_pos = (24.360, 23.138, 4.649)  # or None
 
     out_file = "smd_pcv_force_displacement.csv"
-    out_file_delimiter = "\t"
+    out_file_delimiter = " \t "
 
     analyze_smd_pcv(namd_log_files=namd_log_files,
                     pull_dir_vec=pull_dir_vec,
