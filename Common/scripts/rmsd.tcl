@@ -52,18 +52,37 @@ puts "----------------- Frame Indices ------------------";
 puts "INFO: Total Frames: $nf";
 puts "Frame index must be in range \[0, ${last_index}\], or -ve for back indices";
 puts ""
-puts -nonewline " -> Reference Frame Index: "; flush stdout; set ref_frame_index [gets stdin]
-puts -nonewline " -> START Frame Index: "; flush stdout; set start_frame_index [gets stdin]
-puts -nonewline " -> END Frame Index: "; flush stdout; set end_frame_index [gets stdin]
+puts -nonewline " -> Reference Frame Index (default: 0): "; flush stdout; set ref_frame_index [gets stdin]
+puts -nonewline " -> START Frame Index (default: 0): "; flush stdout; set start_frame_index [gets stdin]
+puts -nonewline " -> END Frame Index (default: -1): "; flush stdout; set end_frame_index [gets stdin]
 puts ""
 
-if {$ref_frame_index >= $nf} { set ref_frame_index [expr $ref_frame_index % $nf] }
-if {$start_frame_index >= $nf} { set start_frame_index [expr $start_frame_index % $nf] }
-if {$end_frame_index >= $nf} { set end_frame_index [expr $end_frame_index % $nf] }
+# NORMALIZING REFERENCE_FRAME_INDEX (default 0)
+if { [string trim $ref_frame_index] eq ""} {
+	set ref_frame_index 0
+} elseif {$ref_frame_index < 0} {
+	set ref_frame_index [expr $last_index + (($ref_frame_index + 1) % -$nf)]
+} elseif { $ref_frame_index >= $nf } {
+	set ref_frame_index [expr $ref_frame_index % $nf]
+}
 
-if {$ref_frame_index < 0} { set ref_frame_index [expr $last_index + (($ref_frame_index + 1) % -$nf)] }
-if {$start_frame_index < 0} { set start_frame_index [expr $last_index + (($start_frame_index + 1) % -$nf)] }
-if {$end_frame_index < 0} { set end_frame_index [expr $last_index + (($end_frame_index + 1) % -$nf)] }
+# NORMALIZING START_FRAME_INDEX (default 0)
+if { [string trim $start_frame_index] eq ""} {
+	set start_frame_index 0
+} elseif {$start_frame_index < 0} {
+	set start_frame_index [expr $last_index + (($start_frame_index + 1) % -$nf)]
+} elseif { $start_frame_index >= $nf } {
+	set start_frame_index [expr $start_frame_index % $nf]
+}
+
+# Normalizing END_FRAME_INDEX (default last_index)
+if { [string trim $end_frame_index] eq ""} {
+	set end_frame_index $last_index
+} elseif {$end_frame_index < 0} {
+	set end_frame_index [expr $last_index + (($end_frame_index + 1) % -$nf)]
+} elseif { $end_frame_index >= $nf } {
+	set end_frame_index [expr $end_frame_index % $nf]
+}
 
 # =========================  MAIN  ==================================
 puts "--------------------------"

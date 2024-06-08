@@ -1,4 +1,5 @@
 import datetime
+from collections.abc import Iterable
 
 """
 Script to extract ENERGIES and calculate ENERGY AVERAGES from NAMD .log file(s)
@@ -15,7 +16,7 @@ USAGE:
 """
 
 
-def _extract_energies_internal(namd_log_files: [str, list],
+def _extract_energies_internal(namd_log_files: [str, Iterable],
                                e_titles_callback: callable,
                                energies_callback: callable,
                                start_timestep: int = -1,
@@ -70,11 +71,39 @@ def _extract_energies_internal(namd_log_files: [str, list],
                     energies_callback(energies)
 
 
-def extract_energies(namd_log_files: [str, list],
+def _parse_energy_cols(energy_cols: [str, Iterable, None]) -> [list, None]:
+    if isinstance(energy_cols, str):
+        energy_cols = energy_cols.strip()
+        if energy_cols:
+            return [energy_cols]
+        return None
+
+    if isinstance(energy_cols, (list, tuple, Iterable)):
+        energy_cols = [e.strip() for e in energy_cols if isinstance(e, str) and e.strip()]
+        if len(energy_cols) > 0:
+            return energy_cols
+        return None
+
+    return None
+
+
+def _out_file_from_energy_cols(energy_cols: [list | None],
+                               suffix: str,
+                               default_file_name: str) -> str:
+    if energy_cols and len(energy_cols) > 0:
+        if len(energy_cols) == 1:
+            return f"{energy_cols[0].lower()}{suffix}"
+
+        return f"{energy_cols[0].lower()}-{energy_cols[-1].lower()}{suffix}"
+
+    return default_file_name  # Default
+
+
+def extract_energies(namd_log_files: [str, Iterable],
                      start_timestep: int = -1,
                      end_timestep: int = -1,
-                     energy_cols: [str, list] = None,
-                     out_file_name: str = "energies.csv",
+                     energy_cols: [str, Iterable, None] = None,
+                     out_file_name: str = None,
                      out_delimiter: str = " \t ",
                      comment_token: str = "#",
                      comment_e_titles: bool = False):
@@ -92,18 +121,16 @@ def extract_energies(namd_log_files: [str, list],
                             -1 to read till the end of all .log files
     @param energy_cols : Energy fields required.
                         can be a single string, or list of strings, or None for all energy fields present in .log file(s)
-    @param out_file_name : name of the output file
+    @param out_file_name : name of the output file. None for default
     @param out_delimiter : delimiter to use for output
     @param comment_token : A token for comments. Empty string to disable comments
     @param comment_e_titles : Whether to comment Energy Titles as well. Useful for programs
                             such as Xmgrace which cannot parse headers
     """
 
-    if isinstance(energy_cols, str):
-        if energy_cols.strip():
-            energy_cols = [energy_cols]
-        else:
-            energy_cols = None
+    energy_cols = _parse_energy_cols(energy_cols)
+    if not out_file_name:
+        out_file_name = _out_file_from_energy_cols(energy_cols, suffix="_vs_ts.csv", default_file_name="energies_vs_ts.csv")
 
     indices = []
     with open(out_file_name, "w") as out_fd:
@@ -146,11 +173,11 @@ def extract_energies(namd_log_files: [str, list],
               f" | comment_token: '{comment_token}' | comment_energy_titles: {comment_e_titles}")
 
 
-def energies_average(namd_log_files: [str, list],
+def energies_average(namd_log_files: [str, Iterable],
                      start_timestep: int = -1,
                      end_timestep: int = -1,
-                     energy_cols: [str, list] = None,
-                     out_file_name: str = "energies_avg.csv",
+                     energy_cols: [str, Iterable, None] = None,
+                     out_file_name: str = None,
                      out_delimiter: str = " \t ",
                      comment_token: str = "#",
                      comment_e_titles: bool = False):
@@ -168,18 +195,16 @@ def energies_average(namd_log_files: [str, list],
                             -1 to read till the end of all .log files
     @param energy_cols : Energy fields required.
                         can be a single string, or list of strings, or None for all energy fields present in .log file(s)
-    @param out_file_name : name of the output file
+    @param out_file_name : name of the output file, None for default
     @param out_delimiter : delimiter to use for output
     @param comment_token : A token for comments. Empty string to disable comments
     @param comment_e_titles : Whether to comment Energy Titles as well. Useful for programs
                             such as Xmgrace which cannot parse headers
     """
 
-    if isinstance(energy_cols, str):
-        if energy_cols.strip():
-            energy_cols = [energy_cols]
-        else:
-            energy_cols = None
+    energy_cols = _parse_energy_cols(energy_cols)
+    if not out_file_name:
+        out_file_name = _out_file_from_energy_cols(energy_cols, suffix="_avg.csv", default_file_name="energies_avg.csv")
 
     indices = []  # indices of energy cols: list[int]
     titles = []  # energy titles: list[str]
@@ -254,18 +279,18 @@ if __name__ == '__main__':
     # TS, BOND, ANGLE, DIHED, IMPRP, ELECT, VDW, BOUNDARY, MISC, KINETIC, TOTAL, TEMP, POTENTIAL, TOTAL3, TEMPAVG
 
     ## ====================  INPUT CONFIG  =========================
-    namd_log_files = ["test.log"]  # TODO: input .log file(s)
-    # energy_columns = ["BOND", "TEMP", "KINETIC"]  # TODO: Energy columns required. None or empty list for all columns
+    namd_log_files = ["test.log"]           # TODO: input .log file(s)
+    # energy_columns = ["BOND", "TEMP", "KINETIC"]     # TODO: str or list of str. None for all columns
     energy_columns = None
-    
-    start_timestep = -1  # TODO: start timestep, or -1 to start form beginning
-    end_timestep = -1  # TODO: end timestep, or -1 to read till the end of all .log file(s)
+
+    start_timestep = -1     # TODO: START Timestep, or -1 to start form beginning
+    end_timestep = -1       # TODO: END Timestep, or -1 to read till the end of all .log file(s)
 
     ## =====================  OUTPUT CONFIG  ==========================
-    # output_file = "energies.csv"
-    # out_delimiter = " \t "
-    # comment_token = ""         # Empty string to disable comments
-    comment_e_titles = False  # whether to comment ENERGY TITLES in the Header, useful for Xmgrace
+    output_file = None          # None or empty str for default
+    out_delimiter = " \t "
+    comment_token = "#"         # Empty string to disable comments
+    comment_e_titles = True    # whether to comment ENERGY TITLES in the Header, useful for Xmgrace
 
     ## ----------------------------------------------------------------
 
@@ -274,9 +299,9 @@ if __name__ == '__main__':
                      energy_cols=energy_columns,
                      start_timestep=start_timestep,
                      end_timestep=end_timestep,
-                     # out_file_name=output_file,
-                     # out_delimiter=out_delimiter,
-                     # comment_token=comment_token,
+                     out_file_name=output_file,
+                     out_delimiter=out_delimiter,
+                     comment_token=comment_token,
                      comment_e_titles=comment_e_titles)
 
     ## AVERAGE ENERGIES
@@ -284,7 +309,7 @@ if __name__ == '__main__':
                      energy_cols=energy_columns,
                      start_timestep=start_timestep,
                      end_timestep=end_timestep,
-                     # out_file_name=output_file,
-                     # out_delimiter=out_delimiter,
-                     # comment_token=comment_token,
+                     out_file_name=output_file,
+                     out_delimiter=out_delimiter,
+                     comment_token=comment_token,
                      comment_e_titles=comment_e_titles)
