@@ -9,9 +9,11 @@
 # 4. run with "vmd -dispdev text -e distance.tcl"
 # 5. OUTPUT: generates file "dist_vs_frame.dat"
 
+## NOTE: Distance is in Angstrom (Å)
+
 # ======================= INPUT ===========================
 set in_psf_file "../common/dna.psf";		# input strcuture file (.psf)
-set in_frame_file "dna_gbis_pcf.dcd";		# input trajectory (.dcd) or a single frame (.pdb, .coor)
+set in_frame_file "dna_gbis_pcf.restart.coor";		# input trajectory (.dcd) or a single frame (.pdb, .coor)
 
 set selection_atom1 "nucleic and resid 1 and name C5'";		# selection for first atom
 set selection_atom2 "nucleic and resid 16 and name C3'";	# selection for second atom
@@ -118,19 +120,20 @@ log2file $out_header;
 
 # Main Loop
 for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
-	if {[expr $i % 10000] == 0} {
-		puts "INFO: processing Frames $i-[expr min($i + 10000, $end_frame_index)]";
-	}
-
 	$atom1 frame $i
 	$atom2 frame $i
 	
 	set a1pos [lindex [$atom1 get {x y z}] 0]
 	set a2pos [lindex [$atom2 get {x y z}] 0]
 	
-	set v [vecsub $a2pos $a1pos]
-	set dsq [vecdot $v $v]
-	set dist [expr { sqrt($dsq) }]
+	set v [vecsub $a2pos $a1pos];		# Vector connecting the two atoms
+	set dsq [vecdot $v $v];				# Distance Square (self dot)
+	set dist [expr { sqrt($dsq) }];		# Distance in Å
+	
+	if {[expr $i % 10000] == 0} {
+		puts "INFO: processing Frames $i-[expr min($i + 10000, $end_frame_index)]";
+		puts "INFO: FRAME ${i} -> DISTANCE: ${dist} Å"
+	}
 	
 	set line "${i}${out_delimiter}${dist}"
 	log2file $line
