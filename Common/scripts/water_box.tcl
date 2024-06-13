@@ -12,13 +12,13 @@ set padding 5;		# TODO: padding in Angrostom
 set output_name ${molname}_wb;		# name of output .psf and .pdb files (defaults to adding "wb" suffix)
 
 package require solvate
-solvate ${molname}.psf ${molname}.pdb -t $padding -o $output_name
+solvate "${molname}.psf" "${molname}.pdb" -t $padding -o $output_name
 
 # Determine the center and minimum-maximum cooridnates of the solvated system (useful for periodic boundary conditions)
-mol new ${output_name}.psf
-mol addfile ${output_name}.pdb
+set mol_id [mol new "${output_name}.psf"]
+mol addfile "${output_name}.pdb" molid $mol_id
 
-set everyone [atomselect top all]
+set everyone [atomselect $mol_id all]
 
 # Geometric Center of all atoms (system + water)
 set cen_geo [measure center $everyone]
@@ -55,3 +55,5 @@ puts "cellBasisVector2 0 [ expr $ymax - $ymin ] 0 "
 puts "cellBasisVector3 0 0 [ expr $zmax - $zmin ] "
 puts "cellOrigin [ expr ($xmax + $xmin) / 2 ] [ expr ($ymax + $ymin) / 2 ] [ expr ($zmax + $zmin) / 2 ] "
 puts "-------------------------------------------------------"
+
+exit

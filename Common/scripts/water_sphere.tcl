@@ -12,19 +12,19 @@ set padding 10;		# TODO: padding in Angstrom
 set output_name ${molname}_ws;	# name of output .psf and .pdb files (defaults to adding "ws" suffix)
 set msm_grid_pad 2;				# MSM Grid extra padding in Å (for safety)
 
-mol new ${molname}.psf
-mol addfile ${molname}.pdb
+set mol_id [mol new "${molname}.psf"]
+mol addfile "${molname}.pdb" molid $mol_id
 
 ### Determine the center of mass of the molecule and store the coordinates
-set cen [measure center [atomselect top all] weight mass]
+set cen [measure center [atomselect $mol_id all] weight mass]
 set x1 [lindex $cen 0]
 set y1 [lindex $cen 1]
 set z1 [lindex $cen 2]
 set max_sq 0
 
 ### Determine the distance of the farthest atom from the center of mass
-foreach atom [[atomselect top all] get index] {
-	set pos [lindex [[atomselect top "index $atom"] get {x y z}] 0]
+foreach atom [[atomselect $mol_id all] get index] {
+	set pos [lindex [[atomselect $mol_id "index $atom"] get {x y z}] 0]
 	set x2 [lindex $pos 0]
 	set y2 [lindex $pos 1]
 	set z2 [lindex $pos 2]
@@ -39,7 +39,7 @@ set max [expr sqrt($max_sq)]
 set final_r [expr $max + $padding]
 set final_r_sq [expr $final_r * $final_r]
 
-mol delete top
+mol delete $mol_id
 
 ### Solvate the molecule in a water Cube with body_diagonal = sqrt(3) * ($max + $padding) so that it can 
 # fully embed the sphere we want
@@ -49,18 +49,18 @@ set pad_eff [expr 0.732 * $max + 1.732 * $padding]
 set temp_out "${output_name}.temp"
 
 package require solvate
-solvate ${molname}.psf ${molname}.pdb -t $pad_eff -o $temp_out
+solvate "${molname}.psf" "${molname}.pdb" -t $pad_eff -o $temp_out
 
 resetpsf
 package require psfgen
-mol new ${temp_out}.psf
-mol addfile ${temp_out}.pdb
-readpsf ${temp_out}.psf
-coordpdb ${temp_out}.pdb
+set mol_id [mol new "${temp_out}.psf"]
+mol addfile "${temp_out}.pdb" molid $mol_id
+readpsf "${temp_out}.psf"
+coordpdb "${temp_out}.pdb"
 
 ### Determine which water molecules need to be deleted and use a for loop to delete them
-#set wat [atomselect top "same residue as {water and ((x-$x1)*(x-$x1) + (y-$y1)*(y-$y1) + (z-$z1)*(z-$z1))<($max*$max)}"]
-set del [atomselect top "water and not same residue as { water and ((x-$x1)**2 + (y-$y1)**2 + (z-$z1)**2) < $final_r_sq }"]
+#set wat [atomselect $mol_id "same residue as {water and ((x-$x1)*(x-$x1) + (y-$y1)*(y-$y1) + (z-$z1)*(z-$z1))<($max*$max)}"]
+set del [atomselect $mol_id "water and not same residue as { water and ((x-$x1)**2 + (y-$y1)**2 + (z-$z1)**2) < $final_r_sq }"]
 
 set seg [$del get segid]
 set res [$del get resid]
@@ -69,17 +69,17 @@ for {set i 0} {$i < [llength $seg]} {incr i} {
 	delatom [lindex $seg $i] [lindex $res $i] [lindex $name $i] 
 }
 
-writepsf ${output_name}.psf
-writepdb ${output_name}.pdb
+writepsf "${output_name}.psf"
+writepdb "${output_name}.pdb"
 
-mol delete top
+mol delete $mol_id
 
 
 ### =================== FINAL LOAD  ======================
-mol new ${output_name}.psf
-mol addfile ${output_name}.pdb
+set mol_id [mol new "${output_name}.psf"]
+mol addfile "${output_name}.pdb" molid $mol_id
 
-set everyone [atomselect top all]
+set everyone [atomselect $mol_id all]
 
 # Geometric Center of All Atoms
 set cen_geo [measure center $everyone]
@@ -130,4 +130,5 @@ puts "sphericalBCr1       $final_r"
 puts "---------------------------------------------------------------"
 
 # gc
-mol delete top
+mol delete $mol_id
+exit
