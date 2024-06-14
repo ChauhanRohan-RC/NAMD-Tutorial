@@ -4,7 +4,7 @@
 
 ## USAGE ------------------------
 # 1. Copy script to working dir
-# 2. INPUT: Set input .psf and .dcd (or .pdb .coor coordinate) files
+# 2. INPUT: Set input strcuture (.psf) and frame (.dcd, .pdb, .coor) files
 # 3. INPUT: Set selections for atom1 and atom2
 # 4. run with "vmd -dispdev text -e distance.tcl"
 # 5. OUTPUT: generates file "dist_vs_frame.dat"
@@ -12,28 +12,32 @@
 ## NOTE: Distance is in Angstrom (Å)
 
 # ======================= INPUT ===========================
-set in_psf_file "../common/dna.psf";		# input strcuture file (.psf)
-set in_frame_file "dna_gbis_pcf.restart.coor";		# input trajectory (.dcd) or a single frame (.pdb, .coor)
+set psf_file		"../common/dna.psf";		# input strcuture file (.psf)
+# LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
+set frame_files	{ "dna_gbis_pcf.dcd" "dna_gbis_pcf1.dcd" "dna_gbis_pcf2.dcd" };		
 
-set selection_atom1 "nucleic and resid 1 and name C5'";		# selection for first atom
-set selection_atom2 "nucleic and resid 16 and name C3'";	# selection for second atom
+set selection_atom1	"nucleic and resid 1 and name C5'";		# selection for first atom
+set selection_atom2	"nucleic and resid 16 and name C3'";	# selection for second atom
 
 # ======================= OUTPUT ===========================
-set out_file_name "dist_vs_frame.dat";		# output file name
-set out_delimiter " \t ";					# output delimiter 
+set out_file_name 		"dist_vs_frame.dat";	# output file name
+set out_delimiter 		" \t ";					# output delimiter 
+
+set comment_token 		"#";	# Token used for Comments
+set comment_header		1;		# Whether to comment out the columns header
 # -----------------------------------------------------
 
-
-
-puts "#=============  DISTANCE B/W ATOMS  ================="
+puts "==============  DISTANCE B/W ATOMS  ================="
 
 # loading INPUT .psf and .dcd files
-set mol_id [mol new $in_psf_file];	
+set mol_id [mol new $psf_file];	
 
-puts "---------------------------------------------"
-puts " -> Loading Frames from file : ${in_frame_file}"
-puts "---------------------------------------------"
-mol addfile $in_frame_file waitfor all molid $mol_id;
+foreach frame_file $frame_files {
+	puts "---------------------------------------------"
+	puts " -> Loading Frames from file : ${frame_file}"
+	puts "---------------------------------------------"
+	mol addfile $frame_file waitfor all molid $mol_id;
+}
 
 
 ### FRAMES INPUT ---------------------------
@@ -43,8 +47,8 @@ set last_index [expr $nf - 1]
 
 if {$nf == 0} {
 	puts "-------------------------------------------"
-	puts "INFO: There are no frames in file: ${in_frame_file}"
-	puts "LOG: QUITING (No Frames)"
+	puts "INFO: There are no frames in input file(s): \[${frame_files}\]"
+	puts "LOG: QUITING (NO FRAMES)"
 	puts "-------------------------------------------"
 	exit
 }
@@ -98,23 +102,26 @@ proc log { msg } {
 }
 
 puts "--------------------------"
-log2file "#================  DISTANCE B/W 2 ATOMS  ================="
-log "#LOG: INPUT Structure File: ${in_psf_file} | Frame(s) File: ${in_frame_file}$"
-log "#--------------------------"
-log "#LOG: Mol ID: $mol_id";
-log "#LOG: ATOM1 SELECTION: \"${selection_atom1}\""
-log "#LOG: ATOM2 SELECTION: \"${selection_atom2}\""
-log "#--------------------------"
-log "#LOG: Frame Count: ${nf}";
-log "#LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for Calculation: [expr ${end_frame_index} - ${start_frame_index} + 1]"
-log "#--------------------------"
+log2file "${comment_token}================  DISTANCE B/W 2 ATOMS  ================="
+log "${comment_token}LOG: INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
+log "${comment_token}LOG: ATOM1 SELECTION: \"${selection_atom1}\""
+log "${comment_token}LOG: ATOM2 SELECTION: \"${selection_atom2}\""
+log "${comment_token}--------------------------"
+log "${comment_token}LOG: Total Frames: ${nf}";
+log "${comment_token}LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for Calculation: [expr ${end_frame_index} - ${start_frame_index} + 1]"
+log "${comment_token}--------------------------"
 
 # Selecting Atoms
 set atom1 [atomselect $mol_id $selection_atom1];
 set atom2 [atomselect $mol_id $selection_atom2];
 
 # Header for output file
-set out_header "#Frame${out_delimiter}DIST";
+if {$comment_header == 0} {
+	set out_header "Frame${out_delimiter}DIST";
+} else {
+	set out_header "${comment_token}Frame${out_delimiter}DIST";
+}
+
 log2file $out_header;
 #puts $out_header;
 
@@ -139,6 +146,9 @@ for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
 	log2file $line
 }
 
-puts "====================  FINISHED  ==========================="
+puts "=================  FINISHED  ===================="
+puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
+puts "================================================="
+
 exit
 
