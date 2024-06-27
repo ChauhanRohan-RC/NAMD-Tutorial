@@ -12,12 +12,20 @@
 ## NOTE: Distance is in Angstrom (Å)
 
 # ======================= INPUT ===========================
-set psf_file		"../common/dna.psf";		# input strcuture file (.psf)
+set psf_file		"dna_dummy.psf";		# input strcuture file (.psf)
 # LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
-set frame_files	{ "dna_gbis_pcf.dcd" "dna_gbis_pcf1.dcd" "dna_gbis_pcf2.dcd" };		
+#set frame_files	{ "dna_gbis_pcf1.dcd" "dna_gbis_pcf2.dcd" };		
+set frame_files	{ "dna_gbis_pcf.dcd" };
 
-set selection_atom1	"nucleic and resid 1 and name C5'";		# selection for first atom
-set selection_atom2	"nucleic and resid 16 and name C3'";	# selection for second atom
+set selection_atom1	"resid 1 and name C5'";		# selection for first atom: SMD
+set selection_atom2	"resid 16 and name C3'";	# selection for second atom: FIXED
+
+### Direction Vector onto which ATOM 1 -> ATOM 2 linking vector is projected (dot prod)
+## -> Must be a 3D VECTOR. 
+## -> Comment out for no projection (abs distance between 1 and 2)
+
+#set dir_vec 	{ 0.31759 0.88123 0.35008 };
+set force_positive_dist		1;		# [Only when dir_vec is set] 1 : take only magntiude of distances. 0 : Distances can be negative
 
 # ======================= OUTPUT ===========================
 set out_file_name 		"dist_vs_frame.dat";	# output file name
@@ -106,6 +114,16 @@ log2file "${comment_token}================  DISTANCE B/W 2 ATOMS  ==============
 log "${comment_token}LOG: INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
 log "${comment_token}LOG: ATOM1 SELECTION: \"${selection_atom1}\""
 log "${comment_token}LOG: ATOM2 SELECTION: \"${selection_atom2}\""
+
+if {[info exists dir_vec] && [llength $dir_vec] == 3 } {
+	set dir_unit_vec [vecnorm $dir_vec]
+	set has_dir_vec 1
+	log "${comment_token}LOG: DIR Unit Vector: {$dir_unit_vec}  |  Force Positive Distances: ${force_positive_dist}"
+} else {
+	set dir_unit_vec { };	# Empty list
+	set has_dir_vec 0
+}
+
 log "${comment_token}--------------------------"
 log "${comment_token}LOG: Total Frames: ${nf}";
 log "${comment_token}LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for Calculation: [expr ${end_frame_index} - ${start_frame_index} + 1]"
@@ -133,13 +151,28 @@ for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
 	set a1pos [lindex [$atom1 get {x y z}] 0]
 	set a2pos [lindex [$atom2 get {x y z}] 0]
 	
-	set v [vecsub $a2pos $a1pos];		# Vector connecting the two atoms
-	set dsq [vecdot $v $v];				# Distance Square (self dot)
-	set dist [expr { sqrt($dsq) }];		# Distance in Å
+	set v [vecsub $a2pos $a1pos];		# ATOM 1 -> ATOM 2 Link Vector
+	if {$has_dir_vec == 1} {
+		set dist [vecdot $v $dir_unit_vec];		# Distance in Å
+		if { $force_positive_dist == 1 } { 
+			set dist [expr abs($dist)]
+		}
+	} else {
+		set dsq [vecdot $v $v];				# Distance Square (self dot)
+		set dist [expr { sqrt($dsq) }];		# Distance in Å
+	}
 	
 	if {[expr $i % 10000] == 0} {
 		puts "INFO: processing Frames $i-[expr min($i + 10000, $end_frame_index)]";
-		puts "INFO: FRAME ${i} -> DISTANCE: ${dist} Å"
+		
+		if { $has_dir_vec == 1 } {
+			puts "INFO: FRAME ${i} => 1 -> 2 Link Vector: {$v} | DIR Unit Vector: {$dir_unit_vec}"
+			if {$force_positive_dist == 1} { set tok " | positive" } else { set tok "" }
+			puts "INFO: FRAME ${i} => 1-2 DISTANCE (projected${tok}): ${dist} Å"
+		} else {
+			puts "INFO: FRAME ${i} => 1 -> 2 Link Unit Vector: {[vecnorm $v]}"
+			puts "INFO: FRAME ${i} => 1-2 DISTANCE: ${dist} Å"
+		}
 	}
 	
 	set line "${i}${out_delimiter}${dist}"
