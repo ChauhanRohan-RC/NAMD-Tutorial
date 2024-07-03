@@ -24,8 +24,8 @@ set selection_atom2	"resid 16 and name C3'";	# selection for second atom: FIXED
 ## -> Must be a 3D VECTOR. 
 ## -> Comment out for no projection (abs distance between 1 and 2)
 
-#set dir_vec 	{ 0.31759 0.88123 0.35008 };
-set force_positive_dist		1;		# [Only when dir_vec is set] 1 : take only magntiude of distances. 0 : Distances can be negative
+#set dir_vec 	{ 1.0 0.0 0.0 };
+set force_positive_dist		0;		# [Only when dir_vec is set] 1 : take only magntiude of distances. 0 : Distances can be negative
 
 # ======================= OUTPUT ===========================
 set out_file_name 		"dist_vs_frame.dat";	# output file name
