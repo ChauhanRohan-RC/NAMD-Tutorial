@@ -40,12 +40,6 @@ set comment_header		1;		# Whether to comment out the columns header
 
 puts "=============  RMSF  ================="
 
-## Molecule ID (defaults to top, can be int)
-#puts -nonewline " -> set Molecule ID (default: top): "; flush stdout; 
-#set mol_id [gets stdin]
-#if { [string trim $mol_id] eq ""} { set mol_id top }
-#puts ""
-
 # loading INPUT .psf and .dcd files
 set mol_id [mol new $psf_file];	
 
@@ -55,31 +49,6 @@ foreach frame_file $frame_files {
 	puts "---------------------------------------------"
 	mol addfile $frame_file waitfor all molid $mol_id;
 }
-
-### BASE SELECTION (for each frame) --------------
-# Examples: "protein", "nucleic", "lipid", "all not water"
-
-#puts "---------------- BASE SELECTION ---------------"
-#puts " Used to select the part of system conating residues"
-#puts " Examples: \"protein, \"nucleic\", \"lipid\", \"all not water\""
-#puts ""
-#puts -nonewline " -> set BASE SELECTION for each frame: "; flush stdout; 
-#set base_selection [gets stdin]
-#puts ""
-
-#puts "--------------- RESIDUE SELECTION --------------"
-#puts " Used to get RESIDUE_ID's of residues within BASE_SELECTION for which RMSF is required"
-#puts " Examples: "
-# FOR PROTEIN: "protein and alpha" -> get residue_id of each alpha C-atom in the protein (since there is only 1 alpha C per residue)
-# FOR NUCLEIC Acids: "nucleic and name C1'" get residue_id of each C1'-atom of nucleotide sugar (since there is only 1 C1' per nucleotide)
-#puts "   1. for Protein all residues: \"protein and alpha\" or \"protein and name CA\"" 
-#puts "   2. for Nucleic all residues: \"nucleic and name C1'\""
-#puts "   3. for RESIDUE RANGE, append \"and (resid <start> to <end>)\" or \"and (resid <one> <two>)\""
-#puts "      Example: \"protein and alpha and (resid 10 to 14)\", \"nucleic and name C1'\" and not (resid 11 15)"
-#puts ""
-#puts -nonewline " -> set RESIDUE SELECTION: "; flush stdout; 
-#set residue_selection [gets stdin]
-#puts ""
 
 ### FRAMES INPUT ---------------------------
 # Number of frames
@@ -194,27 +163,33 @@ for { set i $start_frame_index } { $i <= $end_frame_index } { incr i } {
 	# compute the contribution to RMSF
 	# loop through all residues
 	foreach r $res_ids {
-		set ref [atomselect $mol_id "${base_selection} and resid $r and noh" frame $ref_frame_index]
-		set cur [atomselect $mol_id "${base_selection} and resid $r and noh" frame $i]
-		set rmsf_arr($r) [expr $rmsf_arr($r) + [measure rmsd $cur $ref]]
+		set sel_str "${base_selection} and resid $r and noh";
+		set ref [atomselect $mol_id $sel_str frame $ref_frame_index];
+		set cur [atomselect $mol_id $sel_str frame $i];
+		
+		set rmsd_r [measure rmsd $cur $ref]
+		set rmsf_arr($r) [ expr $rmsf_arr($r) + ($rmsd_r * $rmsd_r) ]
 		$cur delete;	# gc
 		$ref delete;	# gc
 	}
 }
 
+
 # Header for output file
 if {$comment_header == 0} {
-	set out_header "Frame${out_delimiter}RMSF";
+	set out_header "RESIDUE${out_delimiter}RMSF";
 } else {
-	set out_header "${comment_token}Frame${out_delimiter}RMSF";
+	set out_header "${comment_token}RESIDUE${out_delimiter}RMSF";
 }
 
-puts "";
+set average_rmsf 0
+
+puts "=========================================";
 log $out_header;
 
-set average_rmsf 0
 foreach r $res_ids {
-    set rmsf_arr($r) [ expr $rmsf_arr($r) / $nf ]
+	# Final RMSF Calculation
+    set rmsf_arr($r) [ expr sqrt($rmsf_arr($r) / $nf) ]
     
     # print the RMSF and save in out_file
     log "$r${out_delimiter}$rmsf_arr($r)"
@@ -224,10 +199,11 @@ foreach r $res_ids {
     
     # Set the "user" field (of atoms of the residue) to RMSF value 
     set res_atoms [atomselect $mol_id "${base_selection} and resid $r"] 
-    $res_atoms set user $rmsf_arr($r)
+    $res_atoms set user $rmsf_arr($r);
     $res_atoms delete;	# gc
 }
 
+puts "=========================================";
 set average_rmsf [ expr $average_rmsf / $res_count ]
 puts ""
 log "${comment_token}----------------------------"
