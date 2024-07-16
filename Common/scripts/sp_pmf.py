@@ -80,7 +80,8 @@ int_df["SP"] = split_prob
 
 ## Re-constructing PMF from Sp(x)
 grad = np.gradient(int_df["SP"], int_df["EXT"])     # Gradient of Sp(fold) : ALways Negative
-pmf_re = (1 if negate_app_pmf else -1) * np.log(-grad * c) * K_b * T
+pmf_re = (1 if negate_app_pmf else -1) * np.log(-grad) * K_b * T
+#pmf_re = (1 if negate_app_pmf else -1) * np.log(-grad * c) * K_b * T       # Accurate but does not resemble with SP traj
 int_df["PMF_RE"] = pmf_re              # Reconstructed PMF from Sp(x)
 
 # Writing Output File

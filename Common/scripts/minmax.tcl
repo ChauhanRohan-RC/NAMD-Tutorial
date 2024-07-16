@@ -6,91 +6,106 @@
 
 ## USAGE
 # 1. copy this script to the working dir
-# 2. run with "tclsh minmax.tcl"
-# 3. specify the input .pdb file
-# 4. specify atom slection (or "all" for all atoms)
+# 2. INPUT: PDB file and ATOM_SELECTION
+# 3. OUTPUT: (optional) output file
+# 2. run with "vmd -dispdev text -e minmax.tcl"
 
-puts "-------------------------------------------------------"
-puts " Gets minimum and maximum coordinates from a PDB file. "
-puts " The selection will be defined below: "
-puts " Use 'all' to consider all atoms in each field. "
-puts "-------------------------------------------------------"
+# INPUT ----------------------------------------
+set pdb_file			"ubq.pdb";
 
-puts -nonewline " PDB file: "; flush stdout; gets stdin pdbfile
-puts -nonewline " Segment: "; flush stdout; gets stdin segment
-puts -nonewline " Residue type: "; flush stdout; gets stdin residue
-puts -nonewline " Atom type: "; flush stdout; gets stdin atomtype
-puts -nonewline " Atom index greater than: "; flush stdout; gets stdin firstatom
-puts -nonewline " Atom index less than: "; flush stdout; gets stdin lastatom
-set pdbfile [ string trim $pdbfile ]
-set segment [ string trim $segment ]
-set residue [ string trim $residue ]
-set atomtype [ string trim $atomtype ]
-set firstatom [ string trim $firstatom ] 
-set lastatom [ string trim $lastatom ]
+# Atoms to select. Use "all" for every atom
+set atom_selection		"all";	
 
-set file [ open $pdbfile r ]
-set file [ read $file ]
-set file [ split $file "\n" ]
+# OUTPUT (optional) ----------------------------
 
-set natoms 0
-foreach line $file {
-  if { [ string range $line 0 3 ] == "ATOM" |
-       [ string range $line 0 5 ] == "HETATM" } {
-    incr natoms
-    set ss [ string trim [ string range $line 72 74 ] ]
-    set rt [ string trim [ string range $line 17 20 ] ]
-    set at [ string trim [ string range $line 12 15 ] ]
-    set consider true
-    if { $firstatom != "all" } { if { $natoms < $firstatom } { set consider false } }
-    if { $lastatom != "all" } { if { $natoms > $lastatom } { set consier false } }
-    if { $segment != "all" } { if { $ss != $segment } { set consider false } }
-    if { $residue != "all" } { if { $rt != $residue } { set consider false } }
-    if { $atomtype != "all" } { if { $at != $atomtype } { set consider false } }
-    if { $consider == "true" } {
-      set x [ string trim [ string range $line 30 37 ] ]
-      set y [ string trim [ string range $line 38 45 ] ]
-      set z [ string trim [ string range $line 46 54 ] ]
-      if { [ info exists xmin ] == 1 } {
-        if { $x < $xmin } { set xmin $x }
-        if { $y < $ymin } { set ymin $y }
-        if { $z < $zmin } { set zmin $z }
-        if { $x > $xmax } { set xmax $x }
-        if { $y > $ymax } { set ymax $y }
-        if { $z > $zmax } { set zmax $z }
-      } else {
-        set xmin $x
-        set ymin $y
-        set zmin $z
-        set xmax $x
-        set ymax $y
-        set zmax $z
-      } 
-    }
-  }
+# Output file. Comment out for no output
+set out_file_name 		"${pdb_file}.minmax.out";
+
+#----------------------------------------------
+
+# Adding molecule
+set mol_id [mol new $pdb_file]
+
+# ATom selection
+set sel [atomselect $mol_id $atom_selection]
+
+# Min and Max coordinates
+set min_max [measure minmax $sel]
+
+set min_vec [lindex $min_max 0]
+set max_vec [lindex $min_max 1]
+
+set xmin [lindex $min_vec 0]
+set ymin [lindex $min_vec 1]
+set zmin [lindex $min_vec 2]
+
+set xmax [lindex $max_vec 0]
+set ymax [lindex $max_vec 1]
+set zmax [lindex $max_vec 2]
+
+# Cell Length
+set len_x [expr $xmax - $xmin]
+set len_y [expr $ymax - $ymin]
+set len_z [expr $zmax - $zmin]
+
+# Cell center from Origin
+set cen_x [expr ($xmax + $xmin) / 2]
+set cen_y [expr ($ymax + $ymin) / 2]
+set cen_z [expr ($zmax + $zmin) / 2]
+
+# If there is "output_file" defined
+if {[info exists out_file_name] && [string trim $out_file_name] != "" } {
+	set has_out_file 1
+	
+	# open output file ofor writing
+	set out_file [open $out_file_name w]
+} else {
+	set has_out_file 0
+	set out_file ""
 }
 
-puts "-------------------------------------------------------"
-puts " Minimum and maximum coordinates of selected atoms: "
-puts " X_min = $xmin     X_max = $xmax " 
-puts " Y_min = $ymin     Y_max = $ymax " 
-puts " Z_min = $zmin     Z_max = $zmax " 
-puts "-------------------------------------------------------"
-puts " Length in each direction: "
-puts " x: [ expr $xmax - $xmin ] "
-puts " y: [ expr $ymax - $ymin ] "
-puts " z: [ expr $zmax - $zmin ] "
-puts "-------------------------------------------------------"
+proc log2file { msg } { 
+	global has_out_file;
+	global out_file;
+	
+	if { $has_out_file == 1 } {
+		puts $out_file $msg;	# to output file
+	}
+}
 
-puts " Cell centre: "
-puts " X= [ expr ($xmax + $xmin)/2 ] "
-puts " Y= [ expr ($ymax + $ymin)/2 ] "
-puts " Z= [ expr ($zmax + $zmin)/2 ] "
-puts "-------------------------------------------------------"
-puts " Copy/paste for NAMD: "
-puts "cellBasisVector1 [ expr $xmax - $xmin ] 0 0 "
-puts "cellBasisVector2 0 [ expr $ymax - $ymin ] 0 "
-puts "cellBasisVector3 0 0 [ expr $zmax - $zmin ] "
-puts "cellOrigin [ expr ($xmax + $xmin)/2 ] [ expr ($ymax + $ymin)/2 ] [ expr ($zmax + $zmin)/2 ] "
-puts "-------------------------------------------------------"
+proc log { msg } {
+	puts $msg; flush stdout;		# to stdout
+	log2file $msg;					# to output file
+}
 
+puts ""
+log "================= Min-Max Coordinates =================="
+log " -> Input PDB: \"${pdb_file}\""
+log " -> ATOM Selection: \"${atom_selection}\"  |  Selected ATOM Count: [$sel num]"
+log "-----------------------------------------------"
+log " Min and Max coordinates of selected atoms: "
+log " -> Min Coordinate: ${min_vec}"
+log " -> Max Coordinate: ${max_vec}"
+log "-----------------------------------------------"
+log " Length in each direction: "
+log " -> X: ${len_x}"
+log " -> Y: ${len_y}"
+log " -> Z: ${len_z}"
+log "-----------------------------------------------"
+log " -> Cell CENTER (From origin): { $cen_x $cen_y $cen_z }"
+log "-------------------------------------------------------"
+log " Copy/paste for PERIODIC BC in NAMD config File: "
+log "cellBasisVector1		${len_x} 0 0; "
+log "cellBasisVector2		0 ${len_y} 0; "
+log "cellBasisVector3		0 0 ${len_z}; "
+log "cellOrigin			$cen_x $cen_y $cen_z; "
+puts "====================================================="
+
+if { $has_out_file == 1 } {
+	close $out_file;
+	puts " FINISHED  |  Output File: ${out_file_name}";
+	puts "================================================="
+} 
+
+puts ""
+exit

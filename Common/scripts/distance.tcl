@@ -183,5 +183,6 @@ puts "=================  FINISHED  ===================="
 puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
 puts "================================================="
 
+close $out_file
 exit
 
