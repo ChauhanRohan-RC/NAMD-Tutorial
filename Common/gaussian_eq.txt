@@ -2,4 +2,9 @@
 # a0: standard deviation
 # a1: mean
 
+# -> Normal Gaussian
 y = (1 / (sqrt(2 * Pi) * a0)) * exp(-0.5 * ((x - a1) / a0) ^ 2)
+
+# -> Skewed Gausian
+# a2: skew parameter
+y = ((1 / (sqrt(2 * Pi) * a0)) * exp(-0.5 * ((x - a1) / a0) ^ 2)) * 0.5 * (1 + erf(a2 * (x - a1) / (sqrt(2) * a0)))
