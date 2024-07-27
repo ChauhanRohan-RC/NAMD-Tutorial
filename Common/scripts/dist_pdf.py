@@ -53,7 +53,7 @@ _rolling_win_bins, _rolling_win_size = parse_rolling_win_bins()
 ## Output --------------------------------------------------------------
 output_pdf_data_file = "dist_pdf.dat"
 output_pdf_avg_data_file = f"dist_pdf-avg{_rolling_win_bins}.dat" if _rolling_win_bins > 0 else ""
-output_fig_file = "dist_pdf.svg"
+output_fig_file = "dist_pdf.svg"        # (optional). Leave blank to not save figure
 comment_output_header = True
 
 # ----------------------------------------------------------------------

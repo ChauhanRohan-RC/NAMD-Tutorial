@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
-
+import matplotlib.pyplot as plt
+from matplotlib.figure import figaspect
 
 ########################################################################
 ## Splitting Probability Sp(x) from Extension Trajectory
@@ -45,10 +45,16 @@ K_b = 8.314 / (CAL_TO_JOULE * 1000)  # ideal gas constant in kcal/(mol K)
 
 ## INPUT -----------------------
 frame_vs_ext_file = "dist_vs_frame.dat"  # Input Frame vs Extension file
+frame_step_fs = 2 * 100  # time (in fs) between frames = time_step (fs) * dcd_freq. -1 for NOT_DEFINED
+
+# Frame Range (optional). NOTE: frame_index = time_fs / frame_step_fs
+frame_index_start = -1         # Inclusive [-1 for no start bound]
+frame_index_end = -1           # Exclusive [-1 for no end bound]
+
 T = 300  # Constant Temp (K)
 
-x_a = 19  # LEFT Absorbing Boundary - Folded state extension (in Å)
-x_b = 40  # RIGHT Absorbing Boundary - Unfolded state extension (in Å)
+x_a = 14  # LEFT Absorbing Boundary - Folded state extension (in Å)
+x_b = 28  # RIGHT Absorbing Boundary - Unfolded state extension (in Å)
 
 ## Number of Spacial and Temporal Bins
 # -1 to use bin sizes (specified below) instead
@@ -56,15 +62,22 @@ ext_bin_count = -1
 frame_bin_count = -1
 
 # Bin sizes: Only used if number of bins is not given
-ext_bin_size = 2.0  # Angstrom(s) in 1 bin
-frame_bin_size = 20  # Number of frames in 1 bin
+ext_bin_size = 1.0  # Angstrom(s) in 1 bin
+frame_bin_size = 10  # Number of frames in 1 bin = femto_secs_in_bin / frame_step_fs
 
 ## OUTPUT ----------------------
-output_file = "sp_traj.csv"
+output_data_file = "sp_traj.csv"
+output_fig_file = "sp_traj.svg"        # (optional). Leave blank to not save figure
 
 ## ----------------------------------
 # Frame vs Extension DataFrame
 frame_ext_df: pd.DataFrame = pd.read_csv(frame_vs_ext_file, sep=r"\s+", comment="#", names=("FRAME", "EXT"))
+
+if frame_index_start >= 0:
+    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] >= frame_index_start]
+    
+if frame_index_end >= 0:
+    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] < frame_index_end]
 
 # Making the dataset DISCRETE over SPACE (EXT) and TIME (FRAME)
 if ext_bin_count <= 0:
@@ -73,7 +86,8 @@ if ext_bin_count <= 0:
 if frame_bin_count <= 0:
     frame_bin_count = int(len(frame_ext_df["FRAME"]) // frame_bin_size)
 
-frame_ext_df["FRAME_BIN"] = pd.cut(frame_ext_df["FRAME"], bins=frame_bin_count, labels=False, right=False)
+frame_bin_series, frame_bins = pd.cut(frame_ext_df["FRAME"], bins=frame_bin_count, labels=False, right=False, retbins=True)
+frame_ext_df["FRAME_BIN"] = frame_bin_series
 
 discrete_df: pd.DataFrame = frame_ext_df[["FRAME_BIN", "EXT"]].groupby(
     by=["FRAME_BIN"]).mean()  # TODO: mean of ext in each time-bin
@@ -98,6 +112,7 @@ split_prob = np.zeros((sample_count,), dtype=np.float32)
 _ext_bin_series = discrete_df["EXT_BIN"]
 _ext_bin_range = np.arange(x_a_bin, x_b_bin + 1)
 
+# Calculating SP (fold): traj reaches folded state before unfolded state
 for i, x_bin in enumerate(_ext_bin_range):
     _df = _ext_bin_series.loc[_ext_bin_series == x_bin]
     _count = len(_df.index)
@@ -145,7 +160,7 @@ grad = np.gradient(res_df["SP"], res_df["EXT_BIN"])  # Gradient of Sp(fold) : Al
 pmf_re = np.log(-grad) * K_b * T
 res_df["PMF_RE"] = pmf_re  # Reconstructed PMF from Sp(x)
 
-res_df.to_csv(output_file, sep="\t", header=True, index=False, index_label=False)
+res_df.to_csv(output_data_file, sep="\t", header=True, index=False, index_label=False)
 
 ## Smoothen SP and PMF
 # ext_bin_smooth = np.linspace(x_a_bin, x_b_bin, num=len(res_df["EXT_BIN"]) * 3, endpoint=True)
@@ -182,18 +197,31 @@ except Exception as exc:
     print("ERR: Exception in interpolating Reconstructed PMF...Ignoring")
 
 # Plotting
-fig, axes = plt.subplots(2, 2)
+has_time = frame_step_fs > 0
+if has_time:
+    frame_ext_df["TIME_NS"] = frame_ext_df["FRAME"] * (frame_step_fs * 1e-6)
 
-axes[0, 0].plot(frame_ext_df["FRAME"], frame_ext_df["EXT"])
+w, h = figaspect(12/16)
+fig, axes = plt.subplots(2, 2, figsize=(w * 1.4, h * 1.4))
+fig.tight_layout(pad=5.0)
+
+axes[0, 0].plot(frame_ext_df["TIME_NS" if has_time else "FRAME"], frame_ext_df["EXT"])
 axes[0, 0].set_title("Trajectory")
+axes[0, 0].set_xlabel("Time (ns)" if has_time else "Frame")
+axes[0, 0].set_ylabel("Extension (Å)")
 
-axes[0, 1].scatter(discrete_df.index, discrete_df["EXT_BIN"])
+
+axes[0, 1].stairs(discrete_df["EXT_BIN"], frame_bins, fill=False)
 axes[0, 1].set_title("Discrete Trajectory")
+axes[0, 1].set_xlabel("Frame Bin")
+axes[0, 1].set_ylabel("Extension Bin")
 
 axes[1, 0].scatter(res_df["EXT_BIN_MED"], res_df["SP"])
 # axes[1, 0].plot(res_df["EXT_BIN"], res_df["SP"])
 axes[1, 0].plot(ext_smooth, sp_smooth, '--')
-axes[1, 0].set_title("SP trajectory")
+axes[1, 0].set_title("SP (fold) Trajectory")
+axes[1, 0].set_xlabel("Extension (Å)")
+axes[1, 0].set_ylabel("Sp (fold)")
 
 ## Smoothen PMF
 axes[1, 1].scatter(res_df2["EXT_BIN_MED"], res_df2["PMF_RE"])
@@ -202,5 +230,9 @@ if ext_smooth2 is not None and pmf_re_smooth is not None:
     axes[1, 1].plot(ext_smooth2, pmf_re_smooth, '--')
 
 axes[1, 1].set_title("Reconstructed PMF")
+axes[1, 1].set_xlabel("Extension (Å)")
+axes[1, 1].set_ylabel("PMF (recons)")
 
+if output_fig_file:
+    plt.savefig(output_fig_file)
 plt.show()
