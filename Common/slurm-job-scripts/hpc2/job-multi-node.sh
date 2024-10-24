@@ -43,7 +43,7 @@
 ##PBS -V
 
 ## Working Dir: Mostly $SLURM_SUBMIT_DIR
-WORK_DIR=/scratch/home/parbati/rohan/Projects/MD/dna-hairpin/test
+WORK_DIR=$SLURM_SUBMIT_DIR
 cd $WORK_DIR
 
 ### -------- Creating Nodelist file for NAMD ---------

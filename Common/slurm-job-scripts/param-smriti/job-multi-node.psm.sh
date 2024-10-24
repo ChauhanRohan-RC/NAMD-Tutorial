@@ -14,10 +14,13 @@
 ##SBATCH --account=parbatib
 #
 # Partition
-#SBATCH --partition=hm
+#SBATCH --partition=standard
 #
 # Number of nodes
-#SBATCH --nodes=10
+#SBATCH --nodes=4
+#
+## Number of gpu's to use --gres=gpu:<num_gpu_to_use>
+##SBATCH --gres=gpu:1
 #
 # Tasks (processes) per node (based on number of cores per node = 48 in this HPC)
 #SBATCH --ntasks-per-node=48
@@ -43,7 +46,7 @@
 ##PBS -V
 
 ## Working Dir: Mostly $SLURM_SUBMIT_DIR
-WORK_DIR=/scratch/parbatib/rohan/Projects/MD/dna-hairpin/dna_gbis_pcf-test1
+WORK_DIR=$SLURM_SUBMIT_DIR
 cd $WORK_DIR
 
 ### -------- Creating Nodelist file for NAMD ---------

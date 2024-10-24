@@ -14,7 +14,7 @@
 ##SBATCH --account=parbatib
 #
 # Partition
-#SBATCH --partition=hm
+#SBATCH --partition=standard
 #
 # Number of nodes
 #SBATCH --nodes=1
@@ -26,7 +26,7 @@
 #SBATCH --cpus-per-task=1
 #
 # Wall clock Time Limit (days-hr:min:secs)
-#SBATCH --time=03:00:00
+#SBATCH --time=1-00:00:00
 #
 # Standard Output and Error
 #SBATCH --output=output.log
@@ -43,7 +43,7 @@
 ##PBS -V
 
 ## Working Dir: Mostly $SLURM_SUBMIT_DIR
-WORK_DIR=/scratch/parbatib/rohan/Projects/MD/dna-hairpin/dna_gbis_pcf-test2
+WORK_DIR=$SLURM_SUBMIT_DIR
 cd $WORK_DIR
 
 ### -------- Creating Nodelist file for NAMD ---------

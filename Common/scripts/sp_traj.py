@@ -1,3 +1,5 @@
+import traceback
+
 import numpy as np
 import pandas as pd
 import scipy
@@ -16,6 +18,57 @@ from matplotlib.figure import figaspect
 # 5. Creates output file "sp_traj.csv"
 
 ## UNITS: Energy (kcal/mol), Distance (Å), T (K)
+
+COMMENT_TOKEN = "#"
+
+## Constants -------------------------
+CAL_TO_JOULE = 4.184  # 1 cal = 4.184 J
+K_b = 8.314 / (CAL_TO_JOULE * 1000)  # ideal gas constant in kcal/(mol K)
+
+## INPUT -----------------------
+frame_vs_ext_file = "dist_vs_frame.dat"  # Input Frame vs Extension file
+frame_step_fs = 2 * 100  # time (in fs) between frames = time_step (fs) * dcd_freq. -1 for NOT_DEFINED
+
+# Frame Range (optional). NOTE: frame_index = time_fs / frame_step_fs
+frame_index_start = -1  # Inclusive [-1 for no start bound]
+frame_index_end = 32e6 / frame_step_fs  # Exclusive [-1 for no end bound]
+
+T = 300  # Constant Temp (K)
+
+# First barrier (F -> I) => x_a = 14, x_b = 28
+# Second barrier (I -> U) => x_a = 26, x_b = 41
+x_a = 14  # TODO: LEFT Absorbing Boundary - Folded state extension (in Å)
+x_b = 28  # TODO: RIGHT Absorbing Boundary - Unfolded state extension (in Å)
+
+## Number of Spacial and Temporal Bins
+# -1 to use bin sizes (specified below) instead
+ext_bin_count = -1
+frame_bin_count = -1
+
+# Bin sizes: Only used if number of bins is not given
+ext_bin_size = 1.0  # Angstrom(s) in 1 bin
+frame_bin_size = 10  # Number of frames in 1 bin = femto_secs_in_bin / frame_step_fs
+
+## OUTPUT ------------------------------------------------------------------
+output_data_file = "sp_traj1.csv"
+output_fig_file = "sp_traj1.pdf"  # (optional). Leave blank to not save figure
+
+## ----------------------------------------------------------------------------
+# Frame vs Extension DataFrame
+frame_ext_df: pd.DataFrame = pd.read_csv(frame_vs_ext_file, sep=r"\s+", comment=COMMENT_TOKEN, names=("FRAME", "EXT"))
+
+if frame_index_start >= 0:
+    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] >= frame_index_start]
+
+if frame_index_end >= 0:
+    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] < frame_index_end]
+
+# Making the dataset DISCRETE over SPACE (EXT) and TIME (FRAME)
+if ext_bin_count <= 0:
+    ext_bin_count = int((frame_ext_df["EXT"].max() - frame_ext_df["EXT"].min()) // ext_bin_size)
+
+if frame_bin_count <= 0:
+    frame_bin_count = int(len(frame_ext_df["FRAME"]) // frame_bin_size)
 
 
 def find_bin(val, bins_arr, last=False):
@@ -39,54 +92,8 @@ def find_bin(val, bins_arr, last=False):
     return -1
 
 
-## Constants -------------------------
-CAL_TO_JOULE = 4.184  # 1 cal = 4.184 J
-K_b = 8.314 / (CAL_TO_JOULE * 1000)  # ideal gas constant in kcal/(mol K)
-
-## INPUT -----------------------
-frame_vs_ext_file = "dist_vs_frame.dat"  # Input Frame vs Extension file
-frame_step_fs = 2 * 100  # time (in fs) between frames = time_step (fs) * dcd_freq. -1 for NOT_DEFINED
-
-# Frame Range (optional). NOTE: frame_index = time_fs / frame_step_fs
-frame_index_start = -1         # Inclusive [-1 for no start bound]
-frame_index_end = -1           # Exclusive [-1 for no end bound]
-
-T = 300  # Constant Temp (K)
-
-x_a = 14  # LEFT Absorbing Boundary - Folded state extension (in Å)
-x_b = 28  # RIGHT Absorbing Boundary - Unfolded state extension (in Å)
-
-## Number of Spacial and Temporal Bins
-# -1 to use bin sizes (specified below) instead
-ext_bin_count = -1
-frame_bin_count = -1
-
-# Bin sizes: Only used if number of bins is not given
-ext_bin_size = 1.0  # Angstrom(s) in 1 bin
-frame_bin_size = 10  # Number of frames in 1 bin = femto_secs_in_bin / frame_step_fs
-
-## OUTPUT ----------------------
-output_data_file = "sp_traj.csv"
-output_fig_file = "sp_traj.svg"        # (optional). Leave blank to not save figure
-
-## ----------------------------------
-# Frame vs Extension DataFrame
-frame_ext_df: pd.DataFrame = pd.read_csv(frame_vs_ext_file, sep=r"\s+", comment="#", names=("FRAME", "EXT"))
-
-if frame_index_start >= 0:
-    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] >= frame_index_start]
-    
-if frame_index_end >= 0:
-    frame_ext_df = frame_ext_df[frame_ext_df["FRAME"] < frame_index_end]
-
-# Making the dataset DISCRETE over SPACE (EXT) and TIME (FRAME)
-if ext_bin_count <= 0:
-    ext_bin_count = int((frame_ext_df["EXT"].max() - frame_ext_df["EXT"].min()) // ext_bin_size)
-
-if frame_bin_count <= 0:
-    frame_bin_count = int(len(frame_ext_df["FRAME"]) // frame_bin_size)
-
-frame_bin_series, frame_bins = pd.cut(frame_ext_df["FRAME"], bins=frame_bin_count, labels=False, right=False, retbins=True)
+frame_bin_series, frame_bins = pd.cut(frame_ext_df["FRAME"], bins=frame_bin_count, labels=False, right=False,
+                                      retbins=True)
 frame_ext_df["FRAME_BIN"] = frame_bin_series
 
 discrete_df: pd.DataFrame = frame_ext_df[["FRAME_BIN", "EXT"]].groupby(
@@ -160,7 +167,19 @@ grad = np.gradient(res_df["SP"], res_df["EXT_BIN"])  # Gradient of Sp(fold) : Al
 pmf_re = np.log(-grad) * K_b * T
 res_df["PMF_RE"] = pmf_re  # Reconstructed PMF from Sp(x)
 
-res_df.to_csv(output_data_file, sep="\t", header=True, index=False, index_label=False)
+
+# Writing output
+if output_data_file:
+    with open(output_data_file, "w") as out_p:
+        out_p.write(f"{COMMENT_TOKEN} -------------- Splitting Probability from Simulation Trajectory ----------------\n")
+        out_p.write(f"{COMMENT_TOKEN} INPUT Frame vs Extension file: \"{frame_vs_ext_file}\"\n")
+        out_p.write(f"{COMMENT_TOKEN} INPUT Frame Range => frame_index_start: {frame_index_start}  |  frame_index_end: {frame_index_end}\n")
+        out_p.write(f"{COMMENT_TOKEN} INPUT Absorbing Boundaries => x_a (LEFT): {x_a}  |  x_b (RIGHT): {x_b}\n")
+        out_p.write(f"{COMMENT_TOKEN} INPUT Bin Count => Frame Bins: {frame_bin_count}  |  Extension Bins: {ext_bin_count}\n")
+        out_p.write(f"{COMMENT_TOKEN} INPUT Thermal Energy (KbT): {K_b * T} kcal/mol/K\n")
+        out_p.write(f"{COMMENT_TOKEN} ---------------------------------------\n")
+
+        res_df.to_csv(out_p, mode="a", sep="\t", header=True, index=False, index_label=False)
 
 ## Smoothen SP and PMF
 # ext_bin_smooth = np.linspace(x_a_bin, x_b_bin, num=len(res_df["EXT_BIN"]) * 3, endpoint=True)
@@ -190,18 +209,20 @@ try:
     ext_bin_med2 = res_df2["EXT_BIN_MED"]
     ext_bin_med_len2 = len(ext_bin_med2)
 
-    ext_smooth2 = np.linspace(ext_bin_med2[0], ext_bin_med2[ext_bin_med_len2 - 1], num=ext_bin_med_len2 * 3, endpoint=True)
+    ext_smooth2 = np.linspace(ext_bin_med2[0], ext_bin_med2[ext_bin_med_len2 - 1], num=ext_bin_med_len2 * 3,
+                              endpoint=True)
     pmf_interp_cubic = scipy.interpolate.interp1d(ext_bin_med2, res_df2["PMF_RE"], kind="cubic")
     pmf_re_smooth = pmf_interp_cubic(ext_smooth2)
 except Exception as exc:
     print("ERR: Exception in interpolating Reconstructed PMF...Ignoring")
+    traceback.print_exception(exc)
 
 # Plotting
 has_time = frame_step_fs > 0
 if has_time:
     frame_ext_df["TIME_NS"] = frame_ext_df["FRAME"] * (frame_step_fs * 1e-6)
 
-w, h = figaspect(12/16)
+w, h = figaspect(12 / 16)
 fig, axes = plt.subplots(2, 2, figsize=(w * 1.4, h * 1.4))
 fig.tight_layout(pad=5.0)
 
@@ -209,7 +230,6 @@ axes[0, 0].plot(frame_ext_df["TIME_NS" if has_time else "FRAME"], frame_ext_df["
 axes[0, 0].set_title("Trajectory")
 axes[0, 0].set_xlabel("Time (ns)" if has_time else "Frame")
 axes[0, 0].set_ylabel("Extension (Å)")
-
 
 axes[0, 1].stairs(discrete_df["EXT_BIN"], frame_bins, fill=False)
 axes[0, 1].set_title("Discrete Trajectory")

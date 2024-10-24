@@ -44,7 +44,7 @@
 ##PBS -V
 
 ## Working Dir: Mostly $SLURM_SUBMIT_DIR
-WORK_DIR=/scratch/home/parbati/rohan/Projects/MD/dna-hairpin/test
+WORK_DIR=$SLURM_SUBMIT_DIR
 cd $WORK_DIR
 
 ### -------- Creating Nodelist file for NAMD ---------
@@ -70,4 +70,4 @@ NAMD_HOME=/scratch/home/parbati/NAMD/NAMD_2.14_Linux-x86_64-multicore/
 TOTAL_TASKS=$(($SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE))
 
 ## -> can use +isomalloc_sync option (after namd2)
-$NAMD_HOME/namd2 +p$TOTAL_TASKS $WORK_DIR/test.conf > $WORK_DIR/test3.log
+$NAMD_HOME/namd2 +p$TOTAL_TASKS $WORK_DIR/test.conf > $WORK_DIR/test.log
