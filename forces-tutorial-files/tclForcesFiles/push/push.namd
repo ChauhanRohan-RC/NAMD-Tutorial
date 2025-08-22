@@ -1,0 +1,56 @@
+numsteps			3000
+structure			../common/ubiquitin.psf
+coordinates			../common/ubiquitin.pdb
+outputName			push
+
+set last			../common/push-eq-2.restart
+bincoordinates			${last}.coor
+binvelocities			${last}.vel
+extendedSystem			${last}.xsc
+
+#temperature			288
+
+langevin			on
+langevinDamping			1.0
+langevinTemp			288
+langevinHydrogen		off
+
+switching			on
+switchdist			10
+cutoff				12
+pairlistdist			14
+margin				5
+
+binaryOutput			yes
+binaryRestart			yes
+
+paraTypeCharmm			on
+
+parameters			../common/par_all27_prot_lipid.inp
+
+COMmotion			no
+
+outputEnergies			100
+outputTiming			100
+xstFreq				100
+dcdFreq				100
+restartFreq			100
+
+timestep			1
+nonBondedFreq			2
+fullElectFrequency		4
+stepsPerCycle			20
+
+exclude				scaled1-4
+1-4scaling			1
+
+Pme				on
+PmeGridSizeX			32
+PmeGridSizeY			32
+PmeGridSizeZ			32
+
+tclforces			on
+set linaccel			"30 0 0"
+tclforcesscript			push.tcl
+
+

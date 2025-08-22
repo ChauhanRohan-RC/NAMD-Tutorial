@@ -1,0 +1,62 @@
+numsteps		1000
+
+minimization		on
+
+structure		graphene-ion.psf
+coordinates		graphene-ion.pdb
+outputName		graphene-min
+
+temperature		300
+#set last		
+#bincoordinates		${last}.coor
+#binvelocities		${last}.vel
+#extendedSystem		${last}.xsc
+
+cellBasisVector1	40 0 0
+cellBasisVector2	0 40 0
+cellBasisVector3	0 0 40
+cellOrigin		0 0 0
+
+switching		on
+switchDist		10
+cutoff			12
+pairlistdist		14
+
+binaryOutput		yes
+binaryRestart		yes
+
+wrapAll			yes
+
+paraTypeCharmm		on
+parameters		../../tclForcesFiles/common/par_all27_prot_lipid.inp
+
+COMmotion		no
+
+outputEnergies		100
+outputTiming		100
+xstFreq			100
+dcdFreq			100
+restartFreq		100
+
+timestep		1
+nonBondedFreq		2
+fullElectFrequency	4
+stepsPerCycle		20
+
+exclude			scaled1-4
+1-4scaling		1
+
+Pme			on
+PmeGridSizeX		128
+PmeGridSizeY		128
+PmeGridSizeZ		164
+
+gridforce		on
+
+gridforcefile		graphene-grid.pdb
+gridforcecol		B
+gridforcechargecol	O
+gridforcepotfile	graphene.dx
+gridforcescale		200 200 200
+gridforcecont1		yes
+gridforcecont2		yes

@@ -1,0 +1,12 @@
+# Grace fit description file
+#
+fit title "Maxwell K.E Distribution Fit for finding Temperature"
+fit formula "y = (2 / sqrt(Pi * (0.00198657 * a0) ^ 3)) * sqrt(x) * exp(-x/(0.00198657 * a0))"
+fit with 1 parameters
+fit prec 1e-05
+
+# parameter a0 is Temperature, actual T of ensemble = 310 K
+a0 = 307.807
+a0 constraints off
+a0min = 1
+a0max = 1
