@@ -7,16 +7,33 @@
 # 3. run with "vmd -dispdev text -e water_box.tcl"
 # 4. OUTPUT: Generates "${molname}_ws" .pdb and .psf files, and .comments.txt file
 
-# INPUT PARAMS --------------------------
-set molname "dna";	# TODO: set molecule name (name of .psf and .pdb files)
-set padding 10;		# TODO: padding (in Å)
-set msm_grid_pad 2;				# Multistep Summation Method (MSM) Grid extra padding (in Å) (for safety)
+## KNOWN BUGS:
+# -> AUTO-IONIZE: adds ions with residue id's starting from 1.
+#    -> DO NOT CHANGE them manually in PDB, will create conflicts with PSF
+#    -> To avoid conflicts, use specific selections "nucleic and resid ..." 
 
-# OUTPUT PARAMS --------------------------
-set output_name "${molname}_ws";		# name of output .psf and .pdb files (defaults to adding "wb" suffix)
+# ----------------------------------
+# INPUT PARAMS
+# ----------------------------------
+set molname 			"dna";	# TODO: set molecule name (name of .psf and .pdb files)
+set padding 			15;		# TODO: padding (in Å)
+set msm_grid_pad		2;		# Multistep Summation Method (MSM) Grid extra padding (in Å) (for safety)
+
+set boundary		2.4;		#  [in Å] min distance to keep between solute and water. Default: 2.4 Å
+
+# ----------------------------------
+# OUTPUT PARAMS
+# ----------------------------------
+set output_name 		"${molname}_ws";		# name of output .psf and .pdb files (defaults to adding "ws" suffix)
 set meta_file_name "${molname}_ws.comments.txt";		# name of the meta information file
 
-### BETA and OCCUPANCY -------
+# Auto-IONIZE (to nuetralize the system) ---------------
+set auto_ionize		on;		
+set cation			"SOD";		# SOD (Na+), MG (Mg+2), POT (K+), CES (Cs+), CAL (Ca+2), ZN2 (Zn+2)  
+set anion			"CLA";		# CLA (Cl-)
+set ion_seg_name		"ION";		# New Segment name for ions 
+
+# BETA and OCCUPANCY -------
 set set_beta		on;		# TODO: [on/off] whether to set beta values of all atoms
 set beta_value	0;		# beta value to set (if $set_beta is ON)
 
@@ -27,7 +44,7 @@ set occupancy_value		0;		# occupancy value to set (if $set_occupancy is ON)
 
 
 # --------------------------------------------
-# ---------------- SOLVATE -------------------
+# SOLVATE
 # --------------------------------------------
 set mol_id [mol new "${molname}.psf"]
 mol addfile "${molname}.pdb" molid $mol_id
@@ -66,7 +83,7 @@ set pad_eff [expr 0.732 * $max + 1.732 * $padding]
 set temp_out "${output_name}.temp"
 
 package require solvate
-solvate "${molname}.psf" "${molname}.pdb" -t $pad_eff -o $temp_out
+solvate "${molname}.psf" "${molname}.pdb" -t $pad_eff -b $boundary -o $temp_out
 
 resetpsf
 package require psfgen
@@ -89,10 +106,33 @@ for {set i 0} {$i < [llength $seg]} {incr i} {
 writepsf "${output_name}.psf"
 writepdb "${output_name}.pdb"
 
+# Cleaning up
 mol delete $mol_id
+resetpsf
+rm "${temp_out}.psf" "${temp_out}.pdb" "${temp_out}.log"
 
 
-### =================== FINAL LOAD  ======================
+# ---------------------------------
+# Ionization
+# ---------------------------------
+if {[string trim $auto_ionize] eq "on"} {
+	# Copying solvated .psf and .pdb to temp files (to be used for input here)
+	set temp_file_name	"${molname}_ws_solvated_temp"
+	cp "${output_name}.psf" "${temp_file_name}.psf"
+	cp "${output_name}.pdb" "${temp_file_name}.pdb"
+
+	puts "# -> LOG: Performing Ionization to neutralize the system...";
+	package require autoionize
+	autoionize -psf "${temp_file_name}.psf" -pdb "${temp_file_name}.pdb" -neutralize -cation $cation -anion $anion -seg $ion_seg_name -o $output_name
+	
+	# Cleaning temp files
+	rm "${temp_file_name}.psf" "${temp_file_name}.pdb"
+}
+
+
+# ----------------------------------
+# Post-Processing
+# ----------------------------------
 set mol_id [mol new "${output_name}.psf"]
 mol addfile "${output_name}.pdb" molid $mol_id
 
@@ -164,7 +204,9 @@ log "# ============== SOLVATE: WATER SPHERE =============="
 log "# -> INPUT molname: \"${molname}\" (used for input .psf and .pdb files)"
 log "# -> INPUT padding: ${padding} Å"
 log "# -> INPUT MSM padding: ${msm_grid_pad} Å"
+log "# -> INPUT boundary: ${boundary} Å"
 log "# ----------------------------------------------------"
+log "# -> INPUT Auto-IONIZE: $auto_ionize | Cation: \"$cation\" | Anion: \"$anion\" | Ion segment name: \"$ion_seg_name\""
 log "# -> INPUT Set BETA: $set_beta | BETA Value: $beta_value"
 log "# -> INPUT Set OCCUPANCY: $set_occupancy | OCCUPANCY Value: $occupancy_value"
 log "# ----------------------------------------------------"
