@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import datetime
 from collections.abc import Iterable
 from itertools import repeat
@@ -21,7 +23,7 @@ NOTE: "TS" stands for Time Step
 USAGE:
 1. copy this script to working dir
 2. edit __name__ == "__main__" section of this script
-2. run with "python namd_energy.py"
+2. run with "python namd_energy_log.py"
 """
 
 

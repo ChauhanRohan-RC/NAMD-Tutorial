@@ -8,9 +8,9 @@ Used to calculate   1. Energy averages, Variance
                     -> Cv is usually calculated for a subset of the system, like protein or nucleic acid alone (excluding water and ions)
                 
 NOTE: Energy vs TS data can be generated from
-1. namd_energy.py 
+1. namd_energy_log.py 
     -> extracts Energy vs TS from NAMD .log file(s)   (for the entire system, may contain water or ions)
-2. from VMD "NAMD-Energy Plugin" [VMD -> Extensions -> Analysis -> NAMD Energy]
+2. namd_energy_plugin.tcl  => VMD's NAMD-Energy Plugin
     -> used to calculate Energies at each TS for a subset of the system, like protein alone.
     
 USAGE:
