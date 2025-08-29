@@ -137,6 +137,11 @@ set mol_id [mol new "${output_name}.psf"]
 mol addfile "${output_name}.pdb" molid $mol_id
 
 set everyone [atomselect $mol_id all]
+set water [atomselect $mol_id "water"]
+set ion [atomselect $mol_id "ion"]
+
+set water_count [expr [$water num] / 3]
+set ion_count [$ion num]
 
 # Geometric Center of All Atoms
 set cen_geo [measure center $everyone]
@@ -211,6 +216,8 @@ log "# -> INPUT Set BETA: $set_beta | BETA Value: $beta_value"
 log "# -> INPUT Set OCCUPANCY: $set_occupancy | OCCUPANCY Value: $occupancy_value"
 log "# ----------------------------------------------------"
 log "# -> OUTPUT solvated: \"${output_name}.psf\", \"${output_name}.pdb\""
+log "# -> OUTPUT Water Count: ${water_count} | Ion Count: ${ion_count}"
+log "#-----------"
 log "# NOTE: All dimensions are in Å"
 log "# NOTE: Sphere COM should be used in most cases"
 log "# ---------------------------------------------------------------"

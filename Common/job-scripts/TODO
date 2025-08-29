@@ -1,0 +1,12 @@
+
+# ----------------
+# For Clusters
+# ----------------
+# 1. Compile NAMD with MPI (openmpi)
+# 2. use mpirun or srun to run namd
+#
+#    => mpirun namd2 config.conf > output.log
+#
+#    This should inherit job parameters from SLURM directives
+#
+#

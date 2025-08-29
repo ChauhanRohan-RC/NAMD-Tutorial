@@ -132,6 +132,11 @@ mol addfile "${output_name}.pdb" molid $mol_id
 set is_pdb_changed	0; # If changed, rewrite pdb file
 
 set everyone [atomselect $mol_id all]
+set water [atomselect $mol_id "water"]
+set ion [atomselect $mol_id "ion"]
+
+set water_count [expr [$water num] / 3]
+set ion_count [$ion num]
 
 # Geometric Center of all atoms (system + water)
 set cen_geo [measure center $everyone]
@@ -150,6 +155,16 @@ set zmin [lindex $min_vec 2]
 set xmax [lindex $max_vec 0]
 set ymax [lindex $max_vec 1]
 set zmax [lindex $max_vec 2]
+
+# Box Length
+set xlen [expr $xmax - $xmin]
+set ylen [expr $ymax - $ymin]
+set zlen [expr $zmax - $zmin]
+
+# Box Body center
+set xcen [expr $xmin + ($xlen / 2)]
+set ycen [expr $ymin + ($ylen / 2)]
+set zcen [expr $zmin + ($zlen / 2)]
 
 # Setting BETA and OCCUPANCY --------------
 puts ""
@@ -208,21 +223,26 @@ log "# -> INPUT Set BETA: $set_beta | BETA Value: $beta_value"
 log "# -> INPUT Set OCCUPANCY: $set_occupancy | OCCUPANCY Value: $occupancy_value"
 log "# ----------------------------------------------------"
 log "# -> OUTPUT solvated: \"${output_name}.psf\", \"${output_name}.pdb\""
+log "# -> OUTPUT Water Count: ${water_count} | Ion Count: ${ion_count}"
+log "#---------"
 log "# NOTE: All dimensions are in Å"
 log "#-----------------------------------------------------"
 log "#"
-log "# -> Geometric Center of All Atoms: $cen_geo"
-log "# -> Center of Mass (COM) of All Atoms: $cen_mass"
-log "# -> Box Min Coordinate: $min_vec"
-log "# -> Box Max Coordinate: $max_vec"
+log "# -> Geometric Center of All Atoms: ($cen_geo)"
+log "# -> Center of Mass (COM) of All Atoms: ($cen_mass)"
+log "# -> Box Min Coordinate: ($xmin, $ymin, $zmin)"
+log "# -> Box Max Coordinate: ($xmax, $ymax, $zmax)"
+log "#-------------------"
+log "# -> Box Size (cell size): ($xlen, $ylen, $zlen)"
+log "# -> Box Body Center (cellOrigin): ($xcen, $ycen, $zcen)"
 log "#"
 log "# ---------------------------------------------------"
 log "# -> COPY-PASTE For NAMD config file (Periodic BC): "
 log "# ---------------------------------------------------"
-log "cellBasisVector1 [ expr $xmax - $xmin ] 0 0 "
-log "cellBasisVector2 0 [ expr $ymax - $ymin ] 0 "
-log "cellBasisVector3 0 0 [ expr $zmax - $zmin ] "
-log "cellOrigin [ expr ($xmax + $xmin) / 2 ] [ expr ($ymax + $ymin) / 2 ] [ expr ($zmax + $zmin) / 2 ] "
+log "cellBasisVector1 [ expr $xmax - $xmin ] 0 0;   # X-Length"
+log "cellBasisVector2 0 [ expr $ymax - $ymin ] 0;   # Y-Length"
+log "cellBasisVector3 0 0 [ expr $zmax - $zmin ];   # Z-length"
+log "cellOrigin [ expr ($xmax + $xmin) / 2 ] [ expr ($ymax + $ymin) / 2 ] [ expr ($zmax + $zmin) / 2 ];     # Body center of water box "
 log "# ---------------------------------------------------"
 puts ""
 
