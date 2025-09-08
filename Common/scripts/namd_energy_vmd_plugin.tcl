@@ -1,8 +1,13 @@
-#################################################################################################
-### Script to run NAMD-Energy Plugin of VMD								    				      ##
-# -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    ##
-# -> Calculate self and cross interaction energies of a subset of the system			          ##
-#################################################################################################
+################################################################################################
+### Script to run NAMD-Energy Plugin of VMD   (VERY INEFFICIENT)								
+# NOTE: This is very inefficient, especially for large trajectories
+#
+# 		USE namd_energy.tcl FOR MOST CASES
+#
+# --------------------------------------------------
+# -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    
+# -> Calculate self and cross interaction energies of a subset of the system			          
+###############################################################################################
 
 ## USAGE --------------------------------------------------
 # 0: First run normal simulation to obtain .dcd trajectory
@@ -14,7 +19,7 @@
 # -> Each calculation is independent
 # -------------------
 # 4. set other input and output params [search for todo]
-# 5. run with "vmd -dispdev text -e namd_energy_plugin.tcl"
+# 5. run with "vmd -dispdev text -e namd_energy_vmd_plugin.tcl"
 
 
 # NAMD Command
@@ -30,7 +35,7 @@ set param_files	{ "../../common/ff/par_all36m_prot.prm" "../../common/ff/toppar_
 set psf_file		"../../common/amyl_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
-set frame_files	{ "../amyl_wb_eq1.dcd" };		
+set frame_files	{ "../amyl_wb_eq2.dcd" "../amyl_wb_eq3.dcd" };		
 
 # Selections
 # => SEL-1 is required
@@ -58,13 +63,13 @@ set switchdist			10;		# Switch distance (in Å) for non-bonded interactions [-sw
 set dielectric			1.0;		# Dielectric constant (> 1 will lessen the electrostatic forces)
 								
 ## Periodic [OPTIONAL]
-set initial_ext_sys		"../amyl_wb_eq.restart.xsc";		# [ONLY PERIODIC todo] Initial cell dimensions in .dcd file
+set initial_ext_sys		"../amyl_wb_eq1.restart.xsc";		# [ONLY PERIODIC todo] Initial cell dimensions in .dcd file
 set pme					on;		# [on/off] [ONLY PERIODIC] PME for long-range electrostatics. Only work when <initial_ext_sys> is specified
 
 ## todo: TIme Step parameters (ONLY USED FOR OUTPUT COLUMNS, DOES NOT AFFECT CALCULATION)
 set timestep				1;		# Timestep (in femto-seconds)  			[-timemult]
 set timestep_first		0;		# First timestep.						[-ts]
-set frame_freq			5000;	# Timesteps b/w each frame = dcdfreq		[-stride]
+set frame_freq			200;	# Timesteps b/w each frame = dcdfreq		[-stride]
 
 set update_sel_each_frame	off;		# [on/off] Update selection every frame		[-updatesel]
 

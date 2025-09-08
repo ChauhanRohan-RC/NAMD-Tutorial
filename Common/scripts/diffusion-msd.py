@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -44,6 +48,8 @@ PROCEDURE
 # CONSTANTS
 
 COMMENT_TOKEN = "#"
+INPUT_SEP = r"\s+"
+OUTPUT_SEP = "\t"
 
 COL_FRAME = "FRAME"
 COL_RMSD = "RMSD"
@@ -81,7 +87,7 @@ def plot_msd(rmsd_file,  # file or path buffer
              time_fs_per_frame: float = -1,  # time b/w frames (in fs) = dcd-frequency
              frame_start: int = None,
              frame_end: int = None,
-             separator: str = r"\s+",
+             input_separator: str = INPUT_SEP,
              plot_msd_vs_t: bool = True,
              plot_loglog: bool = True,
              uniform_logspace: bool = False,  # use plt.logspace(x,y) instead of plt.plot(np.log(x), np.log(y))
@@ -98,7 +104,7 @@ def plot_msd(rmsd_file,  # file or path buffer
 
     """
 
-    df = load_df(rmsd_file, sep=separator, x_column=col_frame, x_start=frame_start, x_end=frame_end,
+    df = load_df(rmsd_file, sep=input_separator, x_column=col_frame, x_start=frame_start, x_end=frame_end,
                  positive_bounds=True)
     _frame_arr = df[col_frame]
 
@@ -166,6 +172,10 @@ def plot_msd(rmsd_file,  # file or path buffer
     # if plotted somthing
     if out_fig_file and (plot_msd_vs_t or plot_loglog):
         plt.savefig(out_fig_file)
+        print("\n--------------------------------------------------------------")
+        print(f" -> OUTPUT MSD vs Time PLOT saved to file: \"{out_fig_file}\"")
+        print("--------------------------------------------------------------\n")
+
     plt.show()
 
 
@@ -182,7 +192,8 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
                           frame_end: int | None = None,
                           time_fs_per_frame: float = -1,  # time b/w frames (in fs) = dcd-frequency
                           dimension: int = 3,
-                          separator: str = r"\s+",
+                          input_separator: str = INPUT_SEP,
+                          out_seperator: str = OUTPUT_SEP,
                           out_file_prefix: str = "msd",
                           out_fig_file_format: str = "pdf"):
     """
@@ -201,7 +212,7 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
         raise ValueError("ERR: No bounds / size / count of fit window provided.")
 
     # Loading Data
-    df = load_df(rmsd_file, sep=separator, x_column=col_frame, x_start=frame_start, x_end=frame_end,
+    df = load_df(rmsd_file, sep=input_separator, x_column=col_frame, x_start=frame_start, x_end=frame_end,
                  positive_bounds=True)
 
     col_frame_log = COL_FRAME_LOG
@@ -289,26 +300,28 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
 
     # Finding the slope closest to 1
     closest_idx = np.argmin(np.abs(log_fit_df[COL_FIT_SLOPE] - 1))  # Index of slope closest to 1
-    print("\n==========================================================")
+    print("\n=========================================================================")
     print(f'BEST DIFFUSIVE BEHAVIOUR: FIT {closest_idx} (slope closest to 1 in loglog plot)')
-    print("============================================================\n")
+    print("===========================================================================\n")
 
     # Info
-    _info_loglog = (f"{COMMENT_TOKEN} =================================================\n"
-                    f"{COMMENT_TOKEN} Linear Least-Square fit of log(MSD) vs log(Frame) \n"
-                    f"{COMMENT_TOKEN} =================================================\n"
-                    f"{COMMENT_TOKEN} INPUT Time between Frames: {str(time_fs_per_frame) + ' fs' if has_time else 'NOT-SPECIFIED'} \n"
-                    f"{COMMENT_TOKEN} OUTPUT Slope closest to 1 (diffusive regime): FIT {closest_idx}\n"
-                    f"{COMMENT_TOKEN}                => Slope: {log_fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} \n"
-                    f"{COMMENT_TOKEN}                => Frame Range: [{log_fit_df[COL_FRAME_START].iloc[closest_idx]}, {log_fit_df[COL_FRAME_END].iloc[closest_idx]}] \n"
-                    f"{COMMENT_TOKEN} -------------\n"
-                    f"{COMMENT_TOKEN} NOTE: FIT columns are linear least-square fits of log(MSD) vs log(Frame) in the corresponding frame ranges\n"
-                    f"{COMMENT_TOKEN}      => {COL_FIT_R_SQ}: R-Square (sum of residual square)\n"
-                    f"{COMMENT_TOKEN} ------------------------------------------------------\n")
+    if out_file_prefix:
+        _info_loglog = (f"{COMMENT_TOKEN} =================================================\n"
+                        f"{COMMENT_TOKEN} Linear Least-Square fit of log(MSD) vs log(Frame) \n"
+                        f"{COMMENT_TOKEN} =================================================\n"
+                        f"{COMMENT_TOKEN} INPUT Time between Frames: {str(time_fs_per_frame) + ' fs' if has_time else 'NOT-SPECIFIED'} \n"
+                        f"{COMMENT_TOKEN} OUTPUT Slope closest to 1 (diffusive regime): FIT {closest_idx}\n"
+                        f"{COMMENT_TOKEN}                => Slope: {log_fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} \n"
+                        f"{COMMENT_TOKEN}                => Frame Range: [{log_fit_df[COL_FRAME_START].iloc[closest_idx]}, {log_fit_df[COL_FRAME_END].iloc[closest_idx]}] \n"
+                        f"{COMMENT_TOKEN} -------------\n"
+                        f"{COMMENT_TOKEN} NOTE: FIT columns are linear least-square fits of log(MSD) vs log(Frame) in the corresponding frame ranges\n"
+                        f"{COMMENT_TOKEN}      => {COL_FIT_R_SQ}: R-Square (sum of residual square)\n"
+                        f"{COMMENT_TOKEN} ------------------------------------------------------\n")
 
-    with open(f"{out_file_prefix}.loglog-fit.csv", 'w') as _log_f:
-        _log_f.write(_info_loglog)
-        log_fit_df.to_csv(_log_f, sep='\t', mode='a', index=True, index_label="FIT")
+        loglog_fit_filename = f"{out_file_prefix}.loglog-fit.csv"
+        with open(loglog_fit_filename, 'w') as _log_f:
+            _log_f.write(_info_loglog)
+            log_fit_df.to_csv(_log_f, sep=out_seperator, mode='a', index=True, index_label="FIT")
 
     # Linear Fitting of MSD vs frame/time ---------------------------------
     line_fits = []
@@ -342,32 +355,38 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
     fit_df[COL_FIT_SELF_DIFF_COEFF] = diff_coeffs
 
     # Info
-    _info = (f"{COMMENT_TOKEN} =================================================\n"
-             f"{COMMENT_TOKEN} Linear Least-Square fit of MSD vs {'Time' if has_time else 'Frame'} \n"
-             f"{COMMENT_TOKEN} =================================================\n"
-             f"{COMMENT_TOKEN} Note: Self-Diffusion coefficient D = (1/2d) * Slope of MSD vs t (in diffusive regime MSD ~ t^1 => slope ~ 1 in loglog plot) \n"
-             f"{COMMENT_TOKEN} ------------------------\n"
-             f"{COMMENT_TOKEN} INPUT Time between Frames: {str(time_fs_per_frame) + ' fs' if has_time else 'NOT-SPECIFIED'} \n"
-             f"{COMMENT_TOKEN} OUTPUT Best Diffusive Behaviour (Slope closest to 1 in loglog plot): FIT {closest_idx}\n"
-             f"{COMMENT_TOKEN}                => Frame Range: [{fit_df[COL_FRAME_START].iloc[closest_idx]}, {fit_df[COL_FRAME_END].iloc[closest_idx]}] \n"
-             f"{COMMENT_TOKEN}                => Slope in loglog plot: {log_fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} \n"
-             f"{COMMENT_TOKEN}                => Slope in MSD vs {'Time' if has_time else 'Frame'}: {fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} \n"
-             f"{COMMENT_TOKEN}                => Self-Diffusion Coefficient (D): {fit_df[COL_FIT_SELF_DIFF_COEFF][closest_idx]:.4E} Å^2/{'ps' if has_time else 'frame'} \n"
-             f"{COMMENT_TOKEN} ------------------------\n"
-             f"{COMMENT_TOKEN} NOTE: FIT columns are linear least-square fits of MSD vs {'Time' if has_time else 'Frame'} in the corresponding frame ranges\n"
-             f"{COMMENT_TOKEN}      => {COL_FIT_R_SQ}: R-Square (sum of residual square)\n"
-             f"{COMMENT_TOKEN}      => {COL_FIT_SELF_DIFF_COEFF}: Self Diffusion Coefficient (in Å^2/{'ps' if has_time else 'frame'})\n"
-             f"{COMMENT_TOKEN} ------------------------------------------------------\n")
+    if out_file_prefix:
+        _info = (f"{COMMENT_TOKEN} =================================================\n"
+                 f"{COMMENT_TOKEN} Linear Least-Square fit of MSD vs {'Time' if has_time else 'Frame'} \n"
+                 f"{COMMENT_TOKEN} =================================================\n"
+                 f"{COMMENT_TOKEN} Note: Self-Diffusion coefficient D = (1/2d) * Slope of MSD vs t (in diffusive regime MSD ~ t^1 => slope ~ 1 in loglog plot) \n"
+                 f"{COMMENT_TOKEN} ------------------------\n"
+                 f"{COMMENT_TOKEN} INPUT Dimensions (d): {dimension}\n"
+                 f"{COMMENT_TOKEN} INPUT Time between Frames: {str(time_fs_per_frame) + ' fs' if has_time else 'NOT-SPECIFIED'} \n"
+                 f"{COMMENT_TOKEN} OUTPUT Best Diffusive Behaviour (Slope closest to 1 in loglog plot): FIT {closest_idx}\n"
+                 f"{COMMENT_TOKEN}                => Frame Range: [{fit_df[COL_FRAME_START].iloc[closest_idx]}, {fit_df[COL_FRAME_END].iloc[closest_idx]}] \n"
+                 f"{COMMENT_TOKEN}                => Slope in loglog plot: {log_fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} \n"
+                 f"{COMMENT_TOKEN}                => Slope in MSD vs {'Time' if has_time else 'Frame'} (s): {fit_df[COL_FIT_SLOPE].iloc[closest_idx]:.2E} Å^2/{'ps' if has_time else 'frame'} \n"
+                 f"{COMMENT_TOKEN}                => Self-Diffusion Coefficient (D = s/2d): {fit_df[COL_FIT_SELF_DIFF_COEFF][closest_idx]:.4E} Å^2/{'ps' if has_time else 'frame'} \n"
+                 f"{COMMENT_TOKEN} ------------------------\n"
+                 f"{COMMENT_TOKEN} NOTE: FIT columns are linear least-square fits of MSD vs {'Time' if has_time else 'Frame'} in the corresponding frame ranges\n"
+                 f"{COMMENT_TOKEN}      => {COL_FIT_INTERCEPT}: Intercept of linear Fit line (in Å^2)\n"
+                 f"{COMMENT_TOKEN}      => {COL_FIT_SLOPE}: Slope of linear Fit line (in Å^2/{'ps' if has_time else 'frame'})\n"
+                 f"{COMMENT_TOKEN}      => {COL_FIT_SELF_DIFF_COEFF}: Self Diffusion Coefficient (in Å^2/{'ps' if has_time else 'frame'})\n"
+                 f"{COMMENT_TOKEN}      => {COL_FIT_R_SQ}: R-Square (sum of residual square)\n"
+                 f"{COMMENT_TOKEN} ------------------------------------------------------\n")
 
-    with open(f"{out_file_prefix}.fit.csv", 'w') as _f:
-        _f.write(_info)
-        fit_df.to_csv(_f, sep='\t', mode='a', index=True, index_label="FIT")
+        msd_fit_filename = f"{out_file_prefix}.fit.csv"
+        with open(msd_fit_filename, 'w') as _f:
+            _f.write(_info)
+            fit_df.to_csv(_f, sep=out_seperator, mode='a', index=True, index_label="FIT")
 
     # Plot
     w, h = figaspect(9 / 26)
     fig, axes = plt.subplots(1, 2, figsize=(w * 1.6, h * 1.6))
     fig.tight_layout(pad=5)
-    fig.suptitle(f"Linear fit of MSD Log-Log Plot to find the Diffusive Region")
+    fig.suptitle(
+        f"Linear fit of MSD Log-Log Plot to find the Diffusive Region\nBest diffusive behaviour: FIT {closest_idx}")
 
     axes[0].plot(df[col_x], df[col_msd])  # MSD vs frame/time
     for i in range(len(line_xy)):
@@ -375,7 +394,7 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
                      label=f"Fit {i} (m: {line_fits[i][1]:.2E}, c: {line_fits[i][0]:.2E}, $R^2$: {line_fits[i][2]:.2E})")
 
     axes[0].set_title(f"MSD vs {'Time' if has_time else 'Frame'} Linear Fit")
-    axes[0].set_xlabel(f"{'Time / fs' if has_time else 'Frame'}")
+    axes[0].set_xlabel(f"{'Time / ps' if has_time else 'Frame'}")
     axes[0].set_ylabel(f"MSD / $Å^2$")
     axes[0].legend(loc="best")
 
@@ -389,74 +408,93 @@ def fit_msd_loglog_linear(rmsd_file,  # file or path buffer
     axes[1].set_ylabel(f"{log_label}(MSD / $Å^2$)")
     axes[1].legend(loc="best")
 
-    if out_file_prefix and out_fig_file_format:
-        plt.savefig(f"{out_file_prefix}.fit.{out_fig_file_format}")
+    if out_file_prefix:
+        if not out_fig_file_format:
+            out_fig_file_format = "pdf"
+        out_fig_filename = f"{out_file_prefix}.fit.{out_fig_file_format}"
+        plt.savefig(out_fig_filename)
+
+        print("\n----------------------------------------------------")
+        print(f" -> OUTPUT MSD vs Time Linear-Fit saved to file: \"{msd_fit_filename}\"")
+        print(f" -> OUTPUT log(MSD) vs log(Time) Linear-Fit saved to file: \"{loglog_fit_filename}\"")
+        print(f" -> OUTPUT Linear-Fit PLOT saved to file: \"{out_fig_filename}\"")
+        print("----------------------------------------------------\n")
+
     plt.show()
 
 
 # ----------------------------------------------------------------------------------------------------
 
-# ===========================
-# INPUT
-# ===========================
-rmsd_file = "../msd/rmsd.csv"
-col_frame = "FRAME"
-col_rmsd = "RMSD"
+def main():
+    # ===========================
+    # INPUT
+    # ===========================
+    rmsd_file = "../amyl-beta/prod1/msd/rmsd.csv"
+    col_frame = "FRAME"
+    col_rmsd = "RMSD"
 
-time_fs_per_frame = 200  # (in fs) time b/w frames = dcd-frequency
-frame_start = None  # None for no bound
-frame_end = None  # None for no bound
+    time_fs_per_frame = 200  # (in fs) time b/w frames = dcd_frequency * time_step
+    frame_start = None  # None for no bound
+    frame_end = None  # None for no bound
 
-# Explicit Fit Window bounds [in Frames] (None for no explicit bounds)
-fit_win_bounds = [(665, 3000)]
-fit_win_count = 10      # Only if fit_win_bounds = None
+    # Explicit Fit Window bounds [in Frames] (None for no explicit bounds)
+    fit_win_bounds = None  # [(665, 3000)]
+    fit_win_count = 10  # Only if fit_win_bounds = None
 
-# ===========================
-# OUTPUT
-# ===========================
-do_plot_full_msd = True  # Plot MSD vs t and their log-log plots
-do_loglog_linear_fit = True
+    # ===========================
+    # OUTPUT
+    # ===========================
+    do_plot_full_msd = True  # Plot MSD vs t and their log-log plots
+    do_loglog_linear_fit = True  # Linear Fit of log-log plot to find slope = 1
 
-out_file_prefix = "msd"
-out_fig_file_format = "pdf"
+    out_dir = "../amyl-beta/prod1/analysis-data"
+    out_file_prefix = "msd"
+    out_fig_file_format = "pdf"
 
-# ===========================
-# MAIN
-# ===========================
+    # ===========================
+    # MAIN
+    # ===========================
 
-if do_plot_full_msd:
-    plot_msd(rmsd_file=rmsd_file,
-             col_frame=col_frame,
-             col_rmsd=col_rmsd,
-             time_fs_per_frame=time_fs_per_frame,
-             frame_start=frame_start,
-             frame_end=frame_end,
-             plot_msd_vs_t=True,
-             plot_loglog=True,
-             uniform_logspace=True,
-             out_fig_file=f"{out_file_prefix}-full.{out_fig_file_format}")
+    if out_dir:
+        out_file_prefix = os.path.join(out_dir, out_file_prefix)
 
-if do_loglog_linear_fit:
-    ### Specify either one [bounds / count / size] of fit window
+    if do_plot_full_msd:
+        plot_msd(rmsd_file=rmsd_file,
+                 col_frame=col_frame,
+                 col_rmsd=col_rmsd,
+                 time_fs_per_frame=time_fs_per_frame,
+                 frame_start=frame_start,
+                 frame_end=frame_end,
+                 plot_msd_vs_t=True,
+                 plot_loglog=True,
+                 uniform_logspace=True,
+                 out_fig_file=f"{out_file_prefix}-full.{out_fig_file_format}")
 
-    # Converting bounds to log(bounds)
-    fit_window_bounds_log = None
-    if fit_win_bounds is not None and len(fit_win_bounds) > 0:
-        _bounds = np.array(fit_win_bounds)
-        _bounds[_bounds == 0] = 1   # replace zeroes by 1 before taking log
-        fit_window_bounds_log = np.log(_bounds)
+    if do_loglog_linear_fit:
+        ### Specify either one [bounds / count / size] of fit window
 
-    fit_window_count = fit_win_count
-    fit_window_size_log = None  # in ln(num_frames)
+        # Converting bounds to log(bounds)
+        fit_window_bounds_log = None
+        if fit_win_bounds is not None and len(fit_win_bounds) > 0:
+            _bounds = np.array(fit_win_bounds)
+            _bounds[_bounds == 0] = 1  # replace zeroes by 1 before taking log
+            fit_window_bounds_log = np.log(_bounds)
 
-    fit_msd_loglog_linear(rmsd_file=rmsd_file,
-                          col_frame=col_frame,
-                          col_rmsd=col_rmsd,
-                          frame_start=frame_start,
-                          frame_end=frame_end,
-                          fit_window_bounds_log=fit_window_bounds_log,
-                          fit_window_size_log=fit_window_size_log,
-                          fit_window_count=fit_window_count,
-                          time_fs_per_frame=time_fs_per_frame,
-                          out_file_prefix=out_file_prefix,
-                          out_fig_file_format=out_fig_file_format)
+        fit_window_count = fit_win_count
+        fit_window_size_log = None  # in ln(num_frames)
+
+        fit_msd_loglog_linear(rmsd_file=rmsd_file,
+                              col_frame=col_frame,
+                              col_rmsd=col_rmsd,
+                              frame_start=frame_start,
+                              frame_end=frame_end,
+                              fit_window_bounds_log=fit_window_bounds_log,
+                              fit_window_size_log=fit_window_size_log,
+                              fit_window_count=fit_window_count,
+                              time_fs_per_frame=time_fs_per_frame,
+                              out_file_prefix=out_file_prefix,
+                              out_fig_file_format=out_fig_file_format)
+
+
+if __name__ == '__main__':
+    main()

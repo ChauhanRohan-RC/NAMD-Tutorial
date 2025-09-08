@@ -1,4 +1,9 @@
 #!/bin/bash
+#------------------------------------
+# Execure rg.tcl and plot data
+#------------------------------------
+# To use default frame range:
+# => echo -ne "\n\n\n" | ./rg.sh
 
 # Calculate RG
 vmd -dispdev text -e rg.tcl

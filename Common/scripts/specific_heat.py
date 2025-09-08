@@ -167,4 +167,3 @@ if mass_grams_per_mole <= 0:
     print("LOG: skipping Mass Specific Heat (Cv_m) ...")
 
 _specific_heat(_temp=temp, _mass_grams_per_mole=mass_grams_per_mole)
-
