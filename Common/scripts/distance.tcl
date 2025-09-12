@@ -1,31 +1,43 @@
 ##############################################################################################
-### Script to calculate DISTANCE B/W 2 ATOMS  from trajectory and frame file(s)				##
-# -> Calculates 1-2 interatomic Distance for each Frame										##
-# -> Capture Checkpoints i.e. Frames with predefined distances of importance				##
+## Script to calculate DISTANCE B/W 2 ATOMS (Group of Atoms) from traj files				##
 ##############################################################################################
+# **REQUIRE bigdcd.tcl**
+
+# -> Calculates 1-2 interatomic Distance for each Frame
+# -> Capture Checkpoints i.e. Frames with predefined distances of importance
+# In case of group of atoms, Center of Mass / Geometric Center is used for distance calculation
 
 ## USAGE ------------------------
 # 1. Copy script to working dir
 # 2. INPUT: Set input strcuture (.psf) and frame (.dcd, .pdb, .coor) files
-# 3. INPUT: Set selections for atom1 and atom2
+# 3. INPUT: Set selection 1 and 2
 # 4. run with "vmd -dispdev text -e distance.tcl"
 # 5. OUTPUT: generates file "dist_vs_frame.csv"
 # 6. OUTPUT (optional) generates "checkpoint-<i>.pdb" file(s)
 
-## NOTE: Distance is in Angstrom (Å)
+# Units: Distance => Angstrom (Å)
+
+
 set COL_NAME_FRAME		"FRAME";		# Frame index
-set COL_NAME_DIST		"DIST";		# Distance b/w two atoms (Extension)
+set COL_NAME_DIST		"DIST";		# Distance b/w atoms/group of atoms (Extension)
 
 # ======================= INPUT ===========================
-set psf_file		"../../common/dna_wb.psf";		# TODO: input strcuture file (.psf)
+set psf_file		"amyl_wb.psf";		# TODO: input strcuture file (.psf)
+
 # TODO: LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
-set frame_files	{ "../dna_wb_eq.dcd" };		
+set frame_files	{ "amyl_wb.pdb" "amyl_wb_eq.restart.coor" "amyl_wb_eq.dcd" };
 #set frame_files	{ "dna_gbis_pcf.restart.coor" };
 
-set selection_atom1	"nucleic and resid 1 and name C5'";		# TODO: selection for ATOM 1 (usually FIXED)
-set selection_atom2	"nucleic and resid 14 and name C3'";		# TODO: selection for ATOM 2 (usually SMD)
+set frame_index_start 	-1;		# INCLUSIVE, -1 for None
+set frame_index_end 	-1;		# Exclusive, -1 for None
 
-### Direction Vector onto which ATOM 1 -> ATOM 2 linking vector is projected (dot prod)
+set selection1	"protein and resid 1 and name CA";		# TODO: selection-1 [usually FIXED Atom(s)]
+set selection2	"protein and resid 2";		# TODO: selection-2  [usually SMD Atom(s)]
+
+# In case of group of atoms, Use Center of Mass (COM) instead of geometric center
+set use_cen_mass			1;
+
+### Direction Vector onto which SEL-1 -> SEL-2 linking vector is projected (dot prod)
 ## -> Must be a 3D VECTOR. 
 ## -> Comment out for no projection (abs distance between 1 and 2)
 
@@ -37,8 +49,8 @@ set out_file_name 		"dist_vs_frame.csv";		# TODO: output file name
 set out_delimiter 		" \t ";					# output delimiter 
 
 ### Checkpoint Frames Capture
-# First frame(s) found to have the given atom 1-2 distance(s) (Å) are saved as .pdb file
-set checkpoints			{   }; 		# checkpoint 1-2 DIstances (in Å) separated by space
+# First frame(s) found to have the given Selection 1-2 distance(s) (Å) are saved as .pdb file
+set checkpoints			{ }; 		# checkpoint 1-2 DIstances (in Å) separated by space
 set checkpoint_tolerance		0.01;	# checkpoint Tolerance (in Å)
 set checkpoint_out_file_name_prefix 	"checkpoint";
 
@@ -46,67 +58,111 @@ set comment_token 		"#";		# Token used for Comments
 set comment_header		0;		# Whether to comment the columns header (for XmGrace). DO NOT comment header for my python scripts
 # -----------------------------------------------------
 
-puts "==============  DISTANCE B/W ATOMS  ================="
 
-# loading INPUT .psf and .dcd files
-set mol_id [mol new $psf_file];	
 
-foreach frame_file $frame_files {
-	puts "---------------------------------------------"
-	puts " -> Loading Frames from file : ${frame_file}"
-	puts "---------------------------------------------"
-	mol addfile $frame_file waitfor all molid $mol_id;
+
+# ==============================================
+# MAIN
+# ==============================================
+
+puts "\n====================================================="
+puts "==========  DISTANCE B/W ATOMS/GROUPS  ================"
+puts "=====================================================\n"
+
+## CHECKS ======================================
+
+# Frame files -----------
+if {[info exists frame_files] == 0 || [llength $frame_files] == 0} {
+	puts "\n------------------------------------------"
+	puts " => ERROR: No Frame Files specified !!"
+	puts "------------------------------------------\n"
+	exit;
 }
 
 
-### FRAMES INPUT ---------------------------
-# Number of frames
-set nf [molinfo $mol_id get numframes]
-set last_index [expr $nf - 1]
-
-if {$nf == 0} {
-	puts "-------------------------------------------"
-	puts "INFO: There are no frames in input file(s): \[${frame_files}\]"
-	puts "LOG: QUITING (NO FRAMES)"
-	puts "-------------------------------------------"
-	exit
+# Frame Range ---------------------
+if { [info exists frame_index_start] == 0 || $frame_index_start < 0 } {
+	set frame_index_start 0;
 }
 
-if {$nf == 1} {
-	set start_frame_index 	0;
-	set end_frame_index 	0;
+set frame_end_str ""
+set frame_count_str ""
+if { [info exists frame_index_end] == 0 || $frame_index_end <= 0 } {
+	set frame_index_end -1;
+	set frame_end_str "LAST"
+	if { $frame_index_start > 0 } {
+		set frame_count_str "$frame_index_start-LAST"
+	} else {
+		set frame_count_str "ALL"
+	}
 } else {
-	puts "----------------- Frame Indices ------------------";
-	puts "INFO: Total Frames: $nf";
-	puts "Frame index must be in range \[0, ${last_index}\], or -ve for back indices";
-	puts ""
-	puts -nonewline " -> START Frame Index (default: 0): "; flush stdout; set start_frame_index [gets stdin]
-	puts -nonewline " -> END Frame Index (default: -1): "; flush stdout; set end_frame_index [gets stdin]
-	puts ""
-	
-	# NORMALIZING START_FRAME_INDEX (default 0)
-	if { [string trim $start_frame_index] eq ""} {
-		set start_frame_index 0
-	} elseif {$start_frame_index < 0} {
-		set start_frame_index [expr $last_index + (($start_frame_index + 1) % -$nf)]
-	} elseif { $start_frame_index >= $nf } {
-		set start_frame_index [expr $start_frame_index % $nf]
+	if { $frame_index_end <= $frame_index_start } {
+		puts "\n------------------------------------------"
+		puts " => ERROR: FRAME_INDEX_END must be > FRAME_INDEX_START. given start: $frame_index_start, end: $frame_index_end"
+		puts "------------------------------------------\n"
+		exit;
 	}
 
-	# Normalizing END_FRAME_INDEX (default last_index)
-	if { [string trim $end_frame_index] eq ""} {
-		set end_frame_index $last_index
-	} elseif {$end_frame_index < 0} {
-		set end_frame_index [expr $last_index + (($end_frame_index + 1) % -$nf)]
-	} elseif { $end_frame_index >= $nf } {
-		set end_frame_index [expr $end_frame_index % $nf]
-	}
-} 
+	set frame_end_str "$frame_index_end"
+	set frame_count_str "[expr $frame_index_end - $frame_index_start]"
+}
 
 
-# =========================  MAIN  ==================================
+# Loading Molecule -------------
+set mol_id [mol new $psf_file waitfor all];
 
-# open output file ofor writing
+#foreach frame_file $frame_files {
+#	puts "---------------------------------------------"
+#	puts " -> Loading Frames from file : ${frame_file}"
+#	puts "---------------------------------------------"
+#	mol addfile $frame_file waitfor all molid $mol_id;
+#}
+
+
+# Selection -----------
+set allatoms [atomselect $mol_id "all"];
+set sel1 [atomselect $mol_id $selection1];
+set sel2 [atomselect $mol_id $selection2];
+
+set num_atoms_all [$allatoms num];
+set num_atoms_sel1 [$sel1 num];
+set num_atoms_sel2 [$sel2 num];
+
+if { $num_atoms_sel1 == 0 } {
+	puts "\n-------------------------------------------------------------"
+	puts " => ERROR: Selection 1 has no atoms : \"$selection1\""
+	puts "-------------------------------------------------------------\n"
+	exit;
+}
+
+if { $num_atoms_sel2 == 0 } {
+	puts "\n-------------------------------------------------------------"
+	puts " => ERROR: Selection 2 has no atoms : \"$selection2\""
+	puts "-------------------------------------------------------------\n"
+	exit;
+}
+
+
+# Direction Vector ---------
+if {[info exists dir_vec] && [llength $dir_vec] == 3 } {
+	set dir_unit_vec [vecnorm $dir_vec];
+	set has_dir_vec 1;
+} else {
+	set dir_unit_vec { };	# Empty list
+	set has_dir_vec 0;
+}
+
+# Checkpoints --------------
+if {[info exists checkpoints] == 1 && [llength $checkpoints] > 0} {
+	set checkpoints_copy  $checkpoints;
+	set has_checkpoints 1;
+} else {
+	set checkpoints_copy [list];
+	set has_checkpoints 0;
+}
+
+
+# OUTPUT Files ================================
 set out_file [open $out_file_name w]
 
 proc log2file { msg } { 
@@ -120,30 +176,22 @@ proc log { msg } {
 	log2file $msg;					# to output file
 }
 
-puts "--------------------------"
-log2file "${comment_token}================  DISTANCE B/W 2 ATOMS  ================="
-log "${comment_token}LOG: INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
-log "${comment_token}LOG: ATOM1 SELECTION: \"${selection_atom1}\""
-log "${comment_token}LOG: ATOM2 SELECTION: \"${selection_atom2}\""
-
-if {[info exists dir_vec] && [llength $dir_vec] == 3 } {
-	set dir_unit_vec [vecnorm $dir_vec]
-	set has_dir_vec 1
-	log "${comment_token}LOG: DIR Unit Vector: {$dir_unit_vec}  |  Force Positive Distances: ${force_positive_dist}"
-} else {
-	set dir_unit_vec { };	# Empty list
-	set has_dir_vec 0
+puts "\n---------------------------------------------------------"
+log2file "${comment_token}============  DISTANCE B/W 2 ATOMS (or Group of Atoms)  ============="
+log "${comment_token} INPUT Structure File: \"${psf_file}\""
+log "${comment_token} INPUT Frame File(s): \[${frame_files}\]"
+log "${comment_token} INPUT SELECTION-1 : \"${selection1}\""
+log "${comment_token} INPUT SELECTION-2 : \"${selection2}\""
+log "${comment_token} => ATOM COUNT: Total ($num_atoms_all), Selection-1 ($num_atoms_sel1), Selection-2 ($num_atoms_sel2)"
+log "${comment_token}-------------------------------------------------------"
+log "${comment_token} FRAME Index RANGE: \[${frame_index_start}, ${frame_end_str})  |  COUNT: $frame_count_str"
+if { $has_dir_vec == 1 } {
+	log "${comment_token} DIR Unit Vector: {$dir_unit_vec}  |  Force Positive Distances: ${force_positive_dist}"
 }
-
-log "${comment_token}--------------------------"
-log "${comment_token}LOG: Total Frames: ${nf}";
-log "${comment_token}LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for Calculation: [expr ${end_frame_index} - ${start_frame_index} + 1]"
-log "${comment_token}--------------------------"
-
-# Selecting Atoms
-set allatoms [atomselect $mol_id "all"]
-set atom1 [atomselect $mol_id $selection_atom1];
-set atom2 [atomselect $mol_id $selection_atom2];
+log "${comment_token}-------------------------------------------------------"
+log "${comment_token} UNITS: Distance = Angstrom (Å)"
+log "${comment_token}-------------------------------------------------------"
+puts ""
 
 # Header for output file
 set out_header "${COL_NAME_FRAME}${out_delimiter}${COL_NAME_DIST}";
@@ -154,32 +202,53 @@ if {$comment_header == 1} {
 log2file $out_header;
 #puts $out_header;
 
-set checkpoints_copy  $checkpoints
-if {[info exists checkpoints] && [llength $checkpoints] > 0} {
-	set has_checkpoints 1		
-} else {
-	set has_checkpoints 0
-}
 
-# Main Loop
-for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
-	$atom1 frame $i
-	$atom2 frame $i
-	
-	set a1pos [lindex [$atom1 get {x y z}] 0]
-	set a2pos [lindex [$atom2 get {x y z}] 0]
-	
-	set v [vecsub $a2pos $a1pos];		# ATOM 1 -> ATOM 2 Link Vector
+# =======================================
+# Function to calculate Distance
+# =======================================
+
+proc calc_dist { i } {
+	global frame_index_start frame_index_end;
+
+	set i [expr $i -1];
+
+	if { $i < $frame_index_start || ($frame_index_end > 0 && $i >= $frame_index_end) } {
+		return;
+	}
+
+
+	global sel1 sel2 allatoms num_atoms_sel1 num_atoms_sel2 use_cen_mass;
+	global has_dir_vec dir_unit_vec force_positive_dist;
+	global has_checkpoints checkpoints checkpoints_copy checkpoint_tolerance checkpoint_out_file_name_prefix;
+	global out_delimiter;
+
+	$sel1 frame $i
+	$sel2 frame $i
+
+	if { $num_atoms_sel1 > 1 && $use_cen_mass == 1 } {
+		set sel1_pos [measure center $sel1 weight mass];	# COM
+	} else {
+		set sel1_pos [measure center $sel1];				# Geo Center
+	}
+
+	if { $num_atoms_sel2 > 1 && $use_cen_mass == 1 } {
+		set sel2_pos [measure center $sel2 weight mass];	# COM
+	} else {
+		set sel2_pos [measure center $sel2];				# Geo Center
+	}
+
+
+	set v [vecsub $sel2_pos $sel1_pos];			# SEL-1 -> SEL-2 Link Vector
 	if {$has_dir_vec == 1} {
 		set dist [vecdot $v $dir_unit_vec];		# Distance in Å
-		if { $force_positive_dist == 1 } { 
+		if { $force_positive_dist == 1 } {
 			set dist [expr abs($dist)]
 		}
 	} else {
 		set dsq [vecdot $v $v];				# Distance Square (self dot)
 		set dist [expr { sqrt($dsq) }];		# Distance in Å
 	}
-	
+
 	if {$has_checkpoints == 1} {
 		for { set ci 0 } { $ci < [llength $checkpoints_copy] } { } {
 			set cp [lindex $checkpoints_copy $ci]
@@ -187,23 +256,23 @@ for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
 				# we got the checkpoint, Save the frame
 				set check_id [expr [lsearch $checkpoints $cp] + 1]
 
-				$allatoms frame $i;
+				#$allatoms frame $i;		# causes errors, not needed with bigdcd
 				set check_file "${checkpoint_out_file_name_prefix}-${check_id}.pdb";
 				$allatoms writepdb $check_file;
-				puts "--------------------------------"
-				puts " -> CHECKPOINT ${check_id} Found => Output File: ${check_file} | 1-2 DISTANCE: ${cp} Å (Requested), ${dist} Å (Actual)"
-				puts "--------------------------------"
-		
+				puts "\n--------------------------------------------------------------"
+				puts " -> CHECKPOINT ${check_id} Found => FRAME Index: $i | Output File: \"${check_file}\" | 1-2 DISTANCE: ${cp} Å (Requested), ${dist} Å (Actual)"
+				puts "--------------------------------------------------------------\n"
+
 				set checkpoints_copy [lreplace $checkpoints_copy $ci $ci];	# remove this checkpoint
 			} else {
 				incr ci;	# Increment
 			}
 		}
 	}
-	
+
 	if {[expr $i % 10000] == 0} {
-		puts "INFO: processing Frames $i-[expr min($i + 10000, $end_frame_index)]";
-		
+		puts "INFO: processing Frames $i";
+
 		if { $has_dir_vec == 1 } {
 			puts "INFO: FRAME ${i} => 1 -> 2 Link Vector: {$v} | DIR Unit Vector: {$dir_unit_vec}"
 			if {$force_positive_dist == 1} { set tok " | positive" } else { set tok "" }
@@ -213,14 +282,27 @@ for { set i $start_frame_index } { $i <= $end_frame_index  } { incr i } {
 			puts "INFO: FRAME ${i} => 1-2 DISTANCE: ${dist} Å"
 		}
 	}
-	
-	set line "${i}${out_delimiter}${dist}"
-	log2file $line
+
+	set line "${i}${out_delimiter}${dist}";
+	log2file $line;
 }
+
+
+# =====================================
+# Execute Calculation
+# =====================================
+package require bigdcd;
+eval "bigdcd calc_dist auto [join $frame_files]";
+bigdcd_wait;
+
+# GC
+flush $out_file;
+close $out_file;
+mol delete $mol_id;
 
 puts "=================  FINISHED  ===================="
 puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
 puts "================================================="
 
-exit
+exit;
 

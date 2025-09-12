@@ -62,6 +62,9 @@ set selection2	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION2
 ## Output file names
 set out_file_prefix 		"";		# or set by  ENV VAR: NAMD_ENERGY_OUT_PREFIX
 
+## [OPTIONAL][ Label for this run 
+set label		"";			# or ser by  ENV VAR: NAMD_ENERGY_LABEL
+
 ### Energies to calculate (as sequence of 4-letter codes)
 # -------------------------------------------------------------------------------------
 # OPTIONS: -bond -angl -dihe -impr -conf -vdw -elec -nonb -boun -misc -kine -pote -all
@@ -103,8 +106,9 @@ set out_force			on;		# [on/off] show force b/w two selections. [-keepforce]
 								
 set frame_skip			0;		# Calculate energy every <frame_skip> frame [-skip]
 
-set out_delimiter " ";
-set out_energy_format "%.4f";
+set out_delimiter 		" ";
+set out_energy_format 	"%.4f";
+set comment_token 		"#";			# For Comments. "" to disable comments
 
 # ==================================
 # MAIN
@@ -255,6 +259,24 @@ if { $has_sel2 == 1 && [info exists out_force] && [string trim $out_force] eq "o
 # 	set projforce 1;
 # }
 
+## Label
+if { [info exists label] == 0 || [string trim $label] eq "" } {
+	# Trying to find env variable
+	set failed [catch { set label "$::env(NAMD_ENERGY_LABEL)" }];
+	if { $failed != 0 } {
+		# Environment variable not found
+	}
+	unset failed;
+
+	if { [info exists label] == 0 || [string trim $label] eq "" } {
+		# Deafult Label
+		if { $keepforce == 1 } {
+			set label "Interaction Energy and Forces (on Selection-1 due to Selection-2)";
+		} else {
+			set label "Interaction Energy b/w Selection-1 and Selection-2";
+		}
+	}
+}
 
 
 set namd_temp_files_prefix "${out_file_prefix}.namd-temp"
@@ -489,6 +511,45 @@ set log_file [open $namd_log_filename "r"];
 # Output energy file
 set fout [open $out_erg_filename "w"];
 
+# Comments ----------------
+if { [info exists comment_token] == 1 && [string trim $comment_token] ne "" } {
+	set comments [list];
+
+	lappend comments "================ $label ================"
+	lappend comments "PARAM File(s): \[$param_files\]  (Drude: ${drude})"
+	lappend comments "PSF File     : $psf_file"
+	lappend comments "DCD File(s)  : \[$dcd_files\]"
+	lappend comments "## Selections ---------------"
+	lappend comments "SELECTION 1  : \"$selection1\""
+	lappend comments "SELECTION 2  : \"$selection2\""
+	lappend comments "ATOM COUNT   : Total ($atom_count_total) | Selection 1 ($atom_count_sel1) | Selection 2 ($atom_count_sel2)"
+	lappend comments "## Output -------------------"
+	lappend comments "OUTPUT Energies : $out_energies"
+	lappend comments "OUTPUT Force    : $keepforce_str  (Force on Sel-1 due to Sel-2)"
+	lappend comments "TIMESTEP First  : $timestep_first \t\t (only for book-keeping)"
+	lappend comments "FRAME Frequency : $frame_freq steps \t (only for book-keeping)"
+	lappend comments "FRAME Skip      : $frame_skip frames"
+	lappend comments "## Simulation Params---------"
+	lappend comments "Temperature : $temperature K (KBT = [format %.2e [expr 0.0019872 * $temperature]] kcal/mol = [format %.2e [expr 1.380649e-23 * $temperature]] J/molecule)"
+	lappend comments "Cutoff      : $cutoff Å"
+	lappend comments "Switchdist  : $switchdist Å"
+	lappend comments "Dielectric  : $dielectric"
+	lappend comments "## Periodic BC --------------"
+	lappend comments "PEROIDIC BC    : $has_ext_sys"
+	lappend comments "PME            : $pme"
+	lappend comments "PME Grid Space : $pme_grid_spacing Å"
+	lappend comments "Initial Extended System File : \"$initial_ext_sys\""
+	lappend comments "-----------------------------------------------------------------"
+	lappend comments "Units => ENERGY: 1 kcal/mol     = 6.95e-21 J/molecule = [format %.2e [expr 1/(0.0019872 * $temperature)]] KBT"
+	lappend comments "      => FORCE : 1 kcal/(mol Å) = 69.5 pN"
+	lappend comments "========================================================================="
+	
+	foreach c $comments {
+		puts $fout "${comment_token} ${c}";
+	}
+}
+
+
 #Initialize variables to hold lists of the output from all frames
 set outputlists [list];
 
@@ -510,8 +571,8 @@ if ([regexp {all|kine} $out_energies]) {lappend lhead "KINETIC"};
 if ([regexp {all|pote} $out_energies]) {lappend lhead "POTENTIAL"};
 lappend lhead "TOTAL";
 if { $keepforce == 1 && [regexp {all|vdw|nonb} $out_energies]} { lappend lhead "VDW_FORCE" };
-if { $keepforce == 1 && [regexp {all|nonb|elec} $out_energies]} { lappend lhead "ELECT_FORCE" };
-if { $keepforce == 1} { lappend lhead "TOTAL_FORCE" };
+if { $keepforce == 1 && [regexp {all|elec|nonb} $out_energies]} { lappend lhead "ELECT_FORCE" };
+if { $keepforce == 1 } { lappend lhead "TOTAL_FORCE" };
 
 # Header
 set headerstring [join $lhead $out_delimiter];
@@ -564,7 +625,7 @@ while {[gets $log_file enerstring] >= 0} {
     lappend outputlist $total_energy;
 
     # Force between selections
-    if {$has_sel2 == 1 && $keepforce == 1} {
+    if {$keepforce == 1} {
         gets $log_file;
         gets $log_file forcestring;
 
@@ -580,7 +641,6 @@ while {[gets $log_file enerstring] >= 0} {
 
 		set vdwproj 1;
 		set vdwmag [expr $vdwproj * [veclength $vdwvec]];
-		lappend outputlist $vdwmag;
 		
 		# Electrostatic Force ---------------
 		set forceindex [lsearch -regexp  $forcelist "^ELECT_FORCE"];

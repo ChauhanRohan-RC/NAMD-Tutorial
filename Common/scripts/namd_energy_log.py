@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+import re
 import datetime
 from collections.abc import Iterable
 from itertools import repeat
@@ -99,7 +101,7 @@ def _parse_energy_cols(energy_cols: [str, Iterable, None]) -> [list, None]:
     if isinstance(energy_cols, str):
         energy_cols = energy_cols.strip()
         if energy_cols:
-            return [energy_cols]
+            return energy_cols.split()
         return None
 
     if isinstance(energy_cols, (list, tuple, Iterable)):
@@ -190,11 +192,12 @@ def extract_energies(namd_log_files: [str, Iterable],
                 print(" -> No Energy type found !!")
                 return False
 
-            indices.sort()
+            # indices.sort()
             titles.clear()
             titles.extend((_e_titles[i] for i in indices))
             e_stats.clear()
-            e_stats.extend((list(repeat(0, len(indices))) for _ in range(3)))  # 3 rows, storing min, max and avg for each energy_type
+            e_stats.extend((list(repeat(0, len(indices))) for _ in
+                            range(3)))  # 3 rows, storing min, max and avg for each energy_type
             e_count[0] = 0
 
             # Comments
@@ -292,15 +295,80 @@ def extract_energies(namd_log_files: [str, Iterable],
         print("===================================\n")
 
 
+def find_files(folder_path: str,
+               prefix: str = "",
+               suffix: str = "",
+               recursive: bool = False,
+               sort: bool = True):
+    """
+    Finds all files in the specified folder with the given prefix and suffix,
+    sorted so files with no number come first (both groups sorted naturally).
+
+    :param folder_path: Path to the folder to search.
+    :param prefix: Prefix string files should start with.
+    :param suffix: Suffix string files should end with.
+    :param recursive: If True, search subfolders recursively.
+    :param sort: If True, sort files in natural order of their name
+    :return: List of matching file paths, grouped and sorted as described.
+    """
+    matching_files = []
+    if recursive:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.startswith(prefix) and file.endswith(suffix):
+                    matching_files.append(os.path.join(root, file))
+    else:
+        for file in os.listdir(folder_path):
+            full_path = os.path.join(folder_path, file)
+            if os.path.isfile(full_path):
+                if file.startswith(prefix) and file.endswith(suffix):
+                    matching_files.append(full_path)
+
+    if not sort:
+        return matching_files
+
+    # Sorting Naturally ---------------------
+    def has_number(s):
+        """Return True if the string contains any digits."""
+        return any(char.isdigit() for char in os.path.basename(s))
+
+    def natural_sort_key(s):
+        """Split string into parts for natural sorting (numbers as ints)."""
+        return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', os.path.basename(s))]
+
+    # Split into files without numbers and with numbers
+    files_num = []  # files with number in their name
+    files_no_num = []  # files with no number in their name
+    for f in matching_files:
+        if has_number(f):
+            files_num.append(f)
+        else:
+            files_no_num.append(f)
+
+    # Sort both groups naturally
+    files_no_num.sort(key=natural_sort_key)
+    files_num.sort(key=natural_sort_key)
+
+    # Combine
+    return files_no_num + files_num
+
+
 if __name__ == '__main__':
     #### Energies output by NAMD:
+    # ---------------------
+    # Available Columns:
+    # ---------------------
     # TS, BOND, ANGLE, DIHED, IMPRP, ELECT, VDW, BOUNDARY, MISC, KINETIC, TOTAL, TEMP, POTENTIAL, TOTAL3, TEMPAVG, PRESSURE, GPRESSURE, VOLUME, PRESSAVG, GPRESSAVG
 
     ## ====================  INPUT CONFIG  =========================
-    namd_log_files = ["../dna_wb_eq.log"]  # TODO: input .log file(s)
+    # TODO: input .log file(s)
+    # namd_log_files = ["../dna_wb_eq.log"]
+    namd_log_files = find_files("..", prefix="dna_wb_eq", suffix=".log", recursive=False, sort=True)
 
-    # energy_columns = ["BOND", "TEMP", "KINETIC"]     # TODO: str or list of str. None for all columns
-    energy_columns = None
+    # TODO: ENERGY COLUMNS ->  str (whitespace delimited) OR list[str] OR None (for all columns)
+    energy_columns = None  # All columns
+    # energy_columns = "TS BOND ANGLE DIHED IMPRP ELECT VDW KINETIC POTENTIAL TOTAL TEMP PRESSURE VOLUME"     # As string
+    # energy_columns = ["BOND", "TEMP", "KINETIC"]      # As list
 
     timestep_start = -1  # TODO: START Timestep, or -1 to start form beginning
     timestep_end = -1  # TODO: END Timestep, or -1 to read till the end of all .log file(s)
@@ -309,7 +377,7 @@ if __name__ == '__main__':
     ## =====================  OUTPUT CONFIG  ==========================
     out_energy_file = "energy.csv"  # File for energy data. None or empty str for default
     out_energy_stats_file = "energy.stats.csv"  # File for average energy data. None or empty str for default
-    out_delimiter = " \t "
+    out_delimiter = " "
     comment_token = "#"  # Empty string to disable comments
     comment_e_titles = False  # whether to comment ENERGY TITLES in the Header, useful for Xmgrace
 
