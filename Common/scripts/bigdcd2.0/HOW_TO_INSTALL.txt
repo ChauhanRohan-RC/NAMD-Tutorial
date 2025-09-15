@@ -1,0 +1,14 @@
+#=====================================
+# install bigdcd as plugin in VMD
+#=====================================
+
+# Copy this folder to VMD library plugin folder
+# => cp -r ../bigdcd2.0 <VMD_LIB_DIR>/plugins/noarch/tcl/
+# example
+cp -r ../bigdcd2.0 /usr/local/lib/vmd-1.9.3/plugins/noarch/tcl/
+
+# Verify owner, group and file permission 644
+cd /usr/local/lib/vmd-1.9.3/plugins/noarch/tcl/
+
+chown -R rohanchauhan:rohanchauhan bigdcd2.0
+chmod 644 bigdcd2.0/*

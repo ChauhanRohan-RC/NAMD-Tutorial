@@ -58,6 +58,8 @@
 # bigdcd_wait
 # quit
 
+package provide bigdcd 2.0;
+
 proc bigdcd { script type args } {
     global bigdcd_frame bigdcd_proc bigdcd_firstframe vmd_frame bigdcd_running
   
