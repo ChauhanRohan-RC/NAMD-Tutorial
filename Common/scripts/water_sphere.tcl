@@ -1,10 +1,12 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ##############################################################################
 ### Script to immerse a molecule inside a water sphere						##
 ##############################################################################
 
 # 1. Copy script in the same directory as input .pdb and .psf files
 # 2. INPUT: set molecule name (name of the input .psf and .pdb files) and padding
-# 3. run with "vmd -dispdev text -e water_box.tcl"
+# 3. run with "./water_box.tcl"
 # 4. OUTPUT: Generates "${molname}_ws" .pdb and .psf files, and .comments.txt file
 
 ## KNOWN BUGS:

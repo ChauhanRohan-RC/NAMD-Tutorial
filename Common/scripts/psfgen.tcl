@@ -1,15 +1,17 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ############################################################################################
 ## Script to generate .psf (protein structure file) from a raw .pdb and topology file     ##
 ############################################################################################
-#
-# Outputs 2 files
+
+# OUTPUT: 2 files
 #	1. new .pdb file: contains missing atoms (like H's) with guessed coordinates
 #	2. .psf structure file
-#
+
 # USAGE
 # 1. Copy this script in your working dir
 # 2. set input and output config
-# 2. In terminal, type "vmd -dispdev text -e psfgen.tcl"
+# 2. run with "./psfgen.tcl"
 
 # ======================
 # INPUT
@@ -50,3 +52,5 @@ guesscoord;
 # Writing output files
 writepdb "$out_name.pdb";		# also contains missing atoms (like H's) with guessed coords
 writepsf "$out_name.psf";
+
+exit;

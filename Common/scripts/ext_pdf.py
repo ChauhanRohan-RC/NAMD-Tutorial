@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import traceback
 
@@ -6,133 +8,242 @@ import pandas as pd
 import plotext
 
 
-######################################################################
-## Script to plot Extension Probability Density Function (PDF)      ##
-######################################################################
+##########################################################################
+## Script to Plot Extension Distribution
+# => Based on pdf.py
+##########################################################################
+# Search for TODO
+
+
+# => pouplation of i'th bin = N(i)
+# => Probability Density P(i) =  c * N(i)   [c: normalization constant]
+# such that
+#                   integral P(i) = 1   (total area = 1)
+#
+# => Boltzmann Inverted PMF
+#
+#                   U(x)/kBT = -ln[P_eq(i)]    (i = bin index)
+#
+
 
 ## Usage
 # 1. Copy script to working dir
-# 2. INPUT: set DISTANCE_VS_FRAME file (ext over time) WITH COLUMN NAMES
+# 2. INPUT: set data_file and column names
 # 3. INPUT: set HISTOGRAM and ROLLING_AVG params
-# 4. run with "python ext_pdf.py"
-# 5. Creates output file "ext_pdf.dat", "ext_pdf-avg[bins].dat", "ext_pdf.svg"
-
-## UNITS: Distance (Å)
-# NOTE: Column names must be present in the input file
-
-## Input ---------------------------------------------------
-frame_vs_ext_file = "dist_vs_frame.csv"
-COL_NAME_FRAME = "FRAME"            # Frame
-COL_NAME_DIST = "DIST"              # Distance b/w atoms (or Extension)
-frame_step_fs = 1 * 1000  # time (in fs) between frames = time_step (fs) * dcd_freq. -1 for NOT_DEFINED
-
-# Frame Range (optional). NOTE: frame_index = time_fs / frame_step_fs
-frame_index_start = -1  # Inclusive [-1 for no start bound]
-frame_index_end = -1 # 32e6 / frame_step_fs  # Exclusive [-1 for no end bound]
-
-# Histogram parameters
-ext_start: float = 0.0
-ext_end: float = 100.0
-ext_bin_count: int = 1000
-_ext_bin_size = (ext_end - ext_start) / ext_bin_count
-
-# Moving average
-rolling_window_bins: int = 20  # [int] Moving Average window size (in no of bins). Set to 0 to disable
-rolling_window_size: float = -1  # [float] [Only used if rolling_window_bins is not set]. Moving Average window size (in Angstroms). Set to 0 to disable.
-
-
-def parse_rolling_win_bins() -> tuple: # tuple[int, float]
-    bins = -1
-
-    if rolling_window_bins > 0:
-        bins = rolling_window_bins
-    elif rolling_window_size > 0:
-        bins = int(round(rolling_window_size / ((ext_end - ext_start) / ext_bin_count)))
-
-    return (bins, bins * _ext_bin_size) if bins > 0 else (-1, -1)
-
-
-_rolling_win_bins, _rolling_win_size = parse_rolling_win_bins()
-
-## Output --------------------------------------------------------------
-output_pdf_data_file = "ext_pdf.csv"
-output_pdf_avg_data_file = f"ext_pdf-avg{_rolling_win_bins}.csv" if _rolling_win_bins > 0 else ""
-output_fig_file = "ext_pdf.pdf"
-comment_output_header = False
-
-plot_in_terminal = True
-
-# ----------------------------------------------------------------------
+# 4. run with "python pdf.py"
 
 ## Constants
 COMMENT_TOKEN = "#"
+COL_NAME_TIME_NS = "TIME_NS"
+COL_NAME_PDF = "PDF"                       # Probability Distribution Function (PDF) with total area = 1
+COL_NAME_PDF_AVG_PREFIX = "PDF_AVG"        # Average PDF over a window
+COL_NAME_PMF = "PMF"    # boltzmann inverted PMF
 
-COL_NAME_PDF = "PDF"                # Probability Distribution Function (PDF) of Distance
-COL_NAME_PDF_AVG = "PDF_AVG"        # Average PDF over a window
-COL_NAME_TIME_NS = "TIME_NS"        # Time in ns
+# Kb = 1.9872036e-3   # Kb (kcal/mol)
+# T = 300 # K
 
 
-# Dataframe
-frame_ext_df: pd.DataFrame = pd.read_csv(frame_vs_ext_file, sep=r"\s+", comment=COMMENT_TOKEN)
-if frame_index_start >= 0:
-    frame_ext_df = frame_ext_df[frame_ext_df[COL_NAME_FRAME] >= frame_index_start]
+# =======================================================
+# INPUT
+# =======================================================
+data_file: str = "dist_vs_frame.csv"     # TODO Input data file
+col_name_x: str = "FRAME"                   # TODO Input column X
+col_name_y: str = "DIST"                # TODO Input column Y
+input_delimiter: str = r"\s+"            # Input delimiter
 
-if frame_index_end >= 0:
-    frame_ext_df = frame_ext_df[frame_ext_df[COL_NAME_FRAME] < frame_index_end]
+# Scaling
+frame_time_fs: float = 1 * 1000    # [OPT] time (in fs) between frames = time_step (fs) * dcd_freq   [-1 for NOT_DEFINED]
+plot_label_y: str = "Extension (Å)"     # After scaling TODO
 
+# Data Range after scaling (OPTIONAL)
+x_start: float = None  # [OPTIONAL] Inclusive ("None" for min(x))
+x_end: float = None    # [OPTIONAL] Exclusive ("None" for max(x))
+
+# Histogram of Y column (after scaling)
+y_hist_start: float = None        # [OPTIONAL] "None" for min(y) 
+y_hist_end: float = None          # [OPTIONAL] "None" for max(y) 
+hist_bin_count: int = 10000
+
+# Moving average
+y_hist_avg_bins: int = 50    # [int] Moving Average window size (in no of bins). Set to 0 to disable
+y_hist_avg_size: float = -1  # [float] [Only used if rolling_window_bins is not set]. Moving Average window size (in unit of y). Set to 0 to disable.
+
+## Boltzmann Inverted PMF: U(x)/kBT = -ln[P_eq(i)]    (i = bin index)
+calc_pmf: bool = True       # TODO
+
+
+# =======================================================
+# OUTPUT
+# =======================================================
+out_prefix: str = "ext"     # TODO
+
+out_scaled_data_file: str = ""  #f"{out_prefix}.scaled.csv"       # [OPT] ONLY IF scale_x or scale_y != 1. "" for None
+out_pdf_file: str = f"{out_prefix}_pdf.csv"     # [OPT] Histogram data file (probability density function - PDF)
+out_fig_file: str = f"{out_prefix}_pdf.pdf"     # [OPT] Histogram figure file
+
+out_format: str = "%.4E"
+out_delimiter: str = " "
+
+comment_output_header: str = False
+plot_in_terminal: bool= True
+
+
+
+
+
+# =======================================================
+# MAIN
+# =======================================================
+
+has_time: bool = frame_time_fs > 0
+scale_x: float = (frame_time_fs * 1e-6) if has_time else 1
+scale_y: float = 1
+
+# [Optional] Labels after scaling. can be "None" or ""
+out_col_name_x: str = col_name_x if not has_time else COL_NAME_TIME_NS    # Useful after scaling
+out_col_name_y: str = col_name_y                                   # Useful after scaling
+plot_label_x: str = "Frame" if not has_time else "Time (ns)"       # After scaling TODO
+
+
+
+
+## Dataframe
+df: pd.DataFrame = pd.read_csv(data_file,
+                               usecols=[col_name_x,col_name_y],
+                               sep=input_delimiter,
+                               comment=COMMENT_TOKEN,
+                               skipinitialspace=True)
+
+# Checks
+if not out_col_name_x:
+    out_col_name_x = col_name_x
+
+if not out_col_name_y:
+    out_col_name_y = col_name_y
+
+if not plot_label_x:
+    plot_label_x = out_col_name_x
+
+if not plot_label_y:
+    plot_label_y = out_col_name_y
+
+
+# -------------------------------------------------
+# Scaling
+# -------------------------------------------------
+has_scale: bool = scale_x != 1 or scale_y != 1
+if has_scale:
+    if scale_x != 1:
+        df[col_name_x] *= scale_x
+    if scale_y != 1:
+        df[col_name_y] *= scale_y
+
+    if out_scaled_data_file:
+        meta_info_str = (
+            f"{COMMENT_TOKEN} -------------- Scaled Data File ----------------\n"
+            f"{COMMENT_TOKEN} INPUT data file: \"{data_file}\"\n"
+            f"{COMMENT_TOKEN} INPUT Columns => X: \"{col_name_x}\"  |  Y: \"{col_name_y}\"\n"
+            f"{COMMENT_TOKEN} INPUT Scale => X: {scale_x}  |  Y: {scale_y}\n"
+            f"{COMMENT_TOKEN} PLOT Labels (after scaling) => X: \"{plot_label_x}\"  |  Y: \"{plot_label_y}\"\n"
+            f"{COMMENT_TOKEN} ---------------------------------------\n"
+        )
+
+        scaled_df = pd.DataFrame()
+        scaled_df[out_col_name_x] = df[col_name_x]
+        scaled_df[out_col_name_y] = df[col_name_y]
+
+        with open(out_scaled_data_file, "w") as out_sc:
+            out_sc.write(meta_info_str)
+            scaled_df.to_csv(out_sc, mode="a", sep=out_delimiter, float_format=out_format, header=True, index=False, index_label=False)
+
+
+# -------------------------------------------------
 # Histogram
-ext_hist, ext_bin_edges = np.histogram(a=frame_ext_df[COL_NAME_DIST], bins=ext_bin_count, range=(ext_start, ext_end),
-                                       density=True)
-ext_pdf_df = pd.DataFrame()
+# -------------------------------------------------
+if x_start is not None:
+    df = df[df[col_name_x] >= x_start]
 
-ext_col_label = (COMMENT_TOKEN if comment_output_header else "") + COL_NAME_DIST
-ext_pdf_df[ext_col_label] = ext_bin_edges[0:-1]
-ext_pdf_df[COL_NAME_PDF] = ext_hist
+if x_end is not None:
+    df = df[df[col_name_x] < x_end]
 
-meta_info_str = (
-    f"{COMMENT_TOKEN} INPUT Frame vs Extension file: \"{frame_vs_ext_file}\"\n"
-    f"{COMMENT_TOKEN} INPUT Frame Range => frame_index_start: {frame_index_start}  |  frame_index_end: {frame_index_end}\n"
-    f"{COMMENT_TOKEN} INPUT Extension Range => ext_start: {ext_start}  |  ext_end: {ext_end}\n"
-    f"{COMMENT_TOKEN} INPUT Extension Bins => Count: {ext_bin_count}  | Bin Size: {_ext_bin_size}\n"
-    f"{COMMENT_TOKEN} INPUT Moving Average Window Size: {_rolling_win_bins} extension bins (or {_rolling_win_size} extension units)\n"
-    f"{COMMENT_TOKEN} ---------------------------------------\n"
+if y_hist_start is None:
+    y_hist_start = df[col_name_y].min()
+
+if y_hist_end is None:
+    y_hist_end = df[col_name_y].max()
+
+hist_bin_size = (y_hist_end - y_hist_start) / hist_bin_count
+
+# calculate histogram density
+y_hist, y_bin_edges = np.histogram(a=df[col_name_y], bins=hist_bin_count, range=(y_hist_start, y_hist_end),
+                                   density=True)
+pdf_df = pd.DataFrame()
+
+out_col_y = (COMMENT_TOKEN if comment_output_header else "") + out_col_name_y
+pdf_df[out_col_y] = y_bin_edges[0:-1]
+pdf_df[COL_NAME_PDF] = y_hist
+
+# -------------------------------------------------
+# Histogram Moving Average
+# -------------------------------------------------
+def parse_hist_avg_win_bins() -> tuple: # tuple[int, float]
+    bins = -1
+
+    if y_hist_avg_bins > 0:
+        bins = y_hist_avg_bins
+    elif y_hist_avg_size > 0:
+        bins = int(round(y_hist_avg_size / ((y_hist_end - y_hist_start) / hist_bin_count)))
+
+    return (bins, bins * hist_bin_size) if bins > 0 else (-1, -1)
+
+
+_hist_avg_win_bins, _hist_avg_win_size = parse_hist_avg_win_bins()
+do_pdf_avg: bool = _hist_avg_win_bins > 0
+
+col_name_pdf_avg: str = COL_NAME_PDF_AVG_PREFIX
+if do_pdf_avg:
+    col_name_pdf_avg = f"{COL_NAME_PDF_AVG_PREFIX}{_hist_avg_win_bins}"  # col_name = PDF_AVG<bins>
+    pdf_df[col_name_pdf_avg] = pdf_df[COL_NAME_PDF].rolling(_hist_avg_win_bins).mean()
+
+if calc_pmf:
+    pdf_df[COL_NAME_PMF] = -np.log(pdf_df[COL_NAME_PDF])    # U(x)/KbT = -ln(P_eq(x))
+
+# -------------------------------------------------
+# Output file
+# -------------------------------------------------
+if out_pdf_file:
+    meta_info_str = (
+        f"{COMMENT_TOKEN} INPUT data file: \"{data_file}\"\n"
+        f"{COMMENT_TOKEN} INPUT Columns => X: \"{col_name_x}\"  | Y: \"{col_name_y}\"\n"
+        f"{COMMENT_TOKEN} INPUT Scale => X: {scale_x}  | Y: {scale_y}\n"
+        f"{COMMENT_TOKEN} INPUT X Range => [{x_start}, {x_end})\n"
+        f"{COMMENT_TOKEN} Histogram Y Range => ({y_hist_start}, {y_hist_end})\n"
+        f"{COMMENT_TOKEN} Histogram Bins => Count: {hist_bin_count}  | Bin Size: {hist_bin_size}\n"
+        f"{COMMENT_TOKEN} Histogram Moving Average Window Size: {_hist_avg_win_bins} bins (or {_hist_avg_win_size} y units)\n"
+        f"{COMMENT_TOKEN} ---------------------------------------\n"
     )
 
-if output_pdf_data_file:
-    with open(output_pdf_data_file, "w") as out_p:
-        out_p.write(f"{COMMENT_TOKEN} -------------- Extension Probability Distribution (Probability Density Function - PDF) ----------------\n")
+    with open(out_pdf_file, "w") as out_p:
+        out_p.write(f"{COMMENT_TOKEN} -------------- Probability Density (PDF) ----------------\n")
         out_p.write(meta_info_str)
-        ext_pdf_df.to_csv(out_p, mode="a", sep="\t", header=True, index=False, index_label=False)
+        pdf_df.to_csv(out_p, mode="a", sep=out_delimiter, float_format=out_format, header=True, index=False, index_label=False)
 
-# Rolling Average
 
-ext_pdf_avg_df = None
+# =======================================================
+# PLOTS
+# =======================================================
 
-if _rolling_win_bins > 0:
-    ext_pdf_df[COL_NAME_PDF_AVG] = ext_pdf_df[COL_NAME_PDF].rolling(_rolling_win_bins).mean()
-    if output_pdf_avg_data_file:
-        ext_pdf_avg_df = ext_pdf_df[[ext_col_label, COL_NAME_PDF_AVG]]
-        ext_pdf_avg_df = ext_pdf_avg_df.dropna()
+# -------------------------------
+# PLOT: Terminal
+# -------------------------------
+pdf_plot_title: str = "Extension Distribution"
+pdf_plot_label_x: str = plot_label_y
+pdf_plot_label_y: str = "Probability Density"
 
-        with open(output_pdf_avg_data_file, "w") as out_p:
-            f"{COMMENT_TOKEN} -------------- Moving-Average Extension Probability Distribution (Probability Density Function - PDF) ----------------\n"
-            out_p.write(meta_info_str)
-            ext_pdf_avg_df.to_csv(out_p, mode="a", sep="\t", header=True, index=False, index_label=False)
+pmf_plot_title: str = "Boltzmann Inverted PMF\n $U(x)/K_{B}T = -ln(P_{eq}(i))$"
+pmf_plot_label_x: str = plot_label_y
+pmf_plot_label_y: str = "$U(x)$ $[K_{B}T]$"
 
-# Plot
-# plt.stairs(ext_hist, ext_bin_edges, fill=True)
-# if pdf_avg_df is not None:
-#     plt.plot(ext_pdf_avg_df[ext_col_label], ext_pdf_avg_df[COL_NAME_PDF_AVG])
-#
-# plt.xlabel("Extension (Å)")
-# plt.ylabel("Relative Population")
-# plt.title("Extension Distribution")
-
-has_time = frame_step_fs > 0
-if has_time:
-    frame_ext_df[COL_NAME_TIME_NS] = frame_ext_df[COL_NAME_FRAME] * (frame_step_fs * 1e-6)
-
-# Plot in terminal
 if plot_in_terminal:
     # plotext.from_matplotlib(plt.gcf())
 
@@ -153,25 +264,35 @@ if plot_in_terminal:
     plotext.plot_size(plotext.terminal_width(), plotext.terminal_height() * 1.6)
     plotext.subplots(2,1)
 
-    plotext.subplot(2,1)
-    plotext.plot(frame_ext_df[COL_NAME_TIME_NS if has_time else COL_NAME_FRAME], frame_ext_df[COL_NAME_DIST])
-    plotext.title("Extension vs " + ("Time" if has_time else "Frame"))
-    plotext.xlabel("Time (ns)" if has_time else "Frame")
-    plotext.ylabel("Extension (Å)")
+    # A input data plot on terminal
+    plotext.subplot(1,1)
+    plotext.plot(df[col_name_x], df[col_name_y])
+    plotext.title(f"{plot_label_y} vs {plot_label_x}")
+    plotext.xlabel(plot_label_x)
+    plotext.ylabel(plot_label_y)
 
     # A basic Histogram plot on terminal
-    plotext.subplot(1, 1)
-    plotext.hist(frame_ext_df[COL_NAME_DIST], bins=200, fill=True)
-    plotext.title("Extension Distribution")
-    plotext.xlabel("Extension (Å)")
-    plotext.ylabel("Relative Population")
+    plotext.subplot(2, 1)
+    plotext.hist(df[col_name_y], bins=200, fill=True)
+    plotext.title(pdf_plot_title)
+    plotext.xlabel(pdf_plot_label_x)
+    plotext.ylabel(pdf_plot_label_y)
+
+    # Boltzmann Inverted PMF plot on terminal
+    # plotext.subplot(3, 1)
+    # plotext.plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
+    # plotext.title(pmf_plot_title)
+    # plotext.xlabel(pmf_plot_label_x)
+    # plotext.ylabel(pmf_plot_label_y)
 
     print(""); print_full_line("#"); print("")
     plotext.show()
     print(""); print_full_line("#"); print("")
 
 
-# Matplotlib PLOT
+# -------------------------------------------------
+# PLOT: Interactive (Matplotlib)
+# -------------------------------------------------
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import figaspect
@@ -180,28 +301,51 @@ except ImportError:
     traceback.print_exc()
     exit(1)
 
-w, h = figaspect(9 / 23)
-fig, axes = plt.subplots(1, 2, figsize=(w * 1.4, h * 1.4))
-fig.tight_layout(pad=5.0)
+w, h = figaspect((9/38) if calc_pmf else (9/24))
+fig, axes = plt.subplots(1, 3 if calc_pmf else 2, figsize=(w * 1.4, h * 1.4))
+fig.tight_layout(pad=3.0)
 
-axes[0].plot(frame_ext_df[COL_NAME_TIME_NS if has_time else COL_NAME_FRAME], frame_ext_df[COL_NAME_DIST])
-axes[0].set_title("Extension vs " + ("Time" if has_time else "Frame"))
-axes[0].set_xlabel("Time (ns)" if has_time else "Frame")
-axes[0].set_ylabel("Extension (Å)")
+# x vs y plot
+axes[0].plot(df[col_name_x], df[col_name_y])
+axes[0].set_title(f"{plot_label_y} vs {plot_label_x}")
+axes[0].set_xlabel(plot_label_x)
+axes[0].set_ylabel(plot_label_y)
 
-axes[1].stairs(ext_hist, ext_bin_edges, fill=True, label=f"PDF ({ext_bin_count} bins, {_ext_bin_size} Å/bin)")
-if ext_pdf_avg_df is not None:
-    axes[1].plot(ext_pdf_avg_df[ext_col_label], ext_pdf_avg_df[COL_NAME_PDF_AVG],
-                 label=f"Moving Avg ({_rolling_win_bins} bins, {round(_rolling_win_size, 2)} Å)")
-    axes[1].legend(loc="upper right")
+# hist(y) plot
+axes[1].stairs(y_hist, y_bin_edges, fill=False, label=f"PDF (bins: {hist_bin_count}, bin_size: {round(hist_bin_size, 2)})")
+if do_pdf_avg:
+    pdf_avg_df = pdf_df[[out_col_y, col_name_pdf_avg]]
+    pdf_avg_df = pdf_avg_df.dropna()
 
-axes[1].set_title("Extension Distribution")
-axes[1].set_xlabel("Extension (Å)")
-axes[1].set_ylabel("Relative Population")
+    axes[1].plot(pdf_avg_df[out_col_y], pdf_avg_df[col_name_pdf_avg],
+                 label=f"Mov-Avg (bins: {_hist_avg_win_bins}, bin_size: {round(_hist_avg_win_size, 2)})")
+
+axes[1].set_title(pdf_plot_title)
+axes[1].set_xlabel(pdf_plot_label_x)
+axes[1].set_ylabel(pdf_plot_label_y)
+axes[1].legend(loc="best")
+
+# PMF plot
+if calc_pmf:
+    axes[2].plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
+    axes[2].set_title(pmf_plot_title)
+    axes[2].set_xlabel(pmf_plot_label_x)
+    axes[2].set_ylabel(pmf_plot_label_y)
+
 
 # Output Figure file
-if output_fig_file:
-    plt.savefig(output_fig_file)
+if out_fig_file:
+    plt.savefig(out_fig_file)
+
+print("\n============= Probability Density ================")
+if has_scale and out_scaled_data_file:
+    print(f"=> Scaled input data file: {out_scaled_data_file}")
+
+if out_pdf_file:
+    print(f"=> OUTPUT data file    :  {out_pdf_file}")
+if out_fig_file:
+    print(f"=> OUTPUT figure file  :  {out_fig_file}")
+print("=================================================\n")
 
 # Interactive plot
 plt.show()

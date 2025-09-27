@@ -1,3 +1,5 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ##############################################################################################
 ### Script to extract PDB from binary Frame files (.coor, .dcd)             			       
 ###----------------------------
@@ -10,7 +12,7 @@
 ## USAGE ------------------------
 # 1. Copy script to working dir
 # 2. INPUT: Set input structure (.psf) and frame (.pdb, .coor) file
-# 4. run with "vmd -dispdev text -e extract_pdb.tcl"
+# 4. run with "./extract_pdb.tcl"
 # 5. OUTPUT: generates .pdb file "<out_pdb_file>.pdb"
 
 # INPUT ------------------

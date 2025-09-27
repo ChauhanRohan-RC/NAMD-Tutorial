@@ -11,10 +11,22 @@ import plotext
 """
 Quickly plot data on terminal and Matplotlib interactive plot
 
------------------------------------------
-use "python3 plot_data.py -h" for usage
------------------------------------------
-NOTE: Uses WHITESPACES as delimiter by default, can be changed with --sep option
+---------------------------------------------------
+USAGE: ./plot_data.py [options] data_file.csv
+---------------------------------------------------
+
+options:
+  -h, --help                    show this help message and exit
+  -s, --sep <SEP>               Separator character (defaults to WHITESPACES)
+  -t, --title <TITLE>           Plot title
+  -x, --x-col <X_COL>           X column to read from data file
+  -y, --y-col <Y_COL>           Y column to read from data file
+  -xl, --x-label <X_LABEL>      X Label
+  -yl, --y-label <Y_LABEL>      Y Label
+  -o, --out-fig <OUT_FIG>       Output figure file name with extension (.svg, .pdf, .png etc)
+
+  -ni, --no-interactive-plot    DO NOT show interactive plot
+  -nt, --no-terminal            DO NOT plot on terminal
 
 EXAMPLE: ./plot_data.py [--sep=','] [-x='<X_COL_NAME>'] [-y='<Y_COL_NAME>'] [-xl='<X_LABEL>'] [-yl='<Y_LABEL>'] [-t='PLOT TITLE'] [-o='<out-fig>'] data.csv
 """
@@ -58,9 +70,6 @@ def plot_data(data_file: str,
             print(f"ERROR: Invalid delimiter char \"{delimiter_char}\", Must be a single character !!")
             return
 
-    if is_empty(title):
-        title = os.path.splitext(data_file)[0]
-
     df = pd.read_csv(data_file, sep=sep, comment=COMMENT_TOKEN)
     if len(df.columns) == 0:
         print(f"WARNING: NO DATA TO PLOT. Input data file: \"{data_file}\"")
@@ -77,22 +86,35 @@ def plot_data(data_file: str,
     else:
         if is_empty(x_col_name):
             x_col_name = df.columns[0]
-            x_col_label = None
+            # x_col_label = None
 
         if is_empty(y_col_name):
             y_col_name = df.columns[1]
-            y_col_label = None
+            # y_col_label = None
 
         x_col = df[x_col_name]
         y_col = df[y_col_name]
+        
+
+    # Plotting --------------------------
+    if is_empty(x_col_label):
+        x_col_label = x_col_name
+
+    if is_empty(y_col_label):
+        y_col_label = y_col_name
+
+    data_filename = os.path.basename(data_file)
+    if is_empty(title):
+        # title = os.path.splitext(data_filename)[0]
+        title = f"{y_col_label} vs {x_col_label}  ({data_filename})"
 
     # Plot on terminal
     if plot_terminal:
         plotext.theme("pro")
 
         plotext.plot(x_col, y_col)
-        plotext.xlabel(x_col_name if is_empty(x_col_label) else x_col_label)
-        plotext.ylabel(y_col_name if is_empty(y_col_label) else y_col_label)
+        plotext.xlabel(x_col_label)
+        plotext.ylabel(y_col_label)
 
         plotext.title(title)
 
@@ -106,27 +128,34 @@ def plot_data(data_file: str,
     else:
         print("LOG: skipping TERMINAL PLOT")
 
-    # Matplotlib Plot
+
+    # Matplotlib Plot -----------------------
     try:
         import matplotlib.pyplot as plt
+        from matplotlib.figure import figaspect
     except ImportError:
         print("ERROR: COuld not import Matplotlib!!")
         traceback.print_exc()
         return
 
-    plt.plot(x_col, y_col)
-    plt.xlabel(x_col_name if is_empty(x_col_label) else x_col_label)
-    plt.ylabel(y_col_name if is_empty(y_col_label) else y_col_label)
+    w, h = figaspect(9/16)
+    plt.figure(figsize=(w*1.4, h*1.4))
 
-    if is_empty(title):
-        title = os.path.splitext(data_file)[0]
+    plt.plot(x_col, y_col)
+    plt.xlabel(x_col_label)
+    plt.ylabel(y_col_label)
+
     plt.title(title)
     plt.ticklabel_format(axis='both', style='sci')
 
-    # Save Figure
-    if is_empty(out_fig_file):
-        out_fig_file = os.path.splitext(data_file)[0] + '.pdf'
-    plt.savefig(out_fig_file)
+    ## Save Figure
+    # if is_empty(out_fig_file):
+    #     out_fig_file = os.path.splitext(data_filename)[0] + '.pdf'
+    if not is_empty(out_fig_file):
+        plt.savefig(out_fig_file)
+        print("------------------------------------------------")
+        print(f"=> Output Figure File: {out_fig_file}")
+        print("------------------------------------------------")
 
     # Interactive Plot
     if show_interactive_plot:

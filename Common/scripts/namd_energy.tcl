@@ -1,11 +1,13 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 #################################################################################################
-### Script to calculate Energies from simulation trajectories								  ##
-#------------------------------																  ##
-# Custom implementation of NAMD-Energy plugin of VMD to make it effecient and fast			  ##
-# Created by RC, Sept 3 2025																	  ##
+### Script to calculate Energies from simulation trajectories								   ##
+#------------------------------																   ##
+# Custom implementation of NAMD-Energy plugin of VMD to make it effecient and fast			   ##
+# Created by RC, Sept 3 2025																   ##
 #----------------------------------------------------------------------------------------------##
 # -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    ##
-# -> Calculate self and cross interaction energies of a subset of the system			          ##
+# -> Calculate self and cross interaction energies of a subset of the system			       ##
 # ---------------------------------------------------------------------------------------------##
 # This script is highly efficient than NAMD Energy Plugin of VMD. 
 # It does not load dcd files into memory, and processes trajectory frame-by-frame. 
@@ -31,12 +33,20 @@
 #	-> NAMD_ENERGY_OUT_PREFIX	=	out_file_prefix
 #--------------------------------------------
 # 4. set other input and output params [search for todo]
-# 5. run with "vmd -dispdev text -e namd_energy.tcl"
+# 5. run with "./namd_energy.tcl"
 # 	OR
 # 6. use namd_energy.sh launcher. 
 #	-> First, unset selection1, selection2, out_energies, out_file_prefix in this script
 #	-> Set environment variables in namd_energy.sh
 #		=> ./namd_energy.sh
+
+proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
+    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
+	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
+    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
+    return $file_list;
+}
+
 
 # NAMD Command
 set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p3";	# todo: ESCAPE SPECIAL CHARACTERS like $ ! etc
@@ -53,7 +63,8 @@ set drude	off;		# Drude additive force field
 set psf_file		"../../common/amyl_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
-set dcd_files	{ "../amyl_wb_eq.dcd" };		
+# set dcd_files	{ "../amyl_wb_eq.dcd" };
+set dcd_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
 
 # Selection
 set selection1	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION1
@@ -63,7 +74,7 @@ set selection2	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION2
 set out_file_prefix 		"";		# or set by  ENV VAR: NAMD_ENERGY_OUT_PREFIX
 
 ## [OPTIONAL][ Label for this run 
-set label		"";			# or ser by  ENV VAR: NAMD_ENERGY_LABEL
+set label_		"";			# or ser by  ENV VAR: NAMD_ENERGY_LABEL
 
 ### Energies to calculate (as sequence of 4-letter codes)
 # -------------------------------------------------------------------------------------
@@ -110,6 +121,9 @@ set out_delimiter 		" ";
 set out_energy_format 	"%.4f";
 set comment_token 		"#";			# For Comments. "" to disable comments
 
+
+
+
 # ==================================
 # MAIN
 # ==================================
@@ -139,7 +153,7 @@ if { [info exists out_file_prefix] == 0 || [string trim $out_file_prefix] eq "" 
 		# Environment variable not found
 	}
 	unset failed;
-	
+
 
 	if { [info exists out_file_prefix] == 0 || [string trim $out_file_prefix] eq "" } {
 		puts "\n==================================================="
@@ -156,7 +170,7 @@ if { [info exists selection1] == 0 || [string trim $selection1] eq "" } {
 	#} else {
 	#	set selection1 ""
 	#}
-	
+
 	# Trying to find env variable
 	set failed [catch { set selection1 "$::env(NAMD_ENERGY_SELECTION1)" }];
 	if { $failed != 0 } {
@@ -179,7 +193,7 @@ if { [info exists selection2] == 0 || [string trim $selection2] eq "" } {
 	#if {$argc > 2} {
 	#	set selection2 [lindex $argv 2];
 	#}
-	
+
 	# Trying to find env variable
 	set failed [catch { set selection2 "$::env(NAMD_ENERGY_SELECTION2)" }];
 	if { $failed != 0 } {
@@ -260,20 +274,20 @@ if { $has_sel2 == 1 && [info exists out_force] && [string trim $out_force] eq "o
 # }
 
 ## Label
-if { [info exists label] == 0 || [string trim $label] eq "" } {
+if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 	# Trying to find env variable
-	set failed [catch { set label "$::env(NAMD_ENERGY_LABEL)" }];
+	set failed [catch { set label_ "$::env(NAMD_ENERGY_LABEL)" }];
 	if { $failed != 0 } {
 		# Environment variable not found
 	}
 	unset failed;
 
-	if { [info exists label] == 0 || [string trim $label] eq "" } {
+	if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 		# Deafult Label
 		if { $keepforce == 1 } {
-			set label "Interaction Energy and Forces (on Selection-1 due to Selection-2)";
+			set label_ "Interaction Energy and Forces (on Selection-1 due to Selection-2)";
 		} else {
-			set label "Interaction Energy b/w Selection-1 and Selection-2";
+			set label_ "Interaction Energy b/w Selection-1 and Selection-2";
 		}
 	}
 }
@@ -298,7 +312,7 @@ chmod +x $namd_sh_filename;	# make it executable
 #-----------------------------------
 # Create pair-interaction pdb
 #-----------------------------------
-set mol_id [mol new $psf_file];	
+set mol_id [mol new $psf_file];
 # Load the first frame as template
 mol addfile [lindex $dcd_files 0] type dcd first 0 last 0 waitfor all molid $mol_id;
 
@@ -326,14 +340,14 @@ $sel1 set beta 1;
 if { $has_sel2 == 1 } {
 	set sel2 [atomselect $mol_id $selection2];
 	set atom_count_sel2 [$sel2 num];
-	
+
 	if {$atom_count_sel2 == 0} {
 		puts "\n============================================================"
 		puts "-> ERROR: No atoms found for selection 2: \"$selection2\" !!!"
 		puts "============================================================\n"
 		exit;
 	}
-	
+
 	$sel2 set beta 2;
 } else {
 	set atom_count_sel2 0;
@@ -383,7 +397,7 @@ if { $temperature == 0} {
 if { $has_ext_sys == 1 } {
     puts $namdconf "\n# Periodic Boundary Condition ----------------------"
 	puts $namdconf "extendedSystem \t\t ${initial_ext_sys};"
-	
+
 	if {$has_pme == 1} {
 	  puts $namdconf "PME \t\t\t on;"
 	  puts $namdconf "PMEGridSpacing \t\t $pme_grid_spacing; \t # PME grid spacing (in A)"
@@ -426,7 +440,7 @@ set ts_inc	$frame_freq;
 set skip_expr "";
 if { $has_skip == 1 } {
 	set ts_inc	[expr $frame_freq * ($frame_skip + 1)];
-	
+
 	for {set i 0} {$i < $frame_skip} {incr i} {
 		set skip_expr "${skip_expr}   coorfile skip;\n"
 	}
@@ -439,7 +453,7 @@ foreach dcd_file $dcd_files {
 	if { $has_skip == 1 } {
 		puts $namdconf $skip_expr
 	}
-	
+
 	puts $namdconf "\}\ncoorfile close;\n"
 }
 
@@ -471,7 +485,7 @@ puts "==========================================================================
 set namd_status [catch {exec ./$namd_sh_filename $namdconf_filename > $namd_log_filename}];
 
 puts "\n----------------------------"
-puts " => NAMD Exit Code: $namd_status";	
+puts " => NAMD Exit Code: $namd_status";
 puts "----------------------------\n"
 
 # --------------------------------------------------------------------------------
@@ -483,7 +497,7 @@ proc listsum {mylist} {
 	foreach element $mylist {
 		set sum [expr $sum + $element];
 	}
-	
+
     return $sum;
 }
 
@@ -494,7 +508,7 @@ proc cleanlist {mylist} {
     			lappend newlist [lindex $mylist $i];
     		}
     }
-    
+
     return $newlist;
 }
 
@@ -515,7 +529,7 @@ set fout [open $out_erg_filename "w"];
 if { [info exists comment_token] == 1 && [string trim $comment_token] ne "" } {
 	set comments [list];
 
-	lappend comments "================ $label ================"
+	lappend comments "================ $label_ ================"
 	lappend comments "PARAM File(s): \[$param_files\]  (Drude: ${drude})"
 	lappend comments "PSF File     : $psf_file"
 	lappend comments "DCD File(s)  : \[$dcd_files\]"
@@ -543,7 +557,7 @@ if { [info exists comment_token] == 1 && [string trim $comment_token] ne "" } {
 	lappend comments "Units => ENERGY: 1 kcal/mol     = 6.95e-21 J/molecule = [format %.2e [expr 1/(0.0019872 * $temperature)]] KBT"
 	lappend comments "      => FORCE : 1 kcal/(mol Å) = 69.5 pN"
 	lappend comments "========================================================================="
-	
+
 	foreach c $comments {
 		puts $fout "${comment_token} ${c}";
 	}
@@ -587,39 +601,39 @@ while {[gets $log_file enerstring] >= 0} {
     #Next, make a list with all of the energy fields
     set enerlist [split $enerstring];
     set enerlist [cleanlist $enerlist];
-    
+
 #     ETITLE: TS BOND ANGLE DIHED IMPRP ELECT VDW BOUNDARY MISC KINETIC TOTAL TEMP POTENTIAL ...
 # Index  0    1   2     3     4     5     6    7    8       9     10       11   12     13	    ...
 
     lappend outputlist $cur_frame;			 # Frame
     lappend outputlist [lindex $enerlist 1];	 # Time Step
-    
+
     ### Confirmational Energies ----------------
     if ([regexp {all|bond|conf} $out_energies]) {lappend outputlist [lindex $enerlist 2] };
     if ([regexp {all|angl|conf} $out_energies]) {lappend outputlist [lindex $enerlist 3] };
     if ([regexp {all|dihe|conf} $out_energies]) {lappend outputlist [lindex $enerlist 4] };
     if ([regexp {all|impr|conf} $out_energies]) {lappend outputlist [lindex $enerlist 5] };
-    
+
     set conf_energy [listsum [lrange $enerlist 2 5]];  # confimational energy (-conf) = bond + angle + dihed + imprp
     if ([regexp {all|conf} $out_energies]) {lappend outputlist $conf_energy};
-    
+
     ### Non Bonded Energies ------------------
     if ([regexp {all|elec|nonb} $out_energies]) {lappend outputlist [lindex $enerlist 6] };
     if ([regexp {all|vdw|nonb} $out_energies]) {lappend outputlist [lindex $enerlist 7] };
-    
+
     set nonb_energy [listsum [lrange $enerlist 6 7]];  # non-bonded energy (-nonb) = elect + vdw
     if ([regexp {all|nonb} $out_energies]) {lappend outputlist $nonb_energy};
-    
+
     # Other Energies -------------------
     if ([regexp {all|boun} $out_energies]) {lappend outputlist [lindex $enerlist 8] };	# Boundary Energy
     if ([regexp {all|misc} $out_energies]) {lappend outputlist [lindex $enerlist 9] };	# Misc Energy
-    
+
     # Kinetic Energy
-    if ([regexp {all|kine} $out_energies]) {lappend outputlist [lindex $enerlist 10] };	
-    
+    if ([regexp {all|kine} $out_energies]) {lappend outputlist [lindex $enerlist 10] };
+
     # Potential Energy = bond + angle + dihed + imprp + elect + vdw + boundary + misc
-    if ([regexp {all|pote} $out_energies]) {lappend outputlist [lindex $enerlist 13] };	
-    
+    if ([regexp {all|pote} $out_energies]) {lappend outputlist [lindex $enerlist 13] };
+
     # Total Energy = kinetic + potential
     set total_energy [lindex $enerlist 11];				# total = kinetic + potential (-conf + -nonb)
     lappend outputlist $total_energy;
@@ -631,7 +645,7 @@ while {[gets $log_file enerstring] >= 0} {
 
         set forcelist [split $forcestring];
         set forcelist [cleanlist $forcelist];
-        
+
         # Vdw Force ----------
         set forceindex [lsearch -regexp  $forcelist "^VDW_FORCE"];
 		set vdwvec [list];
@@ -641,7 +655,7 @@ while {[gets $log_file enerstring] >= 0} {
 
 		set vdwproj 1;
 		set vdwmag [expr $vdwproj * [veclength $vdwvec]];
-		
+
 		# Electrostatic Force ---------------
 		set forceindex [lsearch -regexp  $forcelist "^ELECT_FORCE"];
 		set elvec [list];
@@ -656,19 +670,19 @@ while {[gets $log_file enerstring] >= 0} {
 
 		# Add to output
         if {[regexp {all|vdw|nonb} $out_energies]} {
-			lappend outputlist $vdwmag; 
+			lappend outputlist $vdwmag;
         }
 
-        if {[regexp {all|elec|nonb} $out_energies]} { 
-        		lappend outputlist $elecmag; 
+        if {[regexp {all|elec|nonb} $out_energies]} {
+        		lappend outputlist $elecmag;
         	}
-        
+
         lappend outputlist $totforce;
     }
 
 	# Formatting Output
     set out_str "[lindex $outputlist 0]${out_delimiter}[lindex $outputlist 1]";		# Frame, TimeStep
-    
+
     for {set i 2} { $i < [llength $outputlist]} {incr i} {
     		set val_str [format $out_energy_format [lindex $outputlist $i]];
     		set out_str "${out_str}${out_delimiter}${val_str}";
@@ -696,7 +710,7 @@ proc cleanup { temp_files_prefix } {
 # Celaning Up
 if { $debug == 0 && $namd_status == 0 } {
 	puts "\n--------------------------------------"
-	puts " => Deleting files: ${namd_temp_files_prefix}*";	
+	puts " => Deleting files: ${namd_temp_files_prefix}*";
 	puts "--------------------------------------\n"
 
 	cleanup $namd_temp_files_prefix;

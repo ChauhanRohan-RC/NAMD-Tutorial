@@ -11,6 +11,17 @@ import plotext
 ##########################################################################
 ## General script to plot Probability Density Function (PDF)            ##
 ##########################################################################
+# Search for TODO
+
+# => pouplation of i'th bin = N(i)
+# => Probability Density P(i) =  c * N(i)   [c: normalization constant]
+# such that
+#                   integral P(i) = 1   (total area = 1)
+#
+# => Boltzmann Inverted PMF
+#
+#                   U(x)/kBT = -ln[P_eq(i)]    (i = bin index)
+#
 
 ## Usage
 # 1. Copy script to working dir
@@ -18,70 +29,100 @@ import plotext
 # 3. INPUT: set HISTOGRAM and ROLLING_AVG params
 # 4. run with "python pdf.py"
 
+## Constants
+COMMENT_TOKEN = "#"
+COL_NAME_PDF = "PDF"                       # Probability Distribution Function (PDF) with total area = 1
+COL_NAME_PDF_AVG_PREFIX = "PDF_AVG"        # Average PDF over a window
+COL_NAME_PMF = "PMF"    # boltzmann inverted PMF
+
 Kb = 1.9872036e-3   # Kb (kcal/mol)
-T = 300             # Temperature (K)
+T = 300             # Temperature (K) [ONLY USED in scale_y in very few cases]
 
 # =======================================================
 # INPUT
 # =======================================================
-data_file = "../energy-all.csv"     # Input data file
-col_name_x = "TS"                   # Input column X
-col_name_y = "ELECT"                # Input column Y
+data_file: str = "energy-all.csv"     # TODO Input data file
+col_name_x: str = "TS"                   # TODO Input column X
+col_name_y: str = "ELECT"                # TODO Input column Y
+input_delimiter: str = r"\s+"            # Input delimiter
 
 # Scaling
-scale_x = 1
-scale_y = 1 / (Kb * T)
+scale_x: float = 1
+scale_y: float = 1 / (Kb * T)       # 1 / (Kb * T)   # for energies in unit of KbT
 
-# Output after scaling
-out_col_name_x = col_name_x     # Useful after scaling
-out_col_name_y = "ELECT/KbT"    # Useful after scaling
-plot_label_x = "Time (fs)"      # After scaling
-plot_label_y = "Elec Energy (KbT)"  # After scaling
+# [Optional] Labels after scaling. can be "None" or ""
+out_col_name_x: str = col_name_x     # Useful after scaling
+out_col_name_y: str = "ELECT/KbT"    # Useful after scaling
+plot_label_x: str = "Time (fs)"      # After scaling TODO
+plot_label_y: str = "Elec Energy (KbT)"  # After scaling TODO
 
 # Data Range after scaling (OPTIONAL)
-x_start: float = None  # [OPTIONAL] Inclusive ("None" for no start bound)
-x_end: float = None    # [OPTIONAL] Exclusive ("None" for no end bound)
+x_start: float = None  # [OPTIONAL] Inclusive ("None" for min(x))
+x_end: float = None    # [OPTIONAL] Exclusive ("None" for max(x))
 
 # Histogram of Y column (after scaling)
-y_hist_start: float = None        # [OPTIONAL]
-y_hist_end: float = None          # [OPTIONAL]
-hist_bin_count: int = 1000
+y_hist_start: float = None        # [OPTIONAL] "None" for min(y)
+y_hist_end: float = None          # [OPTIONAL] "None" for max(y)
+hist_bin_count: int = 10000
 
 # Moving average
-y_hist_avg_bins: int = 20    # [int] Moving Average window size (in no of bins). Set to 0 to disable
+y_hist_avg_bins: int = 50    # [int] Moving Average window size (in no of bins). Set to 0 to disable
 y_hist_avg_size: float = -1  # [float] [Only used if rolling_window_bins is not set]. Moving Average window size (in unit of y). Set to 0 to disable.
+
+## Boltzmann Inverted PMF: U(x)/kBT = -ln[P_eq(i)]    (i = bin index)
+calc_pmf: bool = True       # TODO
 
 
 # =======================================================
 # OUTPUT
 # =======================================================
-out_prefix = "erg-elec-all"
+out_prefix: str = "erg-elec-all"     # TODO
 
-out_scaled_data_file = f"{out_prefix}.scaled.csv"       # ONLY IF scale_x or scale_y != 1. "" for None
-out_pdf_file = f"{out_prefix}.pdf.csv"
-out_fig_file = f"{out_prefix}.pdf.pdf"
+out_scaled_data_file: str = f"{out_prefix}.scaled.csv"       # [OPT] ONLY IF scale_x or scale_y != 1. "" for None
+out_pdf_file: str = f"{out_prefix}.pdf.csv"     # [OPT] Histogram data file (probability density function - PDF)
+out_fig_file: str = f"{out_prefix}.pdf.pdf"     # [OPT] Histogram figure file
 
-comment_output_header = False
-plot_in_terminal = True
+out_format: str = "%.4E"
+out_delimiter: str = " "
 
-# -------------------------------------------------------------------------
+comment_output_header: str = False
+plot_in_terminal: bool= True
+
+
+
+
+
 
 # =======================================================
 # MAIN
 # =======================================================
 
-## Constants
-COMMENT_TOKEN = "#"
-COL_NAME_PDF = "PDF"                       # Probability Distribution Function (PDF) of Distance
-COL_NAME_PDF_AVG_PREFIX = "PDF_AVG"        # Average PDF over a window
-
 ## Dataframe
-df: pd.DataFrame = pd.read_csv(data_file, sep=r"\s+", comment=COMMENT_TOKEN)
+df: pd.DataFrame = pd.read_csv(data_file,
+                               usecols=[col_name_x,col_name_y],
+                               sep=input_delimiter,
+                               comment=COMMENT_TOKEN,
+                               skipinitialspace=True)
+
+# Checks
+if not out_col_name_x:
+    out_col_name_x = col_name_x
+
+if not out_col_name_y:
+    out_col_name_y = col_name_y
+
+if not plot_label_x:
+    plot_label_x = out_col_name_x
+
+if not plot_label_y:
+    plot_label_y = out_col_name_y
+
 
 # -------------------------------------------------
 # Scaling
 # -------------------------------------------------
-if scale_x != 1 or scale_y != 1:
+has_scale: bool = scale_x != 1 or scale_y != 1
+if has_scale:
     if scale_x != 1:
         df[col_name_x] *= scale_x
     if scale_y != 1:
@@ -103,7 +144,7 @@ if scale_x != 1 or scale_y != 1:
 
         with open(out_scaled_data_file, "w") as out_sc:
             out_sc.write(meta_info_str)
-            scaled_df.to_csv(out_sc, mode="a", sep="\t", header=True, index=False, index_label=False)
+            scaled_df.to_csv(out_sc, mode="a", sep=out_delimiter, float_format=out_format, header=True, index=False, index_label=False)
 
 
 # -------------------------------------------------
@@ -154,6 +195,9 @@ if do_pdf_avg:
     col_name_pdf_avg = f"{COL_NAME_PDF_AVG_PREFIX}{_hist_avg_win_bins}"  # col_name = PDF_AVG<bins>
     pdf_df[col_name_pdf_avg] = pdf_df[COL_NAME_PDF].rolling(_hist_avg_win_bins).mean()
 
+if calc_pmf:
+    pdf_df[COL_NAME_PMF] = -np.log(pdf_df[COL_NAME_PDF])    # U(x)/KbT = -ln(P_eq(x))
+
 # -------------------------------------------------
 # Output file
 # -------------------------------------------------
@@ -172,7 +216,7 @@ if out_pdf_file:
     with open(out_pdf_file, "w") as out_p:
         out_p.write(f"{COMMENT_TOKEN} -------------- Probability Density (PDF) ----------------\n")
         out_p.write(meta_info_str)
-        pdf_df.to_csv(out_p, mode="a", sep="\t", header=True, index=False, index_label=False)
+        pdf_df.to_csv(out_p, mode="a", sep=out_delimiter, float_format=out_format, header=True, index=False, index_label=False)
 
 
 # =======================================================
@@ -182,6 +226,14 @@ if out_pdf_file:
 # -------------------------------
 # PLOT: Terminal
 # -------------------------------
+pdf_plot_title: str = "Probability Distribution"
+pdf_plot_label_x: str = plot_label_y
+pdf_plot_label_y: str = "Probability Density"
+
+pmf_plot_title: str = "Boltzmann Inverted PMF\n $U(x)/K_{B}T = -ln(P_{eq}(i))$"
+pmf_plot_label_x: str = plot_label_y
+pmf_plot_label_y: str = "$U(x)$ $[K_{B}T]$"
+
 if plot_in_terminal:
     # plotext.from_matplotlib(plt.gcf())
 
@@ -202,18 +254,26 @@ if plot_in_terminal:
     plotext.plot_size(plotext.terminal_width(), plotext.terminal_height() * 1.6)
     plotext.subplots(2,1)
 
-    plotext.subplot(2,1)
+    # A input data plot on terminal
+    plotext.subplot(1,1)
     plotext.plot(df[col_name_x], df[col_name_y])
     plotext.title(f"{plot_label_y} vs {plot_label_x}")
     plotext.xlabel(plot_label_x)
     plotext.ylabel(plot_label_y)
 
     # A basic Histogram plot on terminal
-    plotext.subplot(1, 1)
+    plotext.subplot(2, 1)
     plotext.hist(df[col_name_y], bins=200, fill=True)
-    plotext.title("Probability Distribution")
-    plotext.xlabel(plot_label_y)
-    plotext.ylabel("Relative Population")
+    plotext.title(pdf_plot_title)
+    plotext.xlabel(pdf_plot_label_x)
+    plotext.ylabel(pdf_plot_label_y)
+
+    # Boltzmann Inverted PMF plot on terminal
+    # plotext.subplot(3, 1)
+    # plotext.plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
+    # plotext.title(pmf_plot_title)
+    # plotext.xlabel(pmf_plot_label_x)
+    # plotext.ylabel(pmf_plot_label_y)
 
     print(""); print_full_line("#"); print("")
     plotext.show()
@@ -231,16 +291,18 @@ except ImportError:
     traceback.print_exc()
     exit(1)
 
-w, h = figaspect(9 / 23)
-fig, axes = plt.subplots(1, 2, figsize=(w * 1.4, h * 1.4))
-fig.tight_layout(pad=5.0)
+w, h = figaspect((9/38) if calc_pmf else (9/24))
+fig, axes = plt.subplots(1, 3 if calc_pmf else 2, figsize=(w * 1.4, h * 1.4))
+fig.tight_layout(pad=3.0)
 
+# x vs y plot
 axes[0].plot(df[col_name_x], df[col_name_y])
 axes[0].set_title(f"{plot_label_y} vs {plot_label_x}")
 axes[0].set_xlabel(plot_label_x)
 axes[0].set_ylabel(plot_label_y)
 
-axes[1].stairs(y_hist, y_bin_edges, fill=True, label=f"PDF (bins: {hist_bin_count}, bin_size: {round(hist_bin_size, 2)})")
+# hist(y) plot
+axes[1].stairs(y_hist, y_bin_edges, fill=False, label=f"PDF (bins: {hist_bin_count}, bin_size: {round(hist_bin_size, 2)})")
 if do_pdf_avg:
     pdf_avg_df = pdf_df[[out_col_y, col_name_pdf_avg]]
     pdf_avg_df = pdf_avg_df.dropna()
@@ -248,14 +310,33 @@ if do_pdf_avg:
     axes[1].plot(pdf_avg_df[out_col_y], pdf_avg_df[col_name_pdf_avg],
                  label=f"Mov-Avg (bins: {_hist_avg_win_bins}, bin_size: {round(_hist_avg_win_size, 2)})")
 
-axes[1].set_title("Probability Distribution")
-axes[1].set_xlabel(plot_label_y)
-axes[1].set_ylabel("Relative Population")
+axes[1].set_title(pdf_plot_title)
+axes[1].set_xlabel(pdf_plot_label_x)
+axes[1].set_ylabel(pdf_plot_label_y)
 axes[1].legend(loc="best")
+
+# PMF plot
+if calc_pmf:
+    axes[2].plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
+    axes[2].set_title(pmf_plot_title)
+    axes[2].set_xlabel(pmf_plot_label_x)
+    axes[2].set_ylabel(pmf_plot_label_y)
+
 
 # Output Figure file
 if out_fig_file:
     plt.savefig(out_fig_file)
 
+print("\n============= Probability Density ================")
+if has_scale and out_scaled_data_file:
+    print(f"=> Scaled input data file: {out_scaled_data_file}")
+
+if out_pdf_file:
+    print(f"=> OUTPUT data file    :  {out_pdf_file}")
+if out_fig_file:
+    print(f"=> OUTPUT figure file  :  {out_fig_file}")
+print("=================================================\n")
+
 # Interactive plot
 plt.show()
+

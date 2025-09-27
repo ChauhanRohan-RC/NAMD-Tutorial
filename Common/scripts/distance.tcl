@@ -1,3 +1,5 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ##############################################################################################
 ## Script to calculate DISTANCE B/W 2 ATOMS (Group of Atoms) from traj files				##
 ##############################################################################################
@@ -14,28 +16,39 @@ package require bigdcd;
 # 1. Copy script to working dir
 # 2. INPUT: Set input strcuture (.psf) and frame (.dcd, .pdb, .coor) files
 # 3. INPUT: Set selection 1 and 2
-# 4. run with "vmd -dispdev text -e distance.tcl"
+# 4. run with "./distance.tcl"
 # 5. OUTPUT: generates file "dist_vs_frame.csv"
 # 6. OUTPUT (optional) generates "checkpoint-<i>.pdb" file(s)
 
 # Units: Distance => Angstrom (Å)
 
+proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
+    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
+	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
+    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
+    return $file_list;
+}
+
 
 set COL_NAME_FRAME		"FRAME";		# Frame index
 set COL_NAME_DIST		"DIST";		# Distance b/w atoms/group of atoms (Extension)
 
-# ======================= INPUT ===========================
-set psf_file		"amyld_wb.psf";		# TODO: input strcuture file (.psf)
+
+
+# =========================================
+# INPUT
+# =========================================
+set psf_file		"../../common/amyld_wb.psf";		# TODO: input strcuture file (.psf)
 
 # TODO: LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
-set frame_files	{ "amyld_wb.pdb" "amyld_wb_eq.restart.coor" "amyld_wb_eq.dcd" };
-#set frame_files	{ "dna_gbis_pcf.restart.coor" };
+#set frame_files	 { "amyld_wb.pdb" "amyld_wb_eq.dcd" };
+set frame_files	[find_files ".." "amyld_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
 
 set frame_index_start 	-1;		# INCLUSIVE, -1 for None
 set frame_index_end 	-1;		# Exclusive, -1 for None
 
 set selection1	"protein and resid 1 and name CA";		# TODO: selection-1 [usually FIXED Atom(s)]
-set selection2	"protein and resid 2";		# TODO: selection-2  [usually SMD Atom(s)]
+set selection2	"protein and resid 2 and name CA";		# TODO: selection-2  [usually SMD Atom(s)]
 
 # In case of group of atoms, Use Center of Mass (COM) instead of geometric center
 set use_cen_mass			1;
@@ -47,19 +60,28 @@ set use_cen_mass			1;
 #set dir_vec 	{ -1.0 0.0 0.0 };
 set force_positive_dist		0;		# [Only when dir_vec is set] 1 : take only magntiude of distances. 0 : Distances can be negative
 
-# ======================= OUTPUT ==============================================
-set out_file_name 		"dist_vs_frame.csv";		# TODO: output file name
-set out_delimiter 		" \t ";					# output delimiter 
+
+
+# =========================================
+# OUTPUT
+# =========================================
+set out_file_prefix 	"dist_vs_frame";		# TODO: output file prefix
+
+# Formatting
+set out_format			"%.6f";		# Output distance format
+set out_delimiter 		" ";		# output delimiter
 
 ### Checkpoint Frames Capture
 # First frame(s) found to have the given Selection 1-2 distance(s) (Å) are saved as .pdb file
 set checkpoints			{ }; 		# checkpoint 1-2 DIstances (in Å) separated by space
 set checkpoint_tolerance		0.01;	# checkpoint Tolerance (in Å)
-set checkpoint_out_file_name_prefix 	"checkpoint";
+
+# Plotting
+set plot_output				1;				# [0/1] plot output using "plot_data.py"
+set show_interactive_plot 	1; 				# [0/1]
 
 set comment_token 		"#";		# Token used for Comments
 set comment_header		0;		# Whether to comment the columns header (for XmGrace). DO NOT comment header for my python scripts
-# -----------------------------------------------------
 
 
 
@@ -68,9 +90,17 @@ set comment_header		0;		# Whether to comment the columns header (for XmGrace). D
 # MAIN
 # ==============================================
 
+# preprocess
+set out_data_file 				"${out_file_prefix}.csv";			# output data file name
+set out_plot_file 				"${out_file_prefix}.pdf";			# output figure file name
+set checkpoint_file_prefix 		"${out_file_prefix}.checkpoint";	# checkpoint file prefix
+
+
 puts "\n====================================================="
 puts "==========  DISTANCE B/W ATOMS/GROUPS  ================"
 puts "=====================================================\n"
+
+set time_start [clock seconds];
 
 ## CHECKS ======================================
 
@@ -90,7 +120,7 @@ if { [info exists frame_index_start] == 0 || $frame_index_start < 0 } {
 
 set frame_end_str ""
 set frame_count_str ""
-if { [info exists frame_index_end] == 0 || $frame_index_end <= 0 } {
+if { [info exists frame_index_end] == 0 || $frame_index_end < 0 } {
 	set frame_index_end -1;
 	set frame_end_str "LAST"
 	if { $frame_index_start > 0 } {
@@ -124,10 +154,17 @@ set mol_id [mol new $psf_file waitfor all];
 
 # Selection -----------
 set allatoms [atomselect $mol_id "all"];
+set num_atoms_all [$allatoms num];
+if { $num_atoms_all == 0 } {
+	puts "\n-------------------------------------------------------------"
+	puts " => ERROR: Molecule has no atoms : \"$psf_file\""
+	puts "-------------------------------------------------------------\n"
+	exit;
+}
+
 set sel1 [atomselect $mol_id $selection1];
 set sel2 [atomselect $mol_id $selection2];
 
-set num_atoms_all [$allatoms num];
 set num_atoms_sel1 [$sel1 num];
 set num_atoms_sel2 [$sel2 num];
 
@@ -166,7 +203,7 @@ if {[info exists checkpoints] == 1 && [llength $checkpoints] > 0} {
 
 
 # OUTPUT Files ================================
-set out_file [open $out_file_name w]
+set out_file [open $out_data_file w]
 
 proc log2file { msg } { 
 	global out_file;
@@ -180,7 +217,7 @@ proc log { msg } {
 }
 
 puts "\n---------------------------------------------------------"
-log2file "${comment_token}============  DISTANCE B/W 2 ATOMS (or Group of Atoms)  ============="
+log "${comment_token} ============  DISTANCE B/W 2 ATOMS (or Group of Atoms)  ============="
 log "${comment_token} INPUT Structure File: \"${psf_file}\""
 log "${comment_token} INPUT Frame File(s): \[${frame_files}\]"
 log "${comment_token} INPUT SELECTION-1 : \"${selection1}\""
@@ -192,7 +229,7 @@ if { $has_dir_vec == 1 } {
 	log "${comment_token} DIR Unit Vector: {$dir_unit_vec}  |  Force Positive Distances: ${force_positive_dist}"
 }
 log "${comment_token}-------------------------------------------------------"
-log "${comment_token} UNITS: Distance = Angstrom (Å)"
+log "${comment_token} OUTPUT Units: Distance (Angstrom Å)"
 log "${comment_token}-------------------------------------------------------"
 puts ""
 
@@ -215,15 +252,20 @@ proc calc_dist { i } {
 
 	set i [expr $i -1];
 
-	if { $i < $frame_index_start || ($frame_index_end > 0 && $i >= $frame_index_end) } {
+	if { $i < $frame_index_start } {
 		return;
+	}
+
+	if { $frame_index_end > 0 && $i >= $frame_index_end } {
+		# Finished. Exit bigdcd
+		error "Finished: FRAME RANGE \[$frame_index_start, $frame_index_end) processed";
 	}
 
 
 	global sel1 sel2 allatoms num_atoms_sel1 num_atoms_sel2 use_cen_mass;
 	global has_dir_vec dir_unit_vec force_positive_dist;
-	global has_checkpoints checkpoints checkpoints_copy checkpoint_tolerance checkpoint_out_file_name_prefix;
-	global out_delimiter;
+	global has_checkpoints checkpoints checkpoints_copy checkpoint_tolerance checkpoint_file_prefix;
+	global out_delimiter out_format;
 
 	$sel1 frame $i
 	$sel2 frame $i
@@ -252,6 +294,9 @@ proc calc_dist { i } {
 		set dist [expr { sqrt($dsq) }];		# Distance in Å
 	}
 
+	set dist_str "[format ${out_format} ${dist}]";
+
+
 	if {$has_checkpoints == 1} {
 		for { set ci 0 } { $ci < [llength $checkpoints_copy] } { } {
 			set cp [lindex $checkpoints_copy $ci]
@@ -260,7 +305,7 @@ proc calc_dist { i } {
 				set check_id [expr [lsearch $checkpoints $cp] + 1]
 
 				#$allatoms frame $i;		# causes errors, not needed with bigdcd
-				set check_file "${checkpoint_out_file_name_prefix}-${check_id}.pdb";
+				set check_file "${checkpoint_file_prefix}-${check_id}.pdb";
 				$allatoms writepdb $check_file;
 				puts "\n--------------------------------------------------------------"
 				puts " -> CHECKPOINT ${check_id} Found => FRAME Index: $i | Output File: \"${check_file}\" | 1-2 DISTANCE: ${cp} Å (Requested), ${dist} Å (Actual)"
@@ -274,19 +319,19 @@ proc calc_dist { i } {
 	}
 
 	if {[expr $i % 10000] == 0} {
-		puts "INFO: processing Frames $i";
-
+		puts "\n--------------------------------------------------------------"
 		if { $has_dir_vec == 1 } {
-			puts "INFO: FRAME ${i} => 1 -> 2 Link Vector: {$v} | DIR Unit Vector: {$dir_unit_vec}"
+			puts "=> FRAME ${i} => 1 -> 2 Link Vector: {$v} | DIR Unit Vector: {$dir_unit_vec}"
 			if {$force_positive_dist == 1} { set tok " | positive" } else { set tok "" }
-			puts "INFO: FRAME ${i} => 1-2 DISTANCE (projected${tok}): ${dist} Å"
+			puts "=> FRAME ${i} => 1-2 DISTANCE (projected${tok}): ${dist_str} Å"
 		} else {
-			puts "INFO: FRAME ${i} => 1 -> 2 Link Unit Vector: {[vecnorm $v]}"
-			puts "INFO: FRAME ${i} => 1-2 DISTANCE: ${dist} Å"
+			puts "=> FRAME ${i} => 1 -> 2 Link Unit Vector: {[vecnorm $v]}"
+			puts "=> FRAME ${i} => 1-2 DISTANCE: ${dist_str} Å"
 		}
+		puts "--------------------------------------------------------------\n"
 	}
 
-	set line "${i}${out_delimiter}${dist}";
+	set line "${i}${out_delimiter}${dist_str}";
 	log2file $line;
 }
 
@@ -302,9 +347,27 @@ flush $out_file;
 close $out_file;
 mol delete $mol_id;
 
-puts "=================  FINISHED  ===================="
-puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
-puts "================================================="
+
+# Plot Output -------------------
+if { $plot_output == 1 } {
+	set cmd "./plot_data.py -x ${COL_NAME_FRAME} -y ${COL_NAME_DIST}  -xl {Frame} -yl {Dist (Å)} -o \"${out_plot_file}\" \"${out_data_file}\"";
+	if { $show_interactive_plot == 0 } {
+		set cmd "$cmd -ni";
+	}
+
+	eval $cmd;
+}
+
+
+set time_end [clock seconds];
+
+puts "\n=======================  FINISHED  =========================="
+puts "=> Output File: ${out_data_file}"
+if { $plot_output == 1 } {
+	puts "=> OUTPUT Plot File: \"${out_plot_file}\""
+}
+puts "-> Time Taken: [expr $time_end -$time_start] secs"
+puts "=============================================================\n"
 
 exit;
 

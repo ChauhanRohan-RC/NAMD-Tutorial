@@ -1,6 +1,8 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ##############################################################################################
-### Script to Transform a frame (from .pdb, .coor, .dcd) for SMD simulations		   				
-## ------------------------------------------------
+## Script to Transform a frame (from .pdb, .coor, .dcd) for SMD simulations
+## ------------------------------------------------------------------------------------------
 ## NOTE: DO NOT USE in Periodic systems because cell dimensions depend on atomic coordinates					
 ## -> brings FIXED ATOM to origin															
 ## -> brings SMD ATOM to X-axis																
@@ -10,7 +12,7 @@
 # 1. Copy script to working dir
 # 2. INPUT: Set input structure (.psf) and frame (.pdb, .coor, .dcd) file(s)
 # 3. INPUT: Set selections for FIXED and SMD atom
-# 4. run with "vmd -dispdev text -e transform_smd.tcl"
+# 4. run with "./transform_smd.tcl"
 # 5. OUTPUT: generates .pdb file "<out_file_prefix>.pdb"
 # 6. OUTPUT: if "create_smd_pcf_file = on", then generates "<out_file_prefix>.smd-pcf.pdb"
 

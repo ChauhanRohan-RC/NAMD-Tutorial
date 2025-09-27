@@ -1,146 +1,272 @@
-## Script to calculate Radius of Gyration (RG) at each Frame in VMD
+#!/usr/bin/env -S vmd -dispdev text -e
+
+###############################################################################
+# Script to calculate Radius of Gyration (RG) from trajectory in VMD         ##
+###############################################################################
+# NOTE: Plotting data requires "plot_data.py"
+
+# **REQUIRE bigdcd.tcl**
+package require bigdcd;
+# OR
+# source bigdcd.tcl;
 
 ### USAGE ------------------
 # 1. Copy this script in working dir
 # 2. INPUT: Set input structure (.psf) and frame (.dcd, .pdb, .coor) files
-# 3. INPUT: Set ATOM_SELECTION for each frame
-# 4. run with "vmd -dispdev text -e rg.tcl"
-# 5. Generates output file "rg.dat"
+# 3. INPUT: Set ATOM_SELECTION
+# 4. run with "./rg.tcl"
+# 5. Generates output file "rg.csv" and "rg.pdf" (if plot_output = 1)
 
-## RG of a frame = sqrt(sum(w_i * (r_i - r_com) ^ 2))   ; where r_i = pos of i'th atom, r_com = pos of center of mass, w_i (weight = mass fraction) = m_i / sum(m_i) 
-## NOTE: RG values are in Angstrom (Å)
+## RG of a frame = sqrt(sum(w_i * ((r_i - r_com) ^ 2)))   ; where r_i = pos of i'th atom, r_com = pos of center of mass, w_i (weight = mass fraction) = m_i / sum(m_i)
 
-# ======================= INPUT ===========================
-set psf_file		"../../common/dna_wb.psf";		# TODO: input strcuture file (.psf)
+## NOTE UNITS: RG values are in Angstrom (Å)
 
-# TODO: LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space	
-set frame_files		{ "../dna_wb_eq.dcd" "../dna_wb_eq1.dcd" };	
+proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
+    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
+	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
+    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
+    return $file_list;
+}
+
+
+set COL_NAME_FRAME		"FRAME";	# Frame index
+set COL_NAME_RG			"RG";		# RG (Å)
+
+
+# ======================
+# INPUT
+# ==================
+set psf_file		"../../common/amyld_wb.psf";		# TODO: input strcuture file (.psf)
+
+# TODO: LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
+#set frame_files		{ "../dna_wb_eq.dcd" "../dna_wb_eq1.dcd" };
+set frame_files	[find_files ".." "amyld_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
+
+set frame_index_start 	-1;		# Inclusive, -1 for None
+set frame_index_end 	-1;		# Exclusive, -1 for None
+
 
 # TODO: ATOM SELECTION for each Frame
-set atom_selection		"nucleic and backbone and noh";		
+set atom_selection		"protein and backbone and noh";
 # Examples:
 # 	1. protein and backbone and noh
 # 	2. nucleic and backbone and noh
 # 	3. protein and backbone and noh and not (resid 10 to 16)
 
-# ======================= OUTPUT ===========================
-set out_file_name 		"rg.csv";		# output file name
-set out_delimiter 		" \t ";			# output delimiter 
+
+# ==================
+# OUTPUT
+# ==================
+set out_file_prefix		"rg"
+set out_data_file 		"${out_file_prefix}.csv";		# output data file
+
+# Format
+set out_format			"%.6f";		# RG Format.
+set out_delimiter 		" ";		# output delimiter
+
+# Plotting
+set plot_output				1;				# [0/1] plot output using "plot_data.py"
+set show_interactive_plot 	1; 				# [0/1]
+set out_plot_file 			"${out_file_prefix}.pdf";	# [Optional] Only if plot_output = 1
+
 
 set comment_token 		"#";	# Token used for Comments
 set comment_header		0;		# Whether to comment out the columns header
-# -----------------------------------------------------
 
-puts "=============  RG  ================="
 
-# loading INPUT .psf and .dcd files
-set mol_id [mol new $psf_file];	
 
-foreach frame_file $frame_files {
-	puts "---------------------------------------------"
-	puts " -> Loading Frames from file : ${frame_file}"
-	puts "---------------------------------------------"
-	mol addfile $frame_file waitfor all molid $mol_id;
+# ==============================================
+# MAIN
+# ==============================================
+
+puts "\n=============================================="
+puts "=============  RG (bigdcd)  ================="
+puts "==============================================\n"
+
+set time_start [clock seconds];
+
+## CHECKS ==========================
+
+# Frame files -----------
+if {[info exists frame_files] == 0 || [llength $frame_files] == 0} {
+	puts "\n------------------------------------------"
+	puts " => ERROR: No Frame Files specified !!"
+	puts "------------------------------------------\n"
+	exit;
 }
 
-### FRAMES INPUT ---------------------------
-# Number of frames
-set nf [molinfo $mol_id get numframes]
-set last_index [expr $nf - 1]
 
-if {$nf == 0} {
-	puts "-------------------------------------------"
-	puts "INFO: There are no frames in input file(s): \[${frame_files}\]"
-	puts "LOG: QUITING (NO FRAMES)"
-	puts "-------------------------------------------"
-	exit
+# Frame Range ---------------------
+if { [info exists frame_index_start] == 0 || $frame_index_start < 0 } {
+	set frame_index_start 0;
 }
 
-puts "----------------- Frame Indices ------------------";
-puts "INFO: Total Frames: $nf";
-puts "Frame index must be in range \[0, ${last_index}\], or -ve for back indices";
-puts ""
-puts -nonewline " -> START Frame Index (default: 0): "; flush stdout; set start_frame_index [gets stdin]
-puts -nonewline " -> END Frame Index (default: -1): "; flush stdout; set end_frame_index [gets stdin]
-puts ""
+set frame_end_str ""
+set frame_count_str ""
+if { [info exists frame_index_end] == 0 || $frame_index_end < 0 } {
+	set frame_index_end -1;
+	set frame_end_str "LAST"
+	if { $frame_index_start > 0 } {
+		set frame_count_str "$frame_index_start-LAST"
+	} else {
+		set frame_count_str "ALL"
+	}
+} else {
+	if { $frame_index_end <= $frame_index_start } {
+		puts "\n------------------------------------------"
+		puts " => ERROR: FRAME_INDEX_END must be > FRAME_INDEX_START. given start: $frame_index_start, end: $frame_index_end"
+		puts "------------------------------------------\n"
+		exit;
+	}
 
-# NORMALIZING START_FRAME_INDEX (default 0)
-if { [string trim $start_frame_index] eq ""} {
-	set start_frame_index 0
-} elseif {$start_frame_index < 0} {
-	set start_frame_index [expr $last_index + (($start_frame_index + 1) % -$nf)]
-} elseif { $start_frame_index >= $nf } {
-	set start_frame_index [expr $start_frame_index % $nf]
+	set frame_end_str "$frame_index_end"
+	set frame_count_str "[expr $frame_index_end - $frame_index_start]"
 }
 
-# Normalizing END_FRAME_INDEX (default last_index)
-if { [string trim $end_frame_index] eq ""} {
-	set end_frame_index $last_index
-} elseif {$end_frame_index < 0} {
-	set end_frame_index [expr $last_index + (($end_frame_index + 1) % -$nf)]
-} elseif { $end_frame_index >= $nf } {
-	set end_frame_index [expr $end_frame_index % $nf]
+
+
+# Loading Molecule -------------
+set mol_id [mol new $psf_file waitfor all];
+
+# foreach frame_file $frame_files {
+# 	puts "---------------------------------------------"
+# 	puts " -> Loading Frames from file : ${frame_file}"
+# 	puts "---------------------------------------------"
+# 	mol addfile $frame_file waitfor all molid $mol_id;
+# }
+
+# Selection -----------
+set allatoms [atomselect $mol_id "all"];
+set num_atoms_all [$allatoms num];
+if { $num_atoms_all == 0 } {
+	puts "\n-------------------------------------------------------------"
+	puts " => ERROR: Molecule has no atoms : \"$psf_file\""
+	puts "-------------------------------------------------------------\n"
+	exit;
 }
 
-# =========================  MAIN  ==================================
+set sel_cur [atomselect $mol_id "$atom_selection"];		# Selection for Current Frame
+set num_atoms_sel [$sel_cur num];
 
-# open output file ofor writing
-set out_file [open $out_file_name w]
+if { $num_atoms_sel == 0 } {
+	puts "\n-------------------------------------------------------------"
+	puts " => ERROR: Selection has no atoms : \"$atom_selection\""
+	puts "-------------------------------------------------------------\n"
+	exit;
+}
 
-proc log2file { msg } { 
+
+# =================================
+# Output File
+# =================================
+
+set out_file [open $out_data_file w];
+
+proc log2file { msg } {
 	global out_file;
 	puts $out_file $msg;	# to output file
 }
 
-proc log { msg } { 
+proc log { msg } {
 	global out_file;
 	puts $msg; flush stdout;		# to stdout
 	log2file $msg;					# to output file
 }
 
-log2file "${comment_token}================ RG =================="
-puts "--------------------------"
-log "${comment_token}LOG: INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
-log "${comment_token}LOG: ATOM SELECTION: \"${atom_selection}\""
-log "${comment_token}--------------------------"
-log "${comment_token}LOG: Total Frames: ${nf}";
-log "${comment_token}LOG: START Frame Index: ${start_frame_index} | END Frame Index: ${end_frame_index} | Frames for RG: [expr ${end_frame_index} - ${start_frame_index} + 1]"
+proc cleanup { } {
+	global out_file mol_id;
 
-# current frame variable
-set cur_frame [atomselect $mol_id $atom_selection];
-log "${comment_token}LOG: selected ATOM COUNT in each frame: [$cur_frame num]"
-log "${comment_token}--------------------------"
+	if { [info exists out_file] == 1 } {
+		flush $out_file;
+		close $out_file;
+	}
 
-# Header for output file
-if {$comment_header == 0} {
-	set out_header "FRAME${out_delimiter}RG";
-} else {
-	set out_header "${comment_token}FRAME${out_delimiter}RG";
+	if { [info exists mol_id] == 1 } {
+		mol delete $mol_id;
+	}
 }
 
-log2file $out_header;	
+log2file "${comment_token} ================ Radius of Gyration (bigdcd) =================="
+puts "----------------------------------------------"
+log "${comment_token} INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
+log "${comment_token} INPUT Atom Selection: \"${atom_selection}\""
+log "${comment_token} => ATOM COUNT: Total ($num_atoms_all), Selection ($num_atoms_sel)"
+log "${comment_token}-----------------------------------------------------------"
+log "${comment_token} FRAME Index RANGE: \[${frame_index_start}, ${frame_end_str})  |  COUNT: $frame_count_str"
+log "${comment_token} Units: RG (Angstrom Å)"
+log "${comment_token}-----------------------------------------------------------"
+
+set out_header "${COL_NAME_FRAME}${out_delimiter}${COL_NAME_RG}";
+if {$comment_header == 1} {
+	set out_header "${comment_token}${out_header}";
+}
+
+log2file $out_header;
 #puts $out_header;
 
-# Main Loop
-for { set i $start_frame_index } { $i <= $end_frame_index } { incr i } {
-	$cur_frame frame $i;
-	
-	set rg_val [measure rgyr $cur_frame weight mass]
-	
-	if {[expr $i % 10000] == 0} {
-		puts "INFO: processing Frames $i-[expr min($i + 10000, $end_frame_index)]";
-		puts "INFO: FRAME ${i} -> RG: ${rg_val} Å"
+
+# =====================================
+# MAIN-RUN: Calculate RG
+# =====================================
+
+proc calc_rg { i } {
+	global frame_index_start frame_index_end;
+	global mol_id sel_cur allatoms;
+	global out_delimiter out_format;
+
+	set i [expr $i - 1];
+
+	if { $i < $frame_index_start } {
+		return;
 	}
-	
-	set out_line "${i}${out_delimiter}${rg_val}";
+
+	if { $frame_index_end > 0 && $i >= $frame_index_end } {
+		# Finished. Exit bigdcd
+		error "Finished: FRAME RANGE \[$frame_index_start, $frame_index_end) processed";
+	}
+
+
+# 	$sel_cur frame $i;	# done by bigdcd
+	set rg_val [measure rgyr $sel_cur weight mass]
+	set rg_str [format "$out_format" $rg_val]
+
+	if {[expr $i % 10000] == 0} {
+		puts "\n-----------------------------------------------"
+		puts " => processing Frame $i -> RG: ${rg_str} Å";
+		puts "-----------------------------------------------\n"
+	}
+
+	set out_line "${i}${out_delimiter}${rg_str}";
 	log2file $out_line;
-	# puts out_line;
 }
 
-close $out_file;
+# Execute Calculation (bigdcd)
+eval "bigdcd calc_rg auto [join $frame_files]";
+bigdcd_wait;
 
-puts "=================  FINISHED  ===================="
-puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
-puts "================================================="
 
-exit
+# GC
+cleanup;
+
+# Plot Output -------------------
+if { $plot_output == 1 } {
+	set cmd "./plot_data.py -t {Radius of Gyration} -xl {Frame} -yl {RG (Å)} -o \"${out_plot_file}\" \"${out_data_file}\"";
+	if { $show_interactive_plot == 0 } {
+		set cmd "$cmd -ni";
+	}
+
+	eval $cmd;
+}
+
+
+set time_end [clock seconds];
+
+puts "\n==================  FINISHED  ====================="
+puts "=> OUTPUT Data File: \"${out_data_file}\""
+if { $plot_output == 1 } {
+	puts "=> OUTPUT Plot File: \"${out_plot_file}\""
+}
+puts "-> Time Taken: [expr $time_end -$time_start] secs"
+puts "===================================================\n"
+
+exit;

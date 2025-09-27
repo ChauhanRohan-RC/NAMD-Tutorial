@@ -1,3 +1,5 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ##################################################################################################
 ## Script to calculate SUM OF DISTANCES B/W Pair of ATOMS (Group of Atoms) from traj files		##
 ##################################################################################################
@@ -18,44 +20,54 @@ package require bigdcd;
 # 3. distance for all selection pairs, and the sum are reported for each frame
 
 ## USAGE ------------------------
-# 1. Copy script to working dir
+# 1. Copy script to working dir, search TODO
 # 2. INPUT: Set input strcuture (.psf) and frame (.dcd, .pdb, .coor) files
 # 3. INPUT: Set selection 1 and 2 lists
-# 4. run with "vmd -dispdev text -e distance.tcl"
+# 4. run with "./distance.tcl"
 # -----------------
 # 5. OUTPUT: generates file "distsum_vs_frame.csv"
 # 6. OUTPUT (optional) generates "distsum_checkpoint-<i>.pdb" file(s)
 
 # Units: Distance => Angstrom (Å)
 
+proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
+    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
+	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
+    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
+    return $file_list;
+}
+
 
 set COL_NAME_FRAME			"FRAME";		# Frame index
 set COL_NAME_DIST_PREFIX	"DIST";			# Distance b/w atoms/group of atoms (Extension)
 set COL_NAME_DIST_SUM		"DIST_SUM";		# Distance Sum
+set COL_NAME_DIST_AVG		"DIST_AVG";		# Avg Distance = DIST_SUM / n
 
-# ======================= INPUT ===========================
-set psf_file		"amyld_wb.psf";		# TODO: input strcuture file (.psf)
+# ============================
+# INPUT
+# ============================
+set psf_file		"../../common/amyld_wb.psf";		# TODO: input strcuture file (.psf)
 
 # TODO: LIST of trajectory (.dcd) or single frame (.pdb, .coor) files separated by space
-set frame_files	{ "amyld_wb.pdb" "amyld_wb_eq.restart.coor" "amyld_wb_eq.dcd" };
+#set frame_files	 { "amyld_wb.pdb" "amyld_wb_eq.dcd" };
+set frame_files	[find_files ".." "amyld_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
 
 set frame_index_start 	-1;		# INCLUSIVE, -1 for None
 set frame_index_end 	-1;		# Exclusive, -1 for None
 
 # TODO: Selection lists
 # -> corresponding elements in sel-1 sel-2 lists form a pair, for which distances are calculated
-set selection1_list	{
-	"protein and (resid 1 and name N)"
-	"protein and (resid 47 and name NH1)"
-	"protein and (resid 70 and name N)"
+set selection1_list	{\
+	"protein and (resid 1 and name N)" \
+	"protein and (resid 47 and name NH1)" \
+	"protein and (resid 70 and name N)" \
 };
 
-set selection2_list	{
-	"protein and (resid 65 and name OD2)"
-	"protein and (resid 7 and name OD1)"
-	"protein and (resid 25 and name O)"
+set selection2_list	{\
+	"protein and (resid 65 and name OD2)" \
+	"protein and (resid 7 and name OD1)" \
+	"protein and (resid 25 and name O)" \
 };
-
 
 # In case of group of atoms, Use Center of Mass (COM) instead of geometric center
 set use_cen_mass			1;		# [0/1]
@@ -67,21 +79,32 @@ set use_cen_mass			1;		# [0/1]
 #set dir_vec 	{ -1.0 0.0 0.0 };
 set force_positive_dist		0;		# # [0/1] [Only with dir_vec] 1 : take only magntiude of distances for each selection pair. 0 : Distances can be negative
 
-# ======================= OUTPUT ==============================================
-set out_file_name 		"distsum_vs_frame.csv";		# TODO: output file name
-set out_only_dist_sum	0;	 # [0/1] Output only the sum of distance, else also output individual distances
 
-set out_delimiter 		" ";						# output delimiter
+
+# ============================
+# OUTPUT
+# ============================
+set out_file_prefix 		"hbonds_dist";		# TODO: output file prefix
+set out_individual_dist		1;	 # [0/1] Output distances of every selection pair in addition to distance_sum and dist_avg
+
+# Formatting
+set out_format			"%.6f";		# Output distance format
+set out_delimiter 		" ";		# output delimiter
 
 ### Checkpoint Frames Capture
 # First frame(s) found to have the given distance sum (Å) are saved as .pdb file
 set checkpoints			{ }; 			# checkpoint dIstance sum (in Å) separated by space
 set checkpoint_tolerance		0.01;	# checkpoint Tolerance (in Å)
-set checkpoint_out_file_name_prefix 	"distsum_checkpoint";
+
+# Plotting
+set plot_output				1;				# [0/1] plot output using "plot_data.py"
+set show_interactive_plot 	1; 				# [0/1]
+
 
 set comment_token 		"#";	# Token used for Comments
 set comment_header		0;		# [0/1] Whether to comment the columns header (for XmGrace). DO NOT comment header for my python scripts
-# -----------------------------------------------------
+
+
 
 
 
@@ -90,9 +113,17 @@ set comment_header		0;		# [0/1] Whether to comment the columns header (for XmGra
 # MAIN
 # ==============================================
 
+# preprocess
+set out_data_file 				"${out_file_prefix}.csv";			# output data file name
+set out_plot_file 				"${out_file_prefix}.pdf";			# output figure file name
+set checkpoint_file_prefix 		"${out_file_prefix}.checkpoint";	# checkpoint file prefix
+
+
 puts "\n====================================================="
 puts "==========  SUM of DISTANCE B/W ATOMS/GROUPS  ================"
 puts "=====================================================\n"
+
+set time_start [clock seconds];
 
 ## CHECKS ======================================
 
@@ -122,7 +153,7 @@ if { [info exists frame_index_start] == 0 || $frame_index_start < 0 } {
 
 set frame_end_str ""
 set frame_count_str ""
-if { [info exists frame_index_end] == 0 || $frame_index_end <= 0 } {
+if { [info exists frame_index_end] == 0 || $frame_index_end < 0 } {
 	set frame_index_end -1;
 	set frame_end_str "LAST"
 	if { $frame_index_start > 0 } {
@@ -155,6 +186,8 @@ set mol_id [mol new $psf_file waitfor all];
 
 
 # Selection -----------
+set sel_count [llength $selection1_list];
+
 set allatoms [atomselect $mol_id "all"];
 set num_atoms_all [$allatoms num];
 if { $num_atoms_all == 0 } {
@@ -212,21 +245,21 @@ if {[info exists checkpoints] == 1 && [llength $checkpoints] > 0} {
 
 
 # OUTPUT Files ================================
-set out_file [open $out_file_name w]
+set out_file [open $out_data_file w]
 
-proc log2file { msg } { 
+proc log2file { msg } {
 	global out_file;
 	puts $out_file $msg;	# to output file
 }
 
-proc log { msg } { 
+proc log { msg } {
 	global out_file;
 	puts $msg; flush stdout;		# to stdout
 	log2file $msg;					# to output file
 }
 
 puts "\n---------------------------------------------------------"
-log2file "${comment_token}============  DISTANCE SUM  ============="
+log "${comment_token} ============  DISTANCE SUM  ============="
 log "${comment_token} INPUT Structure File: \"${psf_file}\""
 log "${comment_token} INPUT Frame File(s): \[${frame_files}\]"
 log "${comment_token}-------------------------------------------------------"
@@ -238,24 +271,27 @@ log "${comment_token} FRAME Index RANGE: \[${frame_index_start}, ${frame_end_str
 if { $has_dir_vec == 1 } {
 	log "${comment_token} DIR Unit Vector: {$dir_unit_vec}  |  Force Positive Distances: ${force_positive_dist}"
 }
-log "${comment_token} UNITS: Distance = Angstrom (Å)"
+log "${comment_token}-------------------"
+log "${comment_token} OUTPUT Report individual distances: ${out_individual_dist}"
+log "${comment_token} OUTPUT Units: Distance (Angstrom Å)"
 log "${comment_token}-------------------------------------------------------"
 puts ""
 
 # Header for output file
-set lhead [list $COL_NAME_FRAME];
-if { $out_only_dist_sum != 1 } {
-	for {set i 1} { $i <= [llength $selection1_list] } {incr i} {
+set lhead [list ${COL_NAME_FRAME}];
+if { $out_individual_dist == 1 } {
+	for {set i 1} { $i <= $sel_count } {incr i} {
 		lappend lhead "${COL_NAME_DIST_PREFIX}${i}";
 	}
 }
 
-lappend lhead $COL_NAME_DIST_SUM;
-set out_header [join $lhead "$out_delimiter"]
+lappend lhead ${COL_NAME_DIST_SUM};
+lappend lhead ${COL_NAME_DIST_AVG};
+set out_header [join $lhead "${out_delimiter}"]
 
 if {$comment_header == 1} {
-	set out_header "${comment_token}${out_header}";	
-} 
+	set out_header "${comment_token}${out_header}";
+}
 
 log2file $out_header;
 #puts $out_header;
@@ -270,19 +306,25 @@ proc calc_dist { i } {
 
 	set i [expr $i -1];
 
-	if { $i < $frame_index_start || ($frame_index_end > 0 && $i >= $frame_index_end) } {
+	if { $i < $frame_index_start } {
 		return;
 	}
 
+	if { $frame_index_end > 0 && $i >= $frame_index_end } {
+		# Finished. Exit bigdcd
+		error "Finished: FRAME RANGE \[$frame_index_start, $frame_index_end) processed";
+	}
 
-	global sel1l sel2l allatoms use_cen_mass out_only_dist_sum;
+
+	global sel1l sel2l allatoms use_cen_mass out_individual_dist sel_count;
 	global has_dir_vec dir_unit_vec force_positive_dist;
-	global has_checkpoints checkpoints checkpoints_copy checkpoint_tolerance checkpoint_out_file_name_prefix;
-	global out_delimiter;
+	global has_checkpoints checkpoints checkpoints_copy checkpoint_tolerance checkpoint_file_prefix;
+	global out_delimiter out_format;
 
 	set distl [list];
 	set dist_sum 0;
 
+	# Calculate distances
 	foreach sel1 $sel1l sel2 $sel2l {
 		$sel1 frame $i;
 		$sel2 frame $i;
@@ -315,8 +357,10 @@ proc calc_dist { i } {
 		set dist_sum [expr $dist_sum + $dist]
 	}
 
+	# Average Distance
+	set dist_avg [expr $dist_sum / $sel_count];
 
-
+	# Checkpoints
 	if {$has_checkpoints == 1} {
 		for { set ci 0 } { $ci < [llength $checkpoints_copy] } { } {
 			set cp [lindex $checkpoints_copy $ci]
@@ -325,7 +369,7 @@ proc calc_dist { i } {
 				set check_id [expr [lsearch $checkpoints $cp] + 1]
 
 				#$allatoms frame $i;		# causes errors, not needed with bigdcd
-				set check_file "${checkpoint_out_file_name_prefix}-${check_id}.pdb";
+				set check_file "${checkpoint_file_prefix}-${check_id}.pdb";
 				$allatoms writepdb $check_file;
 				puts "\n--------------------------------------------------------------"
 				puts " -> CHECKPOINT ${check_id} Found => FRAME Index: $i | Output File: \"${check_file}\" | 1-2 DISTANCE: ${cp} Å (Requested), ${dist_sum} Å (Actual)"
@@ -338,25 +382,33 @@ proc calc_dist { i } {
 		}
 	}
 
+	# Progress Status
 	if {[expr $i % 10000] == 0} {
-		puts "INFO: processing Frames $i";
-
+		puts "\n--------------------------------------------------------------"
 		if { $has_dir_vec == 1 } {
 			if { $force_positive_dist == 1 } { set tok " | positive" } else { set tok "" }
-			puts "INFO: FRAME ${i} => DISTANCE SUM (projected${tok}): ${dist_sum} Å"
+			puts "=> FRAME ${i} => DISTANCE SUM (projected${tok}): ${dist_sum} Å"
 		} else {
-			puts "INFO: FRAME ${i} => DISTANCE SUM: ${dist_sum} Å"
+			puts "=> FRAME ${i} => DISTANCE SUM: ${dist_sum} Å"
+		}
+		puts "--------------------------------------------------------------\n"
+	}
+
+
+	## Output --------------------------------------
+	set cols_formatted [list "${i}"];
+
+	if { $out_individual_dist == 1 } {
+		foreach d $distl {
+			lappend cols_formatted "[format ${out_format} ${d}]";
 		}
 	}
 
-	if { $out_only_dist_sum == 1 } {
-		set line "${i}${out_delimiter}${dist_sum}";
-	} else {
-		set distl_str [join $distl "$out_delimiter"]
+	# Dist sum and avg
+	lappend cols_formatted "[format ${out_format} ${dist_sum}]";
+	lappend cols_formatted "[format ${out_format} ${dist_avg}]";
 
-		set line "${i}${out_delimiter}${distl_str}${out_delimiter}${dist_sum}";
-	}
-
+	set line [join $cols_formatted "${out_delimiter}"];
 	log2file $line;
 }
 
@@ -372,9 +424,27 @@ flush $out_file;
 close $out_file;
 mol delete $mol_id;
 
-puts "=================  FINISHED  ===================="
-puts "LOG: Output File: ${out_file_name}, delimiter: '$out_delimiter', comment token: '${comment_token}"
-puts "================================================="
+
+# Plot Output -------------------
+if { $plot_output == 1 } {
+	set cmd "./plot_data.py -x ${COL_NAME_FRAME} -y ${COL_NAME_DIST_AVG}  -xl {Frame} -yl {Dist Avg (Å)} -o \"${out_plot_file}\" \"${out_data_file}\"";
+	if { $show_interactive_plot == 0 } {
+		set cmd "$cmd -ni";
+	}
+
+	eval $cmd;
+}
+
+
+set time_end [clock seconds];
+
+puts "\n=======================  FINISHED  =========================="
+puts "=> Output File: ${out_data_file}"
+if { $plot_output == 1 } {
+	puts "=> OUTPUT Plot File: \"${out_plot_file}\""
+}
+puts "-> Time Taken: [expr $time_end -$time_start] secs"
+puts "=============================================================\n"
 
 exit;
 

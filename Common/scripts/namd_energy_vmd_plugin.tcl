@@ -1,12 +1,17 @@
+#!/usr/bin/env -S vmd -dispdev text -e
+
 ################################################################################################
-### Script to run NAMD-Energy Plugin of VMD   (VERY INEFFICIENT)								
+### Script to run NAMD-Energy Plugin of VMD   (VERY INEFFICIENT)
 # NOTE: This is very inefficient, especially for large trajectories
 #
 # 		USE namd_energy.tcl FOR MOST CASES
 #
-# --------------------------------------------------
+# -----------------------------------------------------------------------------------
 # -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    
-# -> Calculate self and cross interaction energies of a subset of the system			          
+# -> Calculate self and cross interaction energies of a subset of the system
+#
+# The only additional thing it can do that "namd_energy.tcl" cannot is project the interaction force
+# b/w two different selections on COM link vector, which is NOT REQUIRED in most cases
 ###############################################################################################
 
 ## USAGE --------------------------------------------------
@@ -19,8 +24,14 @@
 # -> Each calculation is independent
 # -------------------
 # 4. set other input and output params [search for todo]
-# 5. run with "vmd -dispdev text -e namd_energy_vmd_plugin.tcl"
+# 5. run with "./namd_energy_vmd_plugin.tcl"
 
+proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
+    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
+	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
+    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
+    return $file_list;
+}
 
 # NAMD Command
 set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p3";	# todo: ESCAPE SPECIAL CHARACTERS like $ ! etc
@@ -35,7 +46,8 @@ set param_files	{ "../../common/ff/par_all36m_prot.prm" "../../common/ff/toppar_
 set psf_file		"../../common/amyl_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
-set frame_files	{ "../amyl_wb_eq2.dcd" "../amyl_wb_eq3.dcd" };		
+# set frame_files	{ "../amyl_wb_eq2.dcd" "../amyl_wb_eq3.dcd" };
+set frame_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
 
 # Selections
 # => SEL-1 is required

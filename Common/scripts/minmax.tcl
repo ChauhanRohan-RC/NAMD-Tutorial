@@ -1,4 +1,4 @@
-#!/bin/tclsh
+#!/usr/bin/env -S vmd -dispdev text -e
 
 ###################################################################
 ## Script to calculate Min and Max coordinates in a PDB file     ##
@@ -8,7 +8,7 @@
 # 1. copy this script to the working dir
 # 2. INPUT: PDB file and ATOM_SELECTION
 # 3. OUTPUT: (optional) output file
-# 2. run with "vmd -dispdev text -e minmax.tcl"
+# 2. run with "./minmax.tcl"
 
 # INPUT ----------------------------------------
 set pdb_file			"ubq.pdb";
