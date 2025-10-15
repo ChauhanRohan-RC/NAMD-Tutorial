@@ -29,8 +29,9 @@
 #--------------------------------------------
 #	-> NAMD_ENERGY_SELECTION1	=	selection1
 #	-> NAMD_ENERGY_SELECTION2	=	selection2 		  (optional)
-#	-> NAMD_ENERGY_OUT_ENERGIES	= 	out_energies		  (optional)
+#	-> NAMD_ENERGY_OUT_ENERGIES	= 	out_energies	  (optional)
 #	-> NAMD_ENERGY_OUT_PREFIX	=	out_file_prefix
+#	-> NAMD_ENERGY_LABEL	    =	label			  (optional)
 #--------------------------------------------
 # 4. set other input and output params [search for todo]
 # 5. run with "./namd_energy.tcl"
@@ -40,12 +41,26 @@
 #	-> Set environment variables in namd_energy.sh
 #		=> ./namd_energy.sh
 
-proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
-    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
-	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
-    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
-    return $file_list;
+# --------------------------------------------------------------------
+# HELPER FUNCTION: Find files with a prefix, suffix and an optional number within a given range
+# Arguments:
+#   dir_path			 :  directory path to search
+#   prefix and suffix    :  file name prefix and suffix
+#   min_num and max_num  :  optional range (both inclusive). "" for none
+
+proc find_files {dir_path prefix suffix {min_num ""} {max_num ""} {sort_natural 1} {return_abs_path 0}} {
+    #if {![file isdirectory $dir_path]} { error "Directory '$dir_path' not found." }
+    set result_list {}; set pattern "${prefix}(\[0-9\]+)${suffix}$";
+    foreach f [glob -nocomplain -directory $dir_path *] {
+        if {[file isfile $f]} { set filename [file tail $f];
+            if {[regexp $pattern $filename -> num]} { set num [expr {$num + 0}];    # ensure numeric
+                if {($min_num eq "" || $num >= $min_num) && ($max_num eq "" || $num <= $max_num)} {
+                    if { $return_abs_path == 1 } { set fpath [file normalize $f]; } else { set fpath [file join $dir_path $filename]; }
+					lappend result_list $fpath; }}}}
+    if { $sort_natural == 1 } { set result_list [lsort -dictionary $result_list] };
+    return $result_list;
 }
+# --------------------------------------------------------------------
 
 
 # NAMD Command
@@ -64,7 +79,7 @@ set psf_file		"../../common/amyl_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
 # set dcd_files	{ "../amyl_wb_eq.dcd" };
-set dcd_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
+set dcd_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix> [min_num] [max_num]
 
 # Selection
 set selection1	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION1
@@ -127,6 +142,8 @@ set comment_token 		"#";			# For Comments. "" to disable comments
 # ==================================
 # MAIN
 # ==================================
+
+set time_start [clock seconds];
 
 #------------------
 # Checks
@@ -284,10 +301,14 @@ if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 
 	if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 		# Deafult Label
-		if { $keepforce == 1 } {
-			set label_ "Interaction Energy and Forces (on Selection-1 due to Selection-2)";
+		if { $has_sel2 == 1 } {
+			if { $keepforce == 1 } {
+				set label_ "Interaction Energy and Forces (on Selection-1 due to Selection-2)";
+			} else {
+				set label_ "Interaction Energy b/w Selection-1 and Selection-2";
+			}
 		} else {
-			set label_ "Interaction Energy b/w Selection-1 and Selection-2";
+			set label_ "Self-Interaction Energy of Selection-1";
 		}
 	}
 }
@@ -325,7 +346,14 @@ if {$atom_count_total == 0} {
 	exit;
 }
 
+# to avoid large coordinates PDB format cannot handle
+#$all moveby [vecinvert [measure center $all]]
+$all set x 0;
+$all set y 0;
+$all set z 0;
+
 $all set beta 0;
+$all set occupancy 0;
 
 set sel1 [atomselect $mol_id $selection1];
 set atom_count_sel1 [$sel1 num];
@@ -472,8 +500,10 @@ puts "\n---------------------------------------------------------------------"
 puts " -> Atom Count: Total ($atom_count_total) | Selection 1 ($atom_count_sel1) | Selection 2 ($atom_count_sel2)"
 puts "---------------------------------------------------------------------"
 
-puts "\n================================================================================================="
-puts " -> Running NAMD-Energy"
+set _time_namd_str [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+puts "\n ${_time_namd_str}"
+puts "================================================================================================="
+puts " -> Running NAMD-Energy: \"$label_\""
 puts " -> Selection 1: \"$selection1\" | Selection 2: \"$selection2\""
 puts " -> Energies: \"$out_energies\""
 if { $has_sel2 == 1 } { puts " -> Forces: $keepforce_str" }
@@ -715,5 +745,22 @@ if { $debug == 0 && $namd_status == 0 } {
 
 	cleanup $namd_temp_files_prefix;
 }
+
+
+
+set time_end [clock seconds];
+set time_end_str [clock format $time_end -format "%Y-%m-%d %H:%M:%S"]
+
+puts "\n ${time_end_str}"
+puts "==================  NAMD Energy FINISHED  ====================="
+puts "=> LABEL: \"${label_}\""
+puts "=> OUTPUT Energy File: \"${out_erg_filename}\""
+puts "-> Time Taken: [expr $time_end -$time_start] secs"
+if { $namd_status != 0 } {
+	puts "---------------------------"
+	puts "=> NAMD-RUN FAILED (exit code ${namd_status})"
+	puts "   See \"${namd_log_filename}\" for error details"
+}
+puts "===================================================\n"
 
 exit;

@@ -26,12 +26,27 @@
 # 4. set other input and output params [search for todo]
 # 5. run with "./namd_energy_vmd_plugin.tcl"
 
-proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0} } {
-    if { $return_abs_path == 1 } { set directory [file normalize $directory]; }
-	set file_list [glob -nocomplain -join "${directory}" "${prefix}*${suffix}"];
-    if { $sort_natural == 1 } { set file_list [lsort -dictionary $file_list] };
-    return $file_list;
+
+# --------------------------------------------------------------------
+# HELPER FUNCTION: Find files with a prefix, suffix and an optional number within a given range
+# Arguments:
+#   dir_path			 :  directory path to search
+#   prefix and suffix    :  file name prefix and suffix
+#   min_num and max_num  :  optional range (both inclusive). "" for none
+
+proc find_files {dir_path prefix suffix {min_num ""} {max_num ""} {sort_natural 1} {return_abs_path 0}} {
+    #if {![file isdirectory $dir_path]} { error "Directory '$dir_path' not found." }
+    set result_list {}; set pattern "${prefix}(\[0-9\]+)${suffix}$";
+    foreach f [glob -nocomplain -directory $dir_path *] {
+        if {[file isfile $f]} { set filename [file tail $f];
+            if {[regexp $pattern $filename -> num]} { set num [expr {$num + 0}];    # ensure numeric
+                if {($min_num eq "" || $num >= $min_num) && ($max_num eq "" || $num <= $max_num)} {
+                    if { $return_abs_path == 1 } { set fpath [file normalize $f]; } else { set fpath [file join $dir_path $filename]; }
+					lappend result_list $fpath; }}}}
+    if { $sort_natural == 1 } { set result_list [lsort -dictionary $result_list] };
+    return $result_list;
 }
+# --------------------------------------------------------------------
 
 # NAMD Command
 set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p3";	# todo: ESCAPE SPECIAL CHARACTERS like $ ! etc
@@ -47,7 +62,7 @@ set psf_file		"../../common/amyl_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
 # set frame_files	{ "../amyl_wb_eq2.dcd" "../amyl_wb_eq3.dcd" };
-set frame_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix>
+set frame_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix> [min_num] [max_num]
 
 # Selections
 # => SEL-1 is required
