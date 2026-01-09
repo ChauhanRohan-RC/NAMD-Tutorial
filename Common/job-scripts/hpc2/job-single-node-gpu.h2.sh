@@ -49,10 +49,11 @@
 ##PBS -V
 
 load_modules() {
-	module use "/home/parbatib/programs/modules"
+	module use "/scratch/home/parbati/programs/modules"
 
-	module load GCC/gcc-9.5.0
-	#module load openmpi4
+	module load gcc/9.4.0
+	#module load openmpi/4.1.6
+	module load cuda
 	module load namd3
 	module load vmd
 }
@@ -105,6 +106,7 @@ create_nodelist() {
 		echo "host ${n}" >> $filename
 	done
 }
+
 
 # Purges unnecessry files
 # => USAGE: purge_files <prefix> <error_prefix>

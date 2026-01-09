@@ -1,76 +1,171 @@
 #!/bin/bash
+#
 #===================================================================
-# SLURM Script to run NAMD2 on Multiple Nodes using open-mpi
+# SLURM Script to run NAMD3 on MULTIPLE NODE (open-mpi)
 #===================================================================
-# TODO: 1. set --job-name, --nodes, --ntasks-per-node, --time
+# TODO: 1. set --job-name, --ntasks-per-node, --time
 #	2. set WORK_DIR
-#	3. set NAMD .conf and .log files 
-#	4. submit with "sbatch job_script.sh"  or  "sbatch -w cn[01-03] job_script.sh" 
+#	3. set NAMD .conf and .log files
+#	4. submit with "sbatch job_script.sh"  or  "sbatch -w cn03 job_script.sh"
 #
-# Job name
-#SBATCH --job-name=dna-t1
+## Job name
+#SBATCH --job-name=dna-t3
 #
-# Account
+## Account
 ##SBATCH --account=parbatib
 #
-# Partition
-#SBATCH --partition=standard
+## Partition
+#SBATCH --partition=cpu
 #
-# Number of nodes
+## Number of nodes
 #SBATCH --nodes=4
 #
-## Number of gpu's to use --gres=gpu:<num_gpu_to_use>
-##SBATCH --gres=gpu:1
+## Tasks (processes) per node (best is 1 process per node)
+#SBATCH --ntasks-per-node=1
 #
-# Tasks (processes) per node (based on number of cores per node = 48 in this HPC)
-#SBATCH --ntasks-per-node=48
+## CPUs (cores) per process (based on no. of cores in the node = 48 (cpu), 40 (gpu) $SLURM_CPUS_ON_NODE)
+#SBATCH --cpus-per-task=48
 #
-# Processors (cores) per task 
-#SBATCH --cpus-per-task=1
+## Number of GPU's to use --gres=gpu:<num_gpu_to_use>
+##SBATCH --gres=gpu:2
 #
-# Wall clock Time Limit (days-hr:min:secs)
-#SBATCH --time=03:00:00
+## Wall clock Time Limit (days-hr:min:secs)
+#SBATCH --time=1-00:00:00
 #
-# Standard Output and Error
+## Standard Output and Error
 #SBATCH --output=output.log
 #SBATCH --error=error.log
 #
 ##SBATCH --mail-type=ALL
-##SBATCH --mail-user=rsingh1.phd@chemistry.du.ac.in
+##SBATCH --mail-user=chauhanrohanrc803@gmail.com
 
 ##PBS -N dna-test1
-##PBS -l nodes=3:ppn=16  
-##PBS -l walltime=10:10:00  
-##PBS -o output.log      
-##PBS -e error.log      
+##PBS -l nodes=3:ppn=16
+##PBS -l walltime=10:10:00
+##PBS -o output.log
+##PBS -e error.log
 ##PBS -V
 
-## Working Dir: Mostly $SLURM_SUBMIT_DIR
-WORK_DIR=$SLURM_SUBMIT_DIR
-cd $WORK_DIR
+load_modules() {
+	module use "/home/parbatib/programs/modules"
 
-### -------- Creating Nodelist file for NAMD ---------
-nodes=$(scontrol show hostname $SLURM_JOB_NODELIST)
+	module load GCC/gcc-9.5.0
+	module load openmpi4
+	module load namd3
+	module load vmd
+}
 
-nodefile=${WORK_DIR}/${SLURM_JOB_NAME}.nodelist
+load_modules
+nodefile="${SLURM_JOB_NAME}.nodelist"
 
-echo "group main" >| $nodefile 
-for n in ${nodes[@]}; do
-	echo "host ${n}" >> $nodefile
+
+## NAMD ---------------
+NAMD_DIR=$NAMD_VERBS
+#TOTAL_TASKS=$(($SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE * $SLURM_CPUS_PER_TASK))		# threads TODO
+
+namd_cmd="${NAMD_DIR}/charmrun ++n $SLURM_JOB_NUM_NODES ++ppn $(($SLURM_CPUS_PER_TASK - 1)) ++mpiexec ++nodelist $nodefile ${NAMD_DIR}/namd3 +setcpuaffinity"
+
+
+## Runs ---------------
+work_dir=$SLURM_SUBMIT_DIR		# work dir, mostly $SLURM_SUBMIT_DIR
+prefix="amyld_wb_eq"			# TODO
+error_prefix="error"
+
+# run indices range to execute
+run_index_start=0		# [INCLUSIVE] first run index		TODO
+run_index_end=1			# [INCLUSIVE] last run index		TODO
+run_index_inc=1			# run index increment (DEFAULT: 1)
+
+## Post Run -----------
+require_exit_code0=true	# [true/false] If a RUN returns non-zero exit code,
+						# do not start subsequent RUNS and quit
+
+purge_old_bak_files=true	 # delete .old and .BAK files after runs
+
+
+
+# ====================================
+# MAIN
+# ====================================
+
+run_logs=""
+log() {
+	run_logs="${run_logs}\n$1"
+	echo -e "$1"
+}
+
+
+create_nodelist() {
+	nodes=$(scontrol show hostname $SLURM_JOB_NODELIST)
+	local filename="$1"
+
+	echo "group main" >| $filename
+	for n in ${nodes[@]}; do
+		echo "host ${n}" >> $filename
+	done
+}
+
+
+# Purges unnecessry files
+# => USAGE: purge_files <prefix> <error_prefix>
+purge_files() {
+	local pre="$1"
+	local err_pre="$2"
+
+	# delete empty error.log
+	if [[ -n "$err_pre" ]]; then
+		find "." -name "${err_pre}.log" -type f -empty -delete
+	fi
+
+	if [[ -n "$pre" ]]; then
+		find "." -name "${pre}.*.old" -type f -delete	# delete *.old files
+		find "." -name "${pre}.*.BAK" -type f -delete	# delete *.BAK files
+	fi
+}
+
+
+
+# --------------------------
+# Execute RUNS
+# --------------------------
+
+cd $work_dir
+create_nodelist "$nodefile"
+
+
+for (( i=$run_index_start; i<=$run_index_end; i+=$run_index_inc )); do
+	# Checks ------------------------------
+	if [ $i -lt 0 ]; then
+		log "ERROR: INVALID RUN INDEX: ${i}. Must be >= 0. Skipping..."
+		continue
+	fi
+
+	num_suffix="${i}"
+	if [ $i -eq 0 ]; then
+		num_suffix=""		# First Run (Index 0) => No numerical suffix
+	fi
+
+	# Execute NAMD command -----------------
+	log "\n$(date): RUN ${i} starting"
+	tstart=$SECONDS
+
+	$namd_cmd "${prefix}${num_suffix}.conf" > "${prefix}${num_suffix}.log" 2> "${error_prefix}${num_suffix}.log"
+	exit_code="$?"
+
+	tend=$SECONDS
+	log "$(date): RUN ${i} finished => Exit Code: ${exit_code} | Duration: $((tend -tstart)) secs"
+	# --------------------------------------
+
+
+	# Purge old, bak and empty logs on successful run
+	if [[ $exit_code -eq 0 && $purge_old_bak_files == "true" ]]; then
+		purge_files "${prefix}${num_suffix}" "${error_prefix}${num_suffix}"
+	fi
+
+	# Sequential Runs: Exit on Failure
+	if [[ $exit_code -ne 0 && $require_exit_code0 == "true" ]]; then
+		log " => Non-Zero Exit code encountered in RUN ${i}. Quitting..."
+		break
+	fi
 done
-### ------------------------------------------------
 
-## Module Load - MPI
-#module use /scratch/apps/modules
-module load openmpi3/3.1.4
-
-### ---------------- MAIN SCRIPT ------------------
-## APP path
-NAMD_HOME=/home/parbatib/NAMD/NAMD_2.14_Linux-x86_64-verbs
-
-## ======= MAIN COMMAND ========
-
-TOTAL_TASKS=$(($SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE))
-
-## -> can use +isomalloc_sync option (after namd2)
-$NAMD_HOME/charmrun +p$TOTAL_TASKS ++mpiexec ++nodelist $nodefile $NAMD_HOME/namd2 $WORK_DIR/dna_gbis_pcf.conf > $WORK_DIR/dna_gbis_pcf.log

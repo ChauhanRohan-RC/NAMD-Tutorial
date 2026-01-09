@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #===================================================================
-# SLURM Script to run NAMD3 on SINGLE NODE GPU (multicore-CUDA)
+# SLURM Script to run NAMD3 on MULTIPLE NODE (open-mpi)
 #===================================================================
 # TODO: 1. set --job-name, --ntasks-per-node, --time
 #	2. set WORK_DIR
@@ -15,21 +15,19 @@
 ##SBATCH --account=parbatib
 #
 ## Partition
-#SBATCH --partition=gpu
+#SBATCH --partition=cpu
 #
 ## Number of nodes
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #
 ## Tasks (processes) per node (best is 1 process per node)
 #SBATCH --ntasks-per-node=1
 #
-### CPUs (cores) per process (based on no. of cores in the node = 48 (cpu), 40 (gpu) $SLURM_CPUS_ON_NODE)
-## => GPU-resident mode: Use ~8-12 for each GPU to avoid segmentation-fault
-#SBATCH --cpus-per-task=8
+## CPUs (cores) per process (based on no. of cores in the node = 48 (cpu), 40 (gpu) $SLURM_CPUS_ON_NODE)
+#SBATCH --cpus-per-task=48
 #
-### Number of GPU's to use --gres=gpu:<num_gpu_to_use>
-## => Does NOT have NVLink b/w GPUs. Performance reduces with 2 GPUs in GPU-Resident mode
-#SBATCH --gres=gpu:1
+## Number of GPU's to use --gres=gpu:<num_gpu_to_use>
+##SBATCH --gres=gpu:2
 #
 ## Wall clock Time Limit (days-hr:min:secs)
 #SBATCH --time=1-00:00:00
@@ -49,10 +47,10 @@
 ##PBS -V
 
 load_modules() {
-	module use "/home/parbatib/programs/modules"
+	module use "/scratch/home/parbati/programs/modules"
 
-	module load GCC/gcc-9.5.0
-	#module load openmpi4
+	module load gcc/9.4.0
+	module load openmpi/4.1.6
 	module load namd3
 	module load vmd
 }
@@ -62,10 +60,11 @@ nodefile="${SLURM_JOB_NAME}.nodelist"
 
 
 ## NAMD ---------------
-NAMD_DIR=$NAMD_MULTICORE_CUDA
-TOTAL_TASKS=$(($SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE * $SLURM_CPUS_PER_TASK))		# threads TODO
+NAMD_DIR=$NAMD_VERBS
+#TOTAL_TASKS=$(($SLURM_JOB_NUM_NODES * $SLURM_NTASKS_PER_NODE * $SLURM_CPUS_PER_TASK))		# threads TODO
 
-namd_cmd="${NAMD_DIR}/namd3 +p${TOTAL_TASKS} +setcpuaffinity"
+namd_cmd="${NAMD_DIR}/charmrun ++n $SLURM_JOB_NUM_NODES ++ppn $(($SLURM_CPUS_PER_TASK - 1)) ++mpiexec ++nodelist $nodefile ${NAMD_DIR}/namd3 +setcpuaffinity"
+
 
 ## Runs ---------------
 work_dir=$SLURM_SUBMIT_DIR		# work dir, mostly $SLURM_SUBMIT_DIR
@@ -105,6 +104,8 @@ create_nodelist() {
 		echo "host ${n}" >> $filename
 	done
 }
+
+
 
 # Purges unnecessry files
 # => USAGE: purge_files <prefix> <error_prefix>
