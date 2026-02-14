@@ -180,7 +180,7 @@ if { [info exists out_file_prefix] == 0 || [string trim $out_file_prefix] eq "" 
     }
 }
 
-if { [info exists selection1] == 0 || [string trim $selection1] eq "" } {
+if { [info exists selection1] == 0 || [string trim "$selection1"] eq "" } {
 	# Reading selection-1 from command line arg-1
 	#if {$argc > 1} {
 	#	set selection1 [lindex $argv 1];
@@ -195,7 +195,7 @@ if { [info exists selection1] == 0 || [string trim $selection1] eq "" } {
 	}
 	unset failed;
 
-	if { [info exists selection1] == 0 || [string trim $selection1] eq "" } {
+	if { [info exists selection1] == 0 || [string trim "$selection1"] eq "" } {
 		puts "\n==================================================="
 		puts "-> ERROR: SELECTION 1 must be defined !!!"
 		puts "===================================================\n"
@@ -205,7 +205,7 @@ if { [info exists selection1] == 0 || [string trim $selection1] eq "" } {
 
 # Selection 2-------------
 set has_sel2 0;
-if { [info exists selection2] == 0 || [string trim $selection2] eq "" } {
+if { [info exists selection2] == 0 || [string trim "$selection2"] eq "" } {
 	# Try reading selection-2 from command line arg-2
 	#if {$argc > 2} {
 	#	set selection2 [lindex $argv 2];
@@ -219,10 +219,10 @@ if { [info exists selection2] == 0 || [string trim $selection2] eq "" } {
 	unset failed;
 }
 
-if { [info exists selection2] && [string trim $selection2] ne "" } {
+if { [info exists selection2] && [string trim "$selection2"] ne "" } {
 	set has_sel2 1;
 
-	if { [string trim $selection1] eq [string trim $selection2] } {
+	if { [string trim "$selection1"] eq [string trim "$selection2"] } {
         puts "\n==================================================="
         puts "-> ERROR: SELECTION 1 and 2 MUST BE DIFFERENT (given \"$selection1\") !!!"
         puts "===================================================\n"
@@ -346,16 +346,7 @@ if {$atom_count_total == 0} {
 	exit;
 }
 
-# to avoid large coordinates PDB format cannot handle
-#$all moveby [vecinvert [measure center $all]]
-$all set x 0;
-$all set y 0;
-$all set z 0;
-
-$all set beta 0;
-$all set occupancy 0;
-
-set sel1 [atomselect $mol_id $selection1];
+set sel1 [atomselect $mol_id "$selection1"];
 set atom_count_sel1 [$sel1 num];
 if {$atom_count_sel1 == 0} {
 	puts "\n============================================================"
@@ -364,9 +355,9 @@ if {$atom_count_sel1 == 0} {
 	exit;
 }
 
-$sel1 set beta 1;
+
 if { $has_sel2 == 1 } {
-	set sel2 [atomselect $mol_id $selection2];
+	set sel2 [atomselect $mol_id "$selection2"];
 	set atom_count_sel2 [$sel2 num];
 
 	if {$atom_count_sel2 == 0} {
@@ -376,9 +367,23 @@ if { $has_sel2 == 1 } {
 		exit;
 	}
 
-	$sel2 set beta 2;
 } else {
 	set atom_count_sel2 0;
+}
+
+
+# to avoid large coordinates PDB format cannot handle
+#$all moveby [vecinvert [measure center $all]]
+$all set x 0;
+$all set y 0;
+$all set z 0;
+
+$all set beta 0;
+$all set occupancy 0;
+
+$sel1 set beta 1;
+if { $has_sel2 == 1 } {
+	$sel2 set beta 2;
 }
 
 set interaction_pdb_filename	"${namd_temp_files_prefix}.pdb";
