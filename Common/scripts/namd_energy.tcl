@@ -9,11 +9,11 @@
 # -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    ##
 # -> Calculate self and cross interaction energies of a subset of the system			       ##
 # ---------------------------------------------------------------------------------------------##
-# This script is highly efficient than NAMD Energy Plugin of VMD. 
-# It does not load dcd files into memory, and processes trajectory frame-by-frame. 
+# This script is highly efficient than NAMD Energy Plugin of VMD.
+# It does not load dcd files into memory, and processes trajectory frame-by-frame.
 #
 ## LIMITATIONS -----------
-# 1. Only calculate the absolute force between two selections. 
+# 1. Only calculate the absolute force between two selections.
 #	 CANNOT calculate the force projection on the vector connection COM of two selections, which
 #	 is anyways not required in most cases
 #################################################################################################
@@ -31,12 +31,13 @@
 #	-> NAMD_ENERGY_SELECTION2	=	selection2 		  (optional)
 #	-> NAMD_ENERGY_OUT_ENERGIES	= 	out_energies	  (optional)
 #	-> NAMD_ENERGY_OUT_PREFIX	=	out_file_prefix
+#	-> NAMD_ENERGY_TIMESTEP_END	=	timestep_end      (optional)
 #	-> NAMD_ENERGY_LABEL	    =	label			  (optional)
 #--------------------------------------------
 # 4. set other input and output params [search for todo]
 # 5. run with "./namd_energy.tcl"
 # 	OR
-# 6. use namd_energy.sh launcher. 
+# 6. use namd_energy.sh launcher.
 #	-> First, unset selection1, selection2, out_energies, out_file_prefix in this script
 #	-> Set environment variables in namd_energy.sh
 #		=> ./namd_energy.sh
@@ -64,7 +65,7 @@ proc find_files {dir_path prefix suffix {min_num ""} {max_num ""} {sort_natural 
 
 
 # NAMD Command
-set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p3";	# todo: ESCAPE SPECIAL CHARACTERS like $ ! etc
+set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p40";	# todo: ESCAPE SPECIAL CHARACTERS like $ ! etc
 set debug		0;	# debug mode
 
 # =============================
@@ -75,11 +76,11 @@ set param_files	{ "../../common/ff/par_all36m_prot.prm" "../../common/ff/toppar_
 set drude	off;		# Drude additive force field
 
 # todo: input strcuture file (.psf)
-set psf_file		"../../common/amyl_wb.psf";
+set psf_file		"../../common/amyld_wb.psf";
 
 # todo: LIST of frames (.dcd, .pdb, .coor) separated by space
 # set dcd_files	{ "../amyl_wb_eq.dcd" };
-set dcd_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix> [min_num] [max_num]
+set dcd_files	[find_files ".." "amyld_wb_eq" ".dcd"];  # <dir> <prefix> <suffix> [min_num] [max_num]
 
 # Selection
 set selection1	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION1
@@ -88,7 +89,7 @@ set selection2	"";			# or set by  ENV VAR: NAMD_ENERGY_SELECTION2
 ## Output file names
 set out_file_prefix 		"";		# or set by  ENV VAR: NAMD_ENERGY_OUT_PREFIX
 
-## [OPTIONAL][ Label for this run 
+## [OPTIONAL][ Label for this run
 set label_		"";			# or ser by  ENV VAR: NAMD_ENERGY_LABEL
 
 ### Energies to calculate (as sequence of 4-letter codes)
@@ -105,31 +106,37 @@ set label_		"";			# or ser by  ENV VAR: NAMD_ENERGY_LABEL
 set out_energies			"";		# or set by  ENV VAR: NAMD_ENERGY_OUT_ENERGIES
 								# example: "-bond -elec -kine - pote"
 
+
+## TODO: TIme Step parameters (ONLY USED FOR OUTPUT COLUMNS, DOES NOT AFFECT CALCULATION)
+set timestep_first		0;			# First timestep.						[-ts]
+set frame_freq			100;		# Timesteps b/w each frame = dcdfreq	[-stride]
+
+# Timstep to stop the calculation at [INCLUSIVE, -1 for None]
+set timestep_end 		-1;		# or set by  ENV VAR: NAMD_ENERGY_TIMESTEP_END
+
+
 ## Params
 set temperature			300;		# Temperature (in K) used for main simulation [-T]
 set cutoff				12;		# Cutoff distance (in Å)		[-cutoff]
 set switchdist			10;		# Switch distance (in Å) for non-bonded interactions [-switch]
 								#   Normally < cutoff. -ve to turn off switching
 set dielectric			1.0;		# Dielectric constant (> 1 will lessen the electrostatic forces)
-								
+
 ## Periodic [OPTIONAL]
-set initial_ext_sys		"../amyl_wb_eq.restart.xsc";		# [ONLY PERIODIC] Initial cell dimensions in .dcd file
+set initial_ext_sys		"../../wb_eq/amyld_wb_eq51.restart.xsc";		# [ONLY PERIODIC] Initial cell dimensions in .dcd file
 set pme					on;		# [on/off] [ONLY PERIODIC] PME for long-range electrostatics. Only work when <initial_ext_sys> is specified
 set pme_grid_spacing		1.0;		# (in Å) spacing b/w PME grid points on cell basis vectors, used for automatic PME grid sizes
 
-## todo: TIme Step parameters (ONLY USED FOR OUTPUT COLUMNS, DOES NOT AFFECT CALCULATION)
-set timestep_first		0;		# First timestep.						[-ts]
-set frame_freq			200;		# Timesteps b/w each frame = dcdfreq		[-stride]
 
 # ==================================
-# OUTPUT Params			
+# OUTPUT Params
 # ==================================
 
 ## Force Output	(ONLY APPLICABLE when SEL-2 is defined)
 # -> Calculates force on SEL-1 due to SEL-2
 set out_force			on;		# [on/off] show force b/w two selections. [-keepforce]
 # set out_force_proj		off;		# [on/off] Only show projection of force on the vector connecting COM of two selections. [-projforce].  [output force will be signed (+ve: replusive, -ve attractive)]
-								
+
 set frame_skip			0;		# Calculate energy every <frame_skip> frame [-skip]
 
 set out_delimiter 		" ";
@@ -290,6 +297,17 @@ if { $has_sel2 == 1 && [info exists out_force] && [string trim $out_force] eq "o
 # 	set projforce 1;
 # }
 
+# Timestep End
+if { [info exists timestep_end] == 0 || [string trim $timestep_end] eq "" || $timestep_end == -1 } {
+    set failed [catch { set timestep_end "$::env(NAMD_ENERGY_TIMESTEP_END)" }];
+	if { $failed != 0 } {
+		# Environment variable not found
+		set timestep_end -1;
+	}
+
+	unset failed;
+}
+
 ## Label
 if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 	# Trying to find env variable
@@ -348,7 +366,7 @@ if {$atom_count_total == 0} {
 
 set sel1 [atomselect $mol_id "$selection1"];
 set atom_count_sel1 [$sel1 num];
-if {$atom_count_sel1 == 0} {
+if { $atom_count_sel1 == 0 } {
 	puts "\n============================================================"
 	puts "-> ERROR: No atoms found for selection 1: \"$selection1\" !!!"
 	puts "============================================================\n"
@@ -366,7 +384,6 @@ if { $has_sel2 == 1 } {
 		puts "============================================================\n"
 		exit;
 	}
-
 } else {
 	set atom_count_sel2 0;
 }
@@ -465,9 +482,14 @@ if { $has_sel2 == 1 } {
 	puts $namdconf "pairInteractionSelf \t\t on;"
 }
 
+
 puts $namdconf "\n# Calculation Energies from each dcd file ------------------------------"
 puts $namdconf "numsteps \t 1;"
 puts $namdconf "set ts $timestep_first; \t # Timestep counter\n";		# Timestep Counter
+if { $timestep_end > 0 } {
+	puts $namdconf "set ts_end $timestep_end; \t # Timestep End\n";
+}
+
 
 set ts_inc	$frame_freq;
 set skip_expr "";
@@ -477,12 +499,16 @@ if { $has_skip == 1 } {
 	for {set i 0} {$i < $frame_skip} {incr i} {
 		set skip_expr "${skip_expr}   coorfile skip;\n"
 	}
-}
+};
 
 foreach dcd_file $dcd_files {
 	puts $namdconf "coorfile open dcd ${dcd_file};"
 	puts $namdconf "while \{ \[coorfile read\] \!= -1 \} \{"
-	puts $namdconf "   firstTimestep \$ts\n   run 0\n   incr ts $ts_inc; # timesetp increment = frame_freq * (frame_skip + 1)"
+	if { $timestep_end > 0 } {
+		puts $namdconf "   if \{ \$ts > \$ts_end  \} \{ break; \}"
+	}
+
+	puts $namdconf "   firstTimestep \$ts;\n   run 0;\n   incr ts $ts_inc; # timesetp increment = frame_freq * (frame_skip + 1)"
 	if { $has_skip == 1 } {
 		puts $namdconf $skip_expr
 	}

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################
-# Energy Calculations using namd_energy.tcl
+# Energy Calculations using namd_energy.tcl (static selections only)
 ##############################################
 # TODO: set env vars for each run
 

@@ -230,7 +230,7 @@ proc cleanup { } {
 # Functions ---------------------------------
 
 # Reference Frame vars
-set ref_frame_filename "rmsd_ref_frame.temp.coor";
+set ref_frame_filename "rmsd_ref_frame-[clock seconds].temp.coor";
 set sel_ref 	"";
 set found_ref_frame 0;
 set num_frames 0;

@@ -1,7 +1,8 @@
 #!/usr/bin/env -S vmd -dispdev text -e
 
 #############################################################################
-# Script to calculate RMSD of a molecule from trajectory in VMD			   ##
+# Script to find displacement of an atom (or group of atoms) in a trajectory from a reference frame
+# => OUTPUT: Displacement vs Frame (time)
 #############################################################################
 # NOTE: Plotting data requires "plot_data.py"
 
@@ -14,10 +15,10 @@ package require bigdcd;
 # 1. Copy this script in working dir
 # 2. INPUT: Set input structure (.psf) and frame (.dcd, .pdb, .coor) files
 # 3. INPUT: Set ATOM_SELECTION
-# 4. run with "./rmsd.tcl"
-# 5. Generates output file "rmsd.csv" and "rmsd.pdf" (if plot_output = 1)
+# 4. run with "./displacement.tcl"
+# 5. Generates output file "displacement.csv" and "displacement.pdf" (if plot_output = 1)
 
-## NOTE UNITS: RMSD values are in Angstrom (Å)
+## NOTE UNITS: Displacement values are in Angstrom (Å)
 
 
 # --------------------------------------------------------------------
@@ -42,8 +43,8 @@ proc find_files {dir_path prefix suffix {min_num ""} {max_num ""} {sort_natural 
 # --------------------------------------------------------------------
 
 
-set COL_NAME_FRAME		"FRAME";	# Frame index
-set COL_NAME_RMSD		"RMSD";		# RMSD (Å)
+set COL_NAME_FRAME				"FRAME";			# Frame index
+set COL_NAME_DISPLACEMENT		"DISPLACEMENT";		# Displacement (Å)
 
 
 # ==================
@@ -60,7 +61,7 @@ set frame_index_start 	-1;		# Inclusive, -1 for None
 set frame_index_end 	-1;		# Exclusive, -1 for None
 
 # TODO: ATOM SELECTION for each Frame
-set atom_selection		"protein and backbone and noh";
+set atom_selection		"protein and resid 1 and name N";
 # Examples:
 # 	1. protein and backbone and noh
 # 	2. nucleic and backbone and noh
@@ -70,11 +71,11 @@ set atom_selection		"protein and backbone and noh";
 # ==================
 # OUTPUT
 # ==================
-set out_file_prefix		"rmsd";
+set out_file_prefix		"displacement-selected_N";		# TODO
 set out_data_file 		"${out_file_prefix}.csv";		# output data file
 
 # Format
-set out_format			"%.6f";		# RMSD Format.
+set out_format			"%.6f";		# Displacement Format.
 set out_delimiter 		" ";		# output delimiter
 
 # Plotting
@@ -93,7 +94,7 @@ set comment_header		0;			# Whether to comment out the columns header
 # ==============================================
 
 puts "\n=============================================="
-puts "=============  RMSD (bigdcd)  ================="
+puts "=============  Displacement (bigdcd)  ================="
 puts "==============================================\n"
 
 set time_start [clock seconds];
@@ -146,7 +147,7 @@ if { [info exists frame_index_end] == 0 || $frame_index_end < 0 } {
 
 
 # Loading Molecule -------------
-set mol_id [mol new $psf_file waitfor all];
+set mol_id [mol new "$psf_file" waitfor all];
 
 # foreach frame_file $frame_files {
 # 	puts "---------------------------------------------"
@@ -213,7 +214,7 @@ proc cleanup { } {
 # Functions ---------------------------------
 
 # Reference Frame vars
-set ref_frame_filename "rmsd_ref_frame-[clock seconds].temp.coor";
+set ref_frame_filename "displacement_ref_frame-[clock seconds].temp.coor";
 set sel_ref 	"";
 set found_ref_frame 0;
 
@@ -239,8 +240,8 @@ proc try_save_ref_frame_bigdcd { i } {
 	}
 }
 
-# Main function to calc rmsd using bigdcd
-proc calc_rmsd { i } {
+# Main function to calc displacement using bigdcd
+proc calc_displacement { i } {
 	global frame_index_ref frame_index_start frame_index_end;
 	global mol_id sel_ref sel_cur allatoms;
 	global out_delimiter out_format;
@@ -261,18 +262,26 @@ proc calc_rmsd { i } {
 	#$sel_cur frame $i;
 	#$sel_ref frame 0;
 
-	$sel_cur move [measure fit $sel_cur $sel_ref];
-	set rmsd_val [measure rmsd $sel_cur $sel_ref];
-	set rmsd_str [format "$out_format" $rmsd_val]
+#	$sel_cur move [measure fit $sel_cur $sel_ref];
+
+	# Get coordinates
+	set coord_ref [lindex [$sel_ref get {x y z}] 0]
+	set coord_cur [lindex [$sel_cur get {x y z}] 0]
+
+	# Calculate displacement
+	set dist [veclength [vecsub $coord_cur $coord_ref]]
+
+	set dist_val $dist;
+	set dist_str [format "$out_format" $dist_val]
 
 	# Post processing
 	if {[expr $i % 10000] == 0} {
 		puts "\n---------------------------------------------------"
-		puts " => processing Frame $i -> RMSD: ${rmsd_str} Å";
+		puts " => processing Frame $i -> Displacement: ${dist_str} Å";
 		puts "---------------------------------------------------\n"
 	}
 
-	set out_line "${i}${out_delimiter}${rmsd_str}";
+	set out_line "${i}${out_delimiter}${dist_str}";
 	log2file $out_line;
 }
 
@@ -294,7 +303,7 @@ if { $found_ref_frame == 0 } {
 # Setup fresh molecule for main run
 mol delete $mol_id;
 
-set mol_id [mol new $psf_file];
+set mol_id [mol new "$psf_file"];
 mol addfile "$ref_frame_filename" type namdbin waitfor all molid $mol_id;
 set sel_ref [atomselect $mol_id "$atom_selection" frame 0];
 set sel_cur [atomselect $mol_id "$atom_selection"];
@@ -306,7 +315,7 @@ set allatoms [atomselect $mol_id "all"];
 # ===============================
 set out_file [open $out_data_file w]
 
-log2file "${comment_token} ==================== RMSD (bigdcd) ======================"
+log2file "${comment_token} ==================== Displacement (bigdcd) ======================"
 puts "----------------------------------------------"
 log "${comment_token} INPUT Structure File: \"${psf_file}\" | Frame File(s): \[${frame_files}\]"
 log "${comment_token} INPUT Atom Selection: \"${atom_selection}\""
@@ -315,10 +324,10 @@ log "${comment_token}-----------------------------------------------------------
 log "${comment_token} REFERENCE Frame Index: ${frame_index_ref}";
 log "${comment_token} FRAME Index RANGE: \[${frame_index_start}, ${frame_end_str})  |  COUNT: $frame_count_str"
 log "${comment_token}----------"
-log "${comment_token} Units: RMSD (Angstrom Å)"
+log "${comment_token} Units: Displacement (Angstrom Å)"
 log "${comment_token}-----------------------------------------------------------"
 
-set out_header "${COL_NAME_FRAME}${out_delimiter}${COL_NAME_RMSD}";
+set out_header "${COL_NAME_FRAME}${out_delimiter}${COL_NAME_DISPLACEMENT}";
 if {$comment_header == 1} {
 	set out_header "${comment_token}${out_header}";
 }
@@ -328,9 +337,9 @@ log2file $out_header;
 
 
 # =====================================
-# MAIN-RUN: Calculate RMSD
+# MAIN-RUN: Calculate Displacement
 # =====================================
-eval "bigdcd calc_rmsd auto [join $frame_files]";
+eval "bigdcd calc_displacement auto [join $frame_files]";
 bigdcd_wait;
 
 
@@ -340,7 +349,7 @@ cleanup;
 
 # Plot Output -------------------
 if { $plot_output == 1 } {
-	set cmd "./plot_data.py -t {RMSD Plot} -xl {Frame} -yl {RMSD (Å)} -o \"${out_plot_file}\" \"${out_data_file}\"";
+	set cmd "./plot_data.py -t {Displacement Plot} -xl {Frame} -yl {Displacement (Å)} -o \"${out_plot_file}\" \"${out_data_file}\"";
 	if { $show_interactive_plot == 0 } {
 		set cmd "$cmd -ni";
 	}

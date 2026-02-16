@@ -2,9 +2,10 @@
 
 ################################################################################################
 ### Script to run NAMD-Energy Plugin of VMD   (VERY INEFFICIENT)
+# Use for dynamic selections (which update every frame)
 # NOTE: This is very inefficient, especially for large trajectories
 #
-# 		USE namd_energy.tcl FOR MOST CASES
+# 		USE namd_energy.tcl FOR STATIC SELECTIONS (which do not change every frame)
 #
 # -----------------------------------------------------------------------------------
 # -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    
@@ -55,7 +56,7 @@ set namd_cmd		"$::env(NAMD_MULTICORE)/namd3 +p3";	# todo: ESCAPE SPECIAL CHARACT
 # INPUT
 # =============================
 # todo: [OPTIONAL] Force-Field Parameter files
-set param_files	{ "../../common/ff/par_all36m_prot.prm" "../../common/ff/toppar_water_ions.prot.str" };
+set param_files	[list "../../common/ff/par_all36m_prot.prm" "../../common/ff/toppar_water_ions.prot.str" ];
 
 # todo: input strcuture file (.psf)
 set psf_file		"../../common/amyl_wb.psf";
@@ -69,18 +70,18 @@ set frame_files	[find_files ".." "amyl_wb_eq" ".dcd"];  # <dir> <prefix> <suffix
 # => SEL-2 is optional [CORRESPONDING TO SEL 1]. MUST NOT overlap with SEL-1
 # 	1. ONLY SEL-1 		 =>  Its self energy is calculated (useful for heat capacity etc)
 # 	2. BOTH SEL-1 and 2  =>  SEL-1 <-> 2 cross-interaction energy is calculated  
-set selection1	{ "protein" "water" "protein" };
-set selection2	{ "" 		"" 		"water" };		# corresponding to selection-1
+set selection1	[list "protein" "water" "protein" ];
+set selection2	[list "" 		"" 		"water"   ];		# corresponding to selection-1
 
 ## Output file names (CORRESPONDING TO each selection-pair)
-set out_file_prefixes  { "prot_self" "water_self" "prot_water" };		# todo
+set out_file_prefixes  [list "prot_self" "water_self" "prot_water" ];		# todo
 
 ### Energies to calculate (CORRESPONDING TO each selection-pair)
 # OPTIONS: -bond -angl -dihe -impr -conf -vdw -elec -nonb -all
 # ONLY -vdw -elec -nonb  are allowd when SEL-2 is defined
 # -> -conf (confomational) = bond + angle + dihedral + improper
 # -> -nonb (non-nonded) = elec + vdw
-set out_energies			{ "-all" "-all" "-nonb" };
+set out_energies		[list "-all" "-all" "-nonb" ];
 
 ## Params
 set temperature			300;		# Temperature (in K) used for main simulation [-T]

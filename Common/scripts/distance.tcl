@@ -157,7 +157,7 @@ if { [info exists frame_index_end] == 0 || $frame_index_end < 0 } {
 
 
 # Loading Molecule -------------
-set mol_id [mol new $psf_file waitfor all];
+set mol_id [mol new "$psf_file" waitfor all];
 
 #foreach frame_file $frame_files {
 #	puts "---------------------------------------------"
@@ -177,8 +177,8 @@ if { $num_atoms_all == 0 } {
 	exit;
 }
 
-set sel1 [atomselect $mol_id $selection1];
-set sel2 [atomselect $mol_id $selection2];
+set sel1 [atomselect $mol_id "$selection1"];
+set sel2 [atomselect $mol_id "$selection2"];
 
 set num_atoms_sel1 [$sel1 num];
 set num_atoms_sel2 [$sel2 num];
