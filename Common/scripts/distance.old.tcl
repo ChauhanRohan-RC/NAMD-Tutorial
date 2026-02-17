@@ -23,6 +23,19 @@ proc find_files { directory prefix suffix { sort_natural 1 } {return_abs_path 0}
     return $file_list;
 }
 
+# Read atomselection string from file (must contain only a single line)
+proc read_selection_from_file { file_path } {
+	set fd [open $file_path];
+	set data [read $fd];
+	close $fd;
+
+	set trimmed [string trim $data];
+	return $trimmed;
+}
+#------------------------------------------------------------------------
+
+
+
 set COL_NAME_FRAME		"FRAME";		# Frame index
 set COL_NAME_DIST		"DIST";		# Distance b/w two atoms (Extension)
 

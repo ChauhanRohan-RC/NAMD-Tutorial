@@ -40,6 +40,16 @@ proc find_files {dir_path prefix suffix {min_num ""} {max_num ""} {sort_natural 
     if { $sort_natural == 1 } { set result_list [lsort -dictionary $result_list] };
     return $result_list;
 }
+
+# Read atomselection string from file (must contain only a single line)
+proc read_selection_from_file { file_path } {
+	set fd [open $file_path];
+	set data [read $fd];
+	close $fd;
+
+	set trimmed [string trim $data];
+	return $trimmed;
+}
 # --------------------------------------------------------------------
 
 

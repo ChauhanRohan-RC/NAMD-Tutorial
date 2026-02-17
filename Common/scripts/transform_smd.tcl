@@ -16,6 +16,19 @@
 # 5. OUTPUT: generates .pdb file "<out_file_prefix>.pdb"
 # 6. OUTPUT: if "create_smd_pcf_file = on", then generates "<out_file_prefix>.smd-pcf.pdb"
 
+
+# Read atomselection string from file (must contain only a single line)
+proc read_selection_from_file { file_path } {
+	set fd [open $file_path];
+	set data [read $fd];
+	close $fd;
+
+	set trimmed [string trim $data];
+	return $trimmed;
+}
+
+
+
 # ======================= INPUT ===========================
 set psf_file			"../../common/dna.psf";				# TODO: input strcuture file (.psf)
 set frame_files		{ "dna_gbis_eq.restart.coor" };		# TODO: input frame files (.pdb, .coor, .dcd)
