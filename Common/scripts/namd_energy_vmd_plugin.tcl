@@ -1,11 +1,12 @@
 #!/usr/bin/env -S vmd -dispdev text -e
 
+# DEPRECATED: use namd_energy.static.tcl or namd_energy.dynamic.tcl
+
 ################################################################################################
 ### Script to run NAMD-Energy Plugin of VMD   (VERY INEFFICIENT)
-# Use for dynamic selections (which update every frame)
 # NOTE: This is very inefficient, especially for large trajectories
 #
-# 		USE namd_energy.tcl FOR STATIC SELECTIONS (which do not change every frame)
+# 		USE namd_energy.static.tcl or namd_energy.dynamic.tcl
 #
 # -----------------------------------------------------------------------------------
 # -> Calculates Energies (Forces) on a subset of the system (due to itself/any other parts)    
