@@ -7,15 +7,18 @@
 
 # Exit on error
 #set -e
-
 # For STATIC SELECTIONS (that do not change with time)
 run_namd_energy_static() {
+	export VMDNOCUDA="on"
 	vmd -dispdev text -e namd_energy.static.tcl
+	unset VMDNOCUDA
 }
 
 # For DYNAMIC SELECTIONS (that change with time)
 run_namd_energy_dynamic() {
+	export VMDNOCUDA="on"
 	vmd -dispdev text -e namd_energy.dynamic.tcl
+	unset VMDNOCUDA
 }
 
 
