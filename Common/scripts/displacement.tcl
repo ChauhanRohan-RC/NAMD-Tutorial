@@ -77,6 +77,9 @@ set atom_selection		"protein and resid 1 and name N";
 # 	2. nucleic and backbone and noh
 # 	3. protein and backbone and noh and not (resid 10 to 16)
 
+# In case of group of atoms, Use Center of Mass (COM) instead of geometric center
+set use_cen_mass			1;
+
 
 # ==================
 # OUTPUT
@@ -253,8 +256,8 @@ proc try_save_ref_frame_bigdcd { i } {
 # Main function to calc displacement using bigdcd
 proc calc_displacement { i } {
 	global frame_index_ref frame_index_start frame_index_end;
-	global mol_id sel_ref sel_cur allatoms;
-	global out_delimiter out_format;
+	global mol_id pos_ref sel_ref sel_cur allatoms num_atoms_sel;
+	global use_cen_mass out_delimiter out_format;
 
 	set i [expr $i - 1];
 
@@ -268,18 +271,21 @@ proc calc_displacement { i } {
 	}
 
 	## Note: bigdcd already does this
-	#$allatoms frame $i;
-	#$sel_cur frame $i;
+	$allatoms frame $i;
+	$sel_cur frame $i;
 	#$sel_ref frame 0;
 
 #	$sel_cur move [measure fit $sel_cur $sel_ref];
 
-	# Get coordinates
-	set coord_ref [lindex [$sel_ref get {x y z}] 0]
-	set coord_cur [lindex [$sel_cur get {x y z}] 0]
+	# Current Position
+	if { $num_atoms_sel > 1 && $use_cen_mass == 1 } {
+		set pos_cur [measure center $sel_cur weight mass];	# COM
+	} else {
+		set pos_cur [measure center $sel_cur];				# Geo Center
+	}
 
 	# Calculate displacement
-	set dist [veclength [vecsub $coord_cur $coord_ref]]
+	set dist [veclength [vecsub $pos_cur $pos_ref]]
 
 	set dist_val $dist;
 	set dist_str [format "$out_format" $dist_val]
@@ -316,6 +322,14 @@ mol delete $mol_id;
 set mol_id [mol new "$psf_file"];
 mol addfile "$ref_frame_filename" type namdbin waitfor all molid $mol_id;
 set sel_ref [atomselect $mol_id "$atom_selection" frame 0];
+
+# Reference Position
+if { $num_atoms_sel > 1 && $use_cen_mass == 1 } {
+	set pos_ref [measure center $sel_ref weight mass];	# COM
+} else {
+	set pos_ref [measure center $sel_ref];				# Geo Center
+}
+
 set sel_cur [atomselect $mol_id "$atom_selection"];
 set allatoms [atomselect $mol_id "all"];
 
