@@ -14,8 +14,11 @@ from tqdm import tqdm
 
 """
 Script to Wrap MD trajectories with Periodic Boundary Conditions (PBC Wrap)
-Equivalent to "pbc wrap" of VMD PBCTools, but very efficient. 
+NOTE: VERY SLOW for big DCD files. Use "pbc_wrap_cpptraj.sh" for big trajectories
+Suitable for small or single frame files
 
+Equivalent to "pbc wrap" of VMD PBCTools
+=> Supports reading and writing all types of files (dcd, pdb, coor etc)
 => Process trajectory frame by frame
 => Supports multiprocessing
 
