@@ -146,6 +146,7 @@ def plot_data(data_file: str,
     plt.ylabel(y_col_label)
 
     plt.title(title)
+    plt.minorticks_on()
     plt.ticklabel_format(axis='both', style='sci')
 
     ## Save Figure

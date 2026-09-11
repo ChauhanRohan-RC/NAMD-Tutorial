@@ -75,7 +75,11 @@ catch { set namd_processes "$::env(NAMD_ENERGY_PROCESSES)" }; # from env-variabl
 # NAMD Command
 set namd_pes 		1;	# threads per NAMD process
 set namd_cmd_list	[list "$::env(NAMD_MULTICORE)/namd3" "+p${namd_pes}"];	# more threads does not do anything
-set debug			0;	# debug mode
+set debug_mode		0;	# debug mode
+
+set ram_disk        "/tmp";     # RAM disk to use for temp files (must be tempfs for speed)
+set load_dcd_to_ram    0;       # whether to load DCD files to RAM before processing.
+                                # Requires large RAM and takes time, but significantly faster once loaded
 
 # =============================
 # INPUT
@@ -88,7 +92,7 @@ set drude	off;		# Drude additive force field
 set psf_file		"../../common/amyld_wb.psf";
 
 # TODO: LIST of frames (.dcd files) separated by space
-# set dcd_files	{ "../amyl_wb_eq.dcd" };
+# set dcd_files	{ "../amyld_wb_eq.dcd" };
 set dcd_files	[find_files ".." "amyld_wb_eq" ".dcd"];  # <dir> <prefix> <suffix> [min_num] [max_num]
 
 # Selection
@@ -131,10 +135,11 @@ set pme_grid_spacing		1.0;		# (in Å) spacing b/w PME grid points on cell basis 
 
 ## TODO: TIme Step parameters (ONLY USED FOR OUTPUT COLUMNS, DOES NOT AFFECT CALCULATION)
 set timestep_first		0;			# First timestep.						[-ts]
-set frame_freq			100;		# Timesteps b/w each frame = dcdfreq	[-stride]
+set frame_freq			100;		# TODO: Timesteps b/w each frame = dcdfreq	[-stride]
 
 # Timstep to stop the calculation at [INCLUSIVE, -1 for None]
 set timestep_end 		-1;		# or set by  ENV VAR: NAMD_ENERGY_TIMESTEP_END
+set frame_skip			 0;		# Skip these number of frames every single calculation [-skip] = frame_step + 1
 
 # ==================================
 # OUTPUT Params
@@ -144,8 +149,6 @@ set timestep_end 		-1;		# or set by  ENV VAR: NAMD_ENERGY_TIMESTEP_END
 # -> Calculates force on SEL-1 due to SEL-2
 set out_force			on;		# [on/off] show force b/w two selections. [-keepforce]
 # set out_force_proj		off;		# [on/off] Only show projection of force on the vector connecting COM of two selections. [-projforce].  [output force will be signed (+ve: replusive, -ve attractive)]
-
-set frame_skip			0;		# Calculate energy every <frame_skip> frame [-skip]
 
 set out_delimiter 		" ";
 set out_energy_format 	"%.4f";
@@ -157,7 +160,6 @@ set comment_token 		"#";			# For Comments. "" to disable comments
 # =========================================================
 # MAIN
 # =========================================================
-
 set time_start [clock seconds];
 
 #------------------
@@ -382,14 +384,16 @@ if { $has_sel2 == 1 } {
 # Worker Pool
 #---------------------------------------
 namespace eval workerpool {
-    variable max_workers 3
-    variable running 0
-    variable next_id 0
-    variable queue {}
-    variable jobs
-    variable idle_callback {}
-    variable done 0
-    variable use_shell 0
+    variable max_workers 3;     # max workers
+    variable running 0;         # running jobs
+    variable next_id 0;
+    variable queue {};          # Job wait queue
+    variable jobs;              # tracks running jobs
+    variable idle_callback {};  # callback to run when any worker gets idle
+    variable use_shell 0;
+
+    variable done 0;
+    variable open_lock 0;       # do not close even if all jobs are finished
 
     # --------------------------
     # Init
@@ -401,6 +405,7 @@ namespace eval workerpool {
         variable queue
         variable jobs
         variable done
+        variable open_lock
 
         set max_workers $size
         set use_shell $shell
@@ -408,6 +413,7 @@ namespace eval workerpool {
         set queue {}
         array unset jobs
         set done 0
+        set open_lock 0
     }
 
     proc on_idle {callback} {
@@ -415,7 +421,26 @@ namespace eval workerpool {
         set idle_callback $callback
     }
 
-    proc capacity {} {
+    # Max number of workers
+    proc worker_count {} {
+        variable max_workers
+        return $max_workers
+    }
+
+    # Number of running jobs. Always <= worker_count
+    proc running_count {} {
+        variable running
+        return $running
+    }
+
+    # Jobs waiting in queue
+    proc waiting_count {} {
+        variable queue
+        return [llength $queue]
+    }
+
+    # Number of free workers
+    proc free_worker_count {} {
         variable running
         variable max_workers
         return [expr {$max_workers - $running}]
@@ -439,19 +464,25 @@ namespace eval workerpool {
     # --------------------------
     # Dispatcher
     # --------------------------
+    # returns the number of jobs started
     proc run_next {} {
         variable running
         variable max_workers
         variable queue
+
+        set started 0;
 
         while {$running < $max_workers && [llength $queue] > 0} {
             set job [lindex $queue 0]
             set queue [lrange $queue 1 end]
             lassign $job id cmd callback tag
             start_job $id $cmd $callback $tag
+
+            incr started;
         }
 
-        check_done
+        check_done;
+        return started;
     }
 
     # --------------------------
@@ -500,20 +531,40 @@ namespace eval workerpool {
         append jobs($id,stdout) [read $pipe]
 
         if {[eof $pipe]} {
-            finalize_job $id
+            # A Job just finished
+            handle_job_finished $id;
         }
     }
+
+
+    # --------------------------
+    # Job end Handler
+    # --------------------------
+    proc handle_job_finished {id} {
+        variable running
+        variable idle_callback
+
+        incr running -1;
+
+        # Start pending jobs
+        set started [run_next];
+
+        if {$started == 0 && $idle_callback ne ""} {
+            uplevel #0 $idle_callback
+        }
+
+        finalize_job $id;
+        check_done;
+    }
+
 
     # --------------------------
     # Finalize Job (Correct Exit Handling)
     # --------------------------
     proc finalize_job {id} {
         variable jobs
-        variable running
-        variable idle_callback
 
         set pipe $jobs($id,pipe)
-
         fileevent $pipe readable {}
 
         catch {append jobs($id,stdout) [read $pipe]}
@@ -544,16 +595,8 @@ namespace eval workerpool {
             unset jobs($id,$key)
         }
 
-        incr running -1
-
         # Callback now includes tag
         uplevel #0 [list $callback $id $cmd $exitcode $stdout $tag]
-
-        if {$idle_callback ne ""} {
-            uplevel #0 $idle_callback
-        }
-
-        check_done
     }
 
     # --------------------------
@@ -599,18 +642,41 @@ namespace eval workerpool {
     # --------------------------
     # Shutdown Detection
     # --------------------------
+
+    # stay open even when all jobs are finished
+    proc acquire_open_lock {} {
+        variable open_lock
+        set open_lock 1;
+    }
+
+    # release open hold
+    proc release_open_lock {} {
+        variable open_lock
+        set open_lock 0;
+    }
+
     proc check_done {} {
         variable running
         variable queue
         variable done
+        variable open_lock
 
-        if {$running == 0 && [llength $queue] == 0} {
+        if {$open_lock == 0 && $running == 0 && [llength $queue] == 0} {
             set done 1
         }
     }
 
     proc wait {} {
         vwait ::workerpool::done
+    }
+
+    # force terminate now, releases open lock
+    proc terminate {} {
+        variable done
+
+        release_open_lock
+        cancel_all
+        set done 1
     }
 }
 
@@ -797,6 +863,217 @@ namespace eval IndexStreamBuffer {
 }
 
 
+
+
+# ---------------------------------------------------
+# A RAM Cache to copy files temporarily to RAM
+# Mostly used for loading .dcd files to RAM for faster access
+#
+# call purge to delete all cached files on exit or in exit handlers
+# OS Signal caching (HUP INT TERM) requires Tclx extension
+#----------------------------------------------------
+namespace eval ramcache {
+    variable ramdisk "";
+    variable buffer_size 2147483648;     # bytes to leave as buffer in ramdisk, default 2GiB
+    variable tracked_files [list];
+    variable file_map;
+    array set file_map {};
+
+    variable net_loading_time_secs 0;    # total time (secs) spent on loading files to ram disk
+
+    proc init {ramdisk_path {buffer_bytes 2147483648}} {
+        variable ramdisk
+        variable buffer_size
+        variable tracked_files
+        variable file_map
+        variable net_loading_time_secs
+
+        set ramdisk $ramdisk_path
+        set buffer_size $buffer_bytes
+        set tracked_files [list]
+        array unset file_map *
+        set net_loading_time_secs 0;
+
+        # ensure temp dir
+        file mkdir $ramdisk;
+        puts "ramcache: Initialized on $ramdisk with a [expr {$buffer_size / 1024 / 1024}] MiB safety buffer."
+    }
+
+    proc get_net_load_time_secs {} {
+        variable net_loading_time_secs
+        return $net_loading_time_secs;
+    }
+
+    # Helper: Get available space in bytes on Linux
+    proc get_free_space {dir} {
+        set df_out [exec df -B1 $dir]
+        set lines [split $df_out "\n"]
+        set data_line [lindex $lines 1]
+
+        set fields [regexp -all -inline {\S+} $data_line]
+        return [lindex $fields 3]
+    }
+
+    # Query the cached RAM path using the original disk path
+    proc get_cached_path {orig_path} {
+        variable file_map
+
+        # Iterate through the map to find the matching original path
+        foreach cached_path [array names file_map] {
+            if {$file_map($cached_path) eq $orig_path} {
+                return $cached_path
+            }
+        }
+
+        # Return empty string if not found
+        return ""
+    }
+
+
+    # Main function to cache the DCD file
+    proc load_file {filepath} {
+        variable ramdisk
+        variable buffer_size
+        variable tracked_files
+        variable file_map
+        variable net_loading_time_secs
+
+        if {$ramdisk eq ""} {
+            error "ramcache Error: Not initialized. Call ::RamCache::init first."
+        }
+        if {![file exists $filepath]} {
+            error "ramcache Error: File $filepath does not exist."
+        }
+
+        set fsize [file size $filepath]
+        set free_space [get_free_space $ramdisk]
+        set required_space [expr {$fsize + $buffer_size}]
+
+        if {$free_space > $required_space} {
+            set filename [file tail $filepath]
+            set root [file rootname $filename]
+            set ext [file extension $filename]
+
+            # Generate a highly unique suffix using process ID and millisecond clock
+            set unique_suffix "[pid]_[clock clicks -milliseconds]"
+            set new_filename "${root}_${unique_suffix}${ext}"
+            set newpath [file join $ramdisk $new_filename]
+
+            # 1. TRACK BEFORE COPYING
+            # This ensures that if a signal kills the script during the copy,
+            # the signal handler already has the path and will delete the partial file.
+            lappend tracked_files $newpath
+            set file_map($newpath) $filepath
+
+            # 2. CATCH COPY ERRORS
+            # Wrap the blocking copy operation in a catch block
+            if {[catch {
+
+                puts "\n---------------------------------------------"
+                puts "ramcache: copying file to RAM ...."
+                puts " => $filepath --> $newpath"
+                puts "\n---------------------------------------------\n"
+
+                set stime [clock seconds];
+                file copy -force $filepath $newpath;
+                set etime [clock seconds];
+
+                set ttaken [expr $etime - $stime];
+                incr net_loading_time_secs $ttaken;
+
+                puts "-----------------------------------------------"
+                puts "ramcache: file copied to RAM disk"
+                puts " => $filepath --> $newpath"
+                puts "ramcache: time taken: $ttaken secs"
+                puts "-----------------------------------------------"
+            } copy_err]} {
+                # If we get here, the copy failed mid-way (e.g., source drive error)
+                puts "ramcache ERROR: Failed to copy file to RAM ($copy_err)."
+                puts "ramcache: Cleaning up partial file and falling back to HDD..."
+
+                # Delete the partially copied file immediately
+                if {[file exists $newpath]} {
+                    file delete -force $newpath
+                }
+
+                # Remove it from the tracking list so purge doesn't try to delete it later
+                set idx [lsearch -exact $tracked_files $newpath]
+                if {$idx >= 0} {
+                    set tracked_files [lreplace $tracked_files $idx $idx]
+                }
+                catch {unset file_map($newpath)}
+
+                # Fallback: return the original HDD filepath so the analysis can still proceed
+                return $filepath
+            }
+
+            # Copy succeeded flawlessly
+            return $newpath
+        } else {
+            puts "ramcache: Insufficient space in $ramdisk. Reading directly from HDD."
+            return $filepath
+        }
+    }
+
+
+    # Function to safely delete all cached files
+    proc purge {} {
+        variable tracked_files
+        variable file_map
+
+        puts "ramcache: Purging tracked files from RAM..."
+
+        if {[llength $tracked_files] == 0} { return }
+
+        foreach f $tracked_files {
+            if {[file exists $f]} {
+                file delete -force $f
+                puts "ramcache: Deleted $f"
+            }
+        }
+        set tracked_files [list]
+        array unset file_map *
+    }
+
+    # Delete a specific file from ramcache using its CACHED RAM path
+    proc delete_by_cached_path {cached_path} {
+        variable tracked_files
+        variable file_map
+
+        set idx [lsearch -exact $tracked_files $cached_path]
+        if {$idx >= 0} {
+            if {[file exists $cached_path]} {
+                file delete -force $cached_path
+                puts "ramcache: Deleted cached file $cached_path"
+            }
+            set tracked_files [lreplace $tracked_files $idx $idx]
+            catch {unset file_map($cached_path)}
+        } else {
+            puts "ramcache Warning: $cached_path is not currently tracked."
+        }
+    }
+
+    # Delete a specific file from ramcache using its ORIGINAL disk path
+    proc delete_by_original_path {orig_path} {
+        variable file_map
+        set found 0
+
+        foreach cached_path [array names file_map] {
+            if {$file_map($cached_path) eq $orig_path} {
+                delete_by_cached_path $cached_path
+                set found 1
+            }
+        }
+
+        if {!$found} {
+            puts "ramcache Warning: No cached file found for original path: $orig_path"
+        }
+    }
+}
+
+
+
+
 # -------------------------------------------------------------------------------------------
 
 
@@ -896,16 +1173,14 @@ proc get_dcd_frame_count {filename} {
 
 
 
-
-
-
 # -------------------------
 # File paths
 # -------------------------
-set tmp_dir 					"/tmp/namd_energy.dynamic";		# or ".". folder to store all temp files
-set namd_temp_files_prefix 		[file join $tmp_dir "${out_file_prefix}.namd-temp"];
+set tmp_dir 					"${ram_disk}/namd_energy.dynamic";
+set namd_temp_files_prefix 		[file join $tmp_dir "${out_file_prefix}.${time_start}.namd-temp"];
+set namd_frame_temp_files_prefix     "${namd_temp_files_prefix}.frame-";
 
-set namd_final_log_filename 	"${namd_temp_files_prefix}.log";	# gets deleted in cleanup
+set namd_erg_log_filename 	    "${namd_temp_files_prefix}.erg.log";	# only contains energy lines
 set out_erg_filename 			"${out_file_prefix}.energy.csv";
 
 # ensure tmp dir
@@ -914,9 +1189,9 @@ file mkdir $tmp_dir;
 
 # returns full path of temp_file prefix for a specific frame
 proc get_frame_temp_file_prefix { frame_index } {
-	global namd_temp_files_prefix
+	global namd_frame_temp_files_prefix
 
-	return "${namd_temp_files_prefix}.frame-${frame_index}";
+	return "${namd_frame_temp_files_prefix}${frame_index}";
 }
 
 
@@ -925,7 +1200,6 @@ proc get_frame_temp_file_prefix { frame_index } {
 #-----------------------------------
 proc write_interaction_pdb_and_dcd { frame_index } {
 	global mol_id all sel1 sel2 has_sel2 selection1 selection2 atom_count_sel2;
-	global namd_temp_files_prefix;
 
 	set file_prefix [get_frame_temp_file_prefix $frame_index];
 
@@ -942,9 +1216,11 @@ proc write_interaction_pdb_and_dcd { frame_index } {
 		set atom_count_sel2 0;
 	}
 
-	puts "------------------------------------------------------------"
-	puts " => ATOM COUNT: Selection-1 ([$sel1 num]) | Selection-2 ($atom_count_sel2)"
-	puts "------------------------------------------------------------"
+	if { [expr $frame_index % 100] == 0 } {
+        puts "------------------------------------------------------------"
+        puts " => ATOM COUNT: Selection-1 ([$sel1 num]) | Selection-2 ($atom_count_sel2)"
+        puts "------------------------------------------------------------"
+    }
 
 	# to avoid large coordinates PDB format cannot handle
 	#$all moveby [vecinvert [measure center $all]]
@@ -1013,8 +1289,8 @@ proc write_namd_conf { frame_index first_time_step } {
 		puts $namdconf "extendedSystem \t\t [file normalize ${initial_ext_sys}];"
 
 		if {$has_pme == 1} {
-		puts $namdconf "PME \t\t\t on;"
-		puts $namdconf "PMEGridSpacing \t\t $pme_grid_spacing; \t # PME grid spacing (in A)"
+            puts $namdconf "PME \t\t\t on;"
+            puts $namdconf "PMEGridSpacing \t\t $pme_grid_spacing; \t # PME grid spacing (in A)"
 		}
 	}
 
@@ -1082,17 +1358,19 @@ puts "==========================================================================
 
 # clean all frames
 animate delete all;
-set ts 		$timestep_first;
-set ts_inc	[expr $frame_freq * ($frame_skip + 1)];
+set frame_inc   [expr $frame_skip + 1];
+set ts          $timestep_first;
+set ts_inc      [expr $frame_freq * $frame_inc];
 
 set stop_job_generation 0;
 set error_occured 0;
 set error_log_filename "";
 
-set cur_dcd_index -1; 		# current dcd file index
-set cur_dcd_frame_count 0;	# total frame count of current dcd file
-set idx 0;					# global frame index across all dcd's
-set frames_done 0;			# total frames processed, incremented by dcd_frame_count
+set dcd_files_copy $dcd_files;  # copy of dcd files for ram cache
+set cur_dcd_index -1; 		    # current dcd file index
+set cur_dcd_frame_count 0;      # total frame count of current dcd file
+set idx 0;                      # global frame index across all dcd's
+set frames_done 0;              # total frames processed, incremented by dcd_frame_count
 
 set frame_log_merge_count 0;	# how many frame log files are merged to final log file
 set line_prefixes { "ETITLE:" "ENERGY:" "PAIR INTERACTION:" };	# line prefixes to append to final log
@@ -1100,14 +1378,33 @@ set line_prefixes { "ETITLE:" "ENERGY:" "PAIR INTERACTION:" };	# line prefixes t
 
 
 proc init_next_dcd {} {
-	global dcd_files cur_dcd_index cur_dcd_frame_count frames_done
+	global dcd_files dcd_files_copy load_dcd_to_ram
+	global cur_dcd_index cur_dcd_frame_count frames_done
 
 	incr cur_dcd_index 1;
 	incr frames_done $cur_dcd_frame_count;
 
 	if { $cur_dcd_index < [llength $dcd_files] } {
-		# load variables
-		set cur_dcd_frame_count [get_dcd_frame_count [lindex $dcd_files $cur_dcd_index]];
+
+        set dcd_path [lindex $dcd_files $cur_dcd_index];
+
+		# RAM Cache
+		if {$load_dcd_to_ram == 1} {
+            # purge previous dcd
+            set prev_dcd_idx [expr $cur_dcd_index - 1];
+            if { $prev_dcd_idx >= 0 } {
+                ramcache::delete_by_cached_path [lindex $dcd_files_copy $prev_dcd_idx]
+            }
+
+            set new_path [ramcache::load_file $dcd_path];      # Takes huge time for large dcd files
+            lset dcd_files_copy $cur_dcd_index $new_path;
+
+            set dcd_path $new_path;
+		}
+
+
+		# set variables
+		set cur_dcd_frame_count [get_dcd_frame_count $dcd_path];
 
 		return 1;
 	}
@@ -1118,16 +1415,17 @@ proc init_next_dcd {} {
 
 # Return "" to stop generation
 proc generate_next_job {} {
-	global dcd_files cur_dcd_index cur_dcd_frame_count
+	global dcd_files_copy
+	global cur_dcd_index cur_dcd_frame_count
     global idx frames_done namd_cmd_list
-    global ts ts_inc timestep_end mol_id
+    global ts ts_inc frame_inc timestep_end mol_id
 
     if { $timestep_end > 0 && $ts > $timestep_end } {
 		return "";
 	}
 
     set i [expr $idx - $frames_done];
-    if { $cur_dcd_index < 0 || $i == $cur_dcd_frame_count } {
+    while { $cur_dcd_index < 0 || $i >= $cur_dcd_frame_count } {
 		set ret [init_next_dcd];
 
 		if { $ret == 0 } {
@@ -1135,15 +1433,17 @@ proc generate_next_job {} {
 			return "";
 		}
 
-		set i [expr $idx - $frames_done];	# should be 0
+		set i [expr $idx - $frames_done];
     }
 
 
-    set dcd_file [lindex $dcd_files $cur_dcd_index];
+    set dcd_file [lindex $dcd_files_copy $cur_dcd_index];
 
-	puts "-----------------------------------------------"
-	puts " => FRAME INDEX : $idx (from_this_file: $i)  | TIMESTEP: $ts"
-	puts "-----------------------------------------------"
+    if { [expr $idx % 100] == 0 } {
+        puts "-----------------------------------------------"
+        puts " => FRAME INDEX : $idx (from_this_file: $i)  | TIMESTEP: $ts"
+        puts "-----------------------------------------------"
+	}
 
 	# Create DCD and interaction-pdb file for this frame
 	mol addfile $dcd_file type dcd first $i last $i waitfor all molid $mol_id;
@@ -1160,7 +1460,7 @@ proc generate_next_job {} {
 	set frame_tmp_file_prefix [get_frame_temp_file_prefix $idx];
 	set frame_namd_cmd [linsert $namd_cmd_list end+1 "${frame_tmp_file_prefix}.namd"]
 
-    incr idx;
+    incr idx $frame_inc;
     return $frame_namd_cmd;
 }
 
@@ -1173,9 +1473,11 @@ proc job_producer {} {
 		return;
 	}
 
-    # Fill available slots
-    while {[workerpool::capacity] > 0} {
+    # Fill available slots + waiting queue
+    set num_workers [workerpool::worker_count];
+    set produce_waiting_count [expr $num_workers * 2];   # number of jobs to maintain in the wait queue
 
+    while {[workerpool::waiting_count] < $produce_waiting_count} {
 		if { $stop_job_generation == 1 } {
 			return;
 		}
@@ -1195,7 +1497,8 @@ proc job_producer {} {
 
 proc on_job_failed { id cmd exitcode output idx } {
 	global workerpool error_occured stop_job_generation
-	global namd_temp_files_prefix namd_final_log_filename error_log_filename
+	global namd_temp_files_prefix
+	global namd_erg_log_filename error_log_filename
 
 	# Stop generating more jobs
 	set error_occured 1;
@@ -1205,19 +1508,18 @@ proc on_job_failed { id cmd exitcode output idx } {
 	workerpool::cancel_all
 
 	# write error logs to file
-	set fidx_temp_prefix [get_frame_temp_file_prefix $idx];
-	set fidx_log_file_name "${fidx_temp_prefix}.log";
-	set error_log_filename "$fidx_log_file_name";
+	set fidx_err_log_file_name "${namd_temp_files_prefix}.error.frame-${idx}.err";
+	set error_log_filename "$fidx_err_log_file_name";
 
-	set fid [open "$fidx_log_file_name" "w"];
+	set fid [open "$fidx_err_log_file_name" "w"];
 	puts $fid $output;
 	close $fid;
 
 	# Print Log details
 	puts "\n-----------------------------------------------------------------";
 	puts " => ERROR: NAMD Job Failed for frame index: ${idx}"
-	puts " => Final Log file: \"${namd_final_log_filename}\""
-	puts " See \"${fidx_log_file_name}\" for error details "
+	puts " => Final Energy Log file: \"${namd_erg_log_filename}\""
+	puts " See \"${fidx_err_log_file_name}\" for error details "
 	puts "-----------------------"
 	puts "# Cleanup TEMP files after evalaution by running..."
 	puts " => rm ${namd_temp_files_prefix}*"
@@ -1257,6 +1559,9 @@ proc on_job_done {id cmd exitcode output idx} {
 
 	# Success
 	if { $energy_line_found > 0 } {
+        # produce next jobs
+        job_producer;
+
 		# Cleanup
 		file delete {*}[glob -nocomplain "${fidx_temp_prefix}.*"];
 	} else {
@@ -1267,26 +1572,98 @@ proc on_job_done {id cmd exitcode output idx} {
 }
 
 
+#------------------------------------------
+# Cleanup and Exit Handlers
+#------------------------------------------
+
+proc cleanup { {leave_energy_log 0} {leave_error_log 1} } {
+	global namd_frame_temp_files_prefix namd_erg_log_filename error_log_filename;
+
+	# close files
+	IndexStreamBuffer::close_file
+
+	# purge ramcache
+	ramcache::purge
+
+	# delete frame-temp files
+	puts "\n-----------------------------------------------"
+    puts " => Deleting temp files: ${namd_frame_temp_files_prefix}*";
+    puts "-----------------------------------------------\n"
+    file delete {*}[glob -nocomplain ${namd_frame_temp_files_prefix}*];
+
+    # final namd energy log file (contains only energy lines)
+    if { $leave_energy_log == 0 } {
+        file delete $namd_erg_log_filename;
+    }
+
+    # error log file, if any error occurs
+    if { $leave_error_log == 0 } {
+        file delete $error_log_filename;
+    }
+}
+
+# TCL exit handler
+proc exit_handler {args} {
+    global debug_mode
+
+    puts "LOG: ON EXIT $args";
+    cleanup $debug_mode;
+}
+
+# OS signal handler (HUP TERM INT). Requires Tclx extension
+proc os_signal_handler {args} {
+    global debug_mode
+
+    puts "LOG: CAUGHT OS SIGNAL $args";
+    cleanup $debug_mode;
+
+#     exit 1;
+}
+
+# Set up the exit/crash handlers for cleanup
+proc setup_exit_handlers {} {
+    # Catch standard TCL exits
+    trace add execution exit enter exit_handler;
+
+    # Try to trap POSIX signals (requires Tclx)
+    if {![catch {package require Tclx}]} {
+        signal trap {HUP TERM INT} os_signal_handler;
+    } else {
+        puts "Warning: Tclx package not found. Native OS signal trapping disabled.";
+    }
+}
 
 
-#-------------------------
-# Setup Worker Pool
-# ------------------------
+
+
+#-==================================================
+# MAIN
+#-==================================================
+
+setup_exit_handlers
 
 set worker_pool_size [expr $namd_processes / $namd_pes];
-
-workerpool::init $worker_pool_size 0;	# no shell support required, commands are given as list
-
-# Whenever a job finishes and a slot frees up, producer gets called automatically.
-workerpool::on_idle job_producer
-
 
 #-------------------------
 # Setup IndexStreamBuffer
 # ------------------------
 set index_buffer_size [expr $worker_pool_size * 2];
 
-IndexStreamBuffer::configure $index_buffer_size $namd_final_log_filename;
+IndexStreamBuffer::configure $index_buffer_size $namd_erg_log_filename;
+
+#-------------------------
+# Setup RAM Cache
+# ------------------------
+ramcache::init $tmp_dir
+
+#-------------------------
+# Setup Worker Pool
+# ------------------------
+
+workerpool::init $worker_pool_size 0;	# no shell support required, commands are given as list
+
+# Whenever a job finishes and a slot frees up, producer gets called automatically.
+workerpool::on_idle job_producer
 
 
 #-------------------------
@@ -1340,11 +1717,10 @@ proc cleanlist {mylist} {
 
 
 set cur_frame 0;
-set skip1 [expr $frame_skip + 1];
-#set stride [expr $skip1 * $frame_freq]
+#set stride [expr $frame_inc * $frame_freq]
 
 #Read the input
-set log_file [open $namd_final_log_filename "r"];
+set log_file [open $namd_erg_log_filename "r"];
 #     ETITLE: TS BOND ANGLE DIHED IMPRP ELECT VDW BOUNDARY MISC KINETIC TOTAL TEMP POTENTIAL ...
 # Index  0    1   2     3     4     5     6    7    8       9     10       11   12     13	    ..
 
@@ -1517,7 +1893,7 @@ while {[gets $log_file enerstring] >= 0} {
     # Write entry to file
     puts $fout $out_str;
 
-    incr cur_frame $skip1;
+    incr cur_frame $frame_inc;
     #incr cur_ts $stride;
 }
 
@@ -1528,41 +1904,36 @@ close $fout;
 
 
 # ------------------------------------------------------------------------
-proc cleanup { } {
-	global namd_temp_files_prefix namd_final_log_filename;
-
-    file delete {*}[glob -nocomplain ${namd_temp_files_prefix}*];
-    file delete $namd_final_log_filename;
-}
 
 
-# Celaning Up
-if { $debug == 0 && $error_occured == 0 } {
-	puts "\n--------------------------------------"
-	puts " => Deleting temp files: ${namd_temp_files_prefix}*";
-	puts "--------------------------------------\n"
-	cleanup;
-}
 
+# Celaning Up, leave energy log in debug mode
+# cleanup $debug_mode;  # now handled in exit_handler (runs automatically on exit)
 
 
 set time_end [clock seconds];
-set time_end_str [clock format $time_end -format "%Y-%m-%d %H:%M:%S"]
+set time_end_str [clock format $time_end -format "%Y-%m-%d %H:%M:%S"];
 
-puts "\n ${time_end_str}"
+set total_time_secs [expr $time_end -$time_start];
+set ram_load_time_secs [ramcache::get_net_load_time_secs];
+
+puts "\n\n ${time_end_str}"
 puts "==================  NAMD Energy FINISHED  ====================="
 puts "=> LABEL: \"${label_}\""
 puts "=> OUTPUT Energy File: \"${out_erg_filename}\""
-puts "-> Time Taken: [expr $time_end -$time_start] secs"
+puts "-------------------------------------------"
+puts "-> RAM Copy Time      : $ram_load_time_secs secs"
+puts "-> Compute Time       : [expr $total_time_secs - $ram_load_time_secs] secs"
+puts "-> Total Time         : $total_time_secs secs"
 if { $error_occured != 0 } {
 	puts "-----------------------------------"
 	puts "--------- NAMD RUN FAILED ---------"
 	puts "-----------------------------------"
-	puts " => Final Log file: \"${namd_final_log_filename}\""
+# 	puts " => Final Energy Log file: \"${namd_erg_log_filename}\""
 	puts " See \"${error_log_filename}\" for error details "
 	puts "-----------------------"
-	puts "# Cleanup TEMP files after evalaution by running..."
-	puts " => rm ${namd_temp_files_prefix}*"
+# 	puts "# Cleanup TEMP files after evalaution by running..."
+# 	puts " => rm ${namd_temp_files_prefix}*"
 }
 puts "===================================================\n"
 

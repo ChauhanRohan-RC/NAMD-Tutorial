@@ -284,9 +284,11 @@ if { [info exists pme] && [string trim $pme] eq "on" } {
 	set has_pme 1;
 }
 
-set has_skip 0;
 if { [info exists frame_skip] && [string trim $frame_skip] ne "" && $frame_skip > 0 } {
 	set has_skip 1;
+} else {
+	set has_skip 0;
+	set frame_skip 0;
 }
 
 # Only when selection 2 is also defined
@@ -496,11 +498,10 @@ if { $timestep_end > 0 } {
 }
 
 
-set ts_inc	$frame_freq;
+set frame_inc [expr $frame_skip + 1];
+set ts_inc	[expr $frame_freq * $frame_inc];
 set skip_expr "";
 if { $has_skip == 1 } {
-	set ts_inc	[expr $frame_freq * ($frame_skip + 1)];
-
 	for {set i 0} {$i < $frame_skip} {incr i} {
 		set skip_expr "${skip_expr}   coorfile skip;\n"
 	}
@@ -580,8 +581,7 @@ proc cleanlist {mylist} {
 
 
 set cur_frame 0;
-set skip1 [expr $frame_skip + 1];
-#set stride [expr $skip1 * $frame_freq]
+#set stride [expr $frame_inc * $frame_freq]
 
 #Read the input
 set log_file [open $namd_log_filename "r"];
@@ -757,7 +757,7 @@ while {[gets $log_file enerstring] >= 0} {
     # Write entry to file
     puts $fout $out_str;
 
-    incr cur_frame $skip1;
+    incr cur_frame $frame_inc;
     #incr cur_ts $stride;
 }
 
