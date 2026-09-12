@@ -78,7 +78,7 @@ set namd_cmd_list	[list "$::env(NAMD_MULTICORE)/namd3" "+p${namd_pes}"];	# more 
 set debug_mode		0;	# debug mode
 
 set ram_disk        "/tmp";     # RAM disk to use for temp files (must be tempfs for speed)
-set load_dcd_to_ram    0;       # whether to load DCD files to RAM before processing.
+set load_dcd_to_ram    1;       # whether to load DCD files to RAM before processing.
                                 # Requires large RAM and takes time, but significantly faster once loaded
 
 # =============================
