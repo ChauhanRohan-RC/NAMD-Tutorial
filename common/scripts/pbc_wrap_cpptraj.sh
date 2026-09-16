@@ -37,6 +37,14 @@ find_files() {
 
 
 
+module load ambertools
+
+# Execution Settings
+CPPTRAJ_BIN="cpptraj.OMP"       # Executable name (cpptraj, cpptraj.OMP or cpptraj.cuda)
+OMP_THREADS=4                   # [only with cpptraj.OMP] Number of CPU threads for OpenMP builds, 1 to disable
+verbose="true"                  # show cpptraj output
+
+
 input_psf_file="../common/amyld_wb.psf"   # TODO: input structure (.psf) file
 
 # TODO: input array of DCD trajectory files
@@ -65,16 +73,13 @@ center_atom_selection=":PRO"
 center_method="mass"    # Centering method: "mass" (weighted) or "" (leave empty for geometry)
 wrap_compound="byres"   # Wrapping compound: "byres" (keep residues intact) or "bymol" (keep molecules intact)
 
-# Execution options
-use_cuda="false"         # uSe cpptraj.cuda if available
-verbose="true"          # show cpptraj output
+
+
 
 
 # ==============================================================================
 # MAIN
 # ==============================================================================
-
-
 
 BOX_X="" ; BOX_Y="" ; BOX_Z=""
 BOX_ALPHA="" ; BOX_BETA="" ; BOX_GAMMA=""
@@ -122,19 +127,36 @@ fi
 # -----------------------------
 # MAIN EXECUTION LOOP
 # -----------------------------
+
+# Check if CPPTRAJ is in PATH
+if ! command -v "$CPPTRAJ_BIN" &> /dev/null; then
+    echo "[ ERROR  ] Executable '$CPPTRAJ_BIN' could not be found."
+    exit 1
+fi
+
+# Configure OpenMP Threading
+if [ "$OMP_THREADS" -gt 1 ]; then
+    export OMP_NUM_THREADS=$OMP_THREADS
+    export OMP_PROC_BIND=false
+    export OMP_PLACES=cores
+    export OMP_MAX_ACTIVE_LEVELS=1
+    export OPENBLAS_NUM_THREADS=1
+    export MKL_NUM_THREADS=1
+
+    if ! echo "quit" | "$CPPTRAJ_BIN" 2>&1 | grep -qi "OpenMP"; then
+        echo "[ WARN   ] OMP_THREADS > 1, but '$CPPTRAJ_BIN' does not appear to be an OpenMP build!"
+    else
+        echo "[ SYSTEM ] OpenMP threading enabled using $OMP_THREADS threads."
+    fi
+else
+    export OMP_NUM_THREADS=1
+fi
+
 echo "------------------------------------------------"
 echo " => Starting cpptraj Batch Wrapping Pipeline "
-
-cmd="cpptraj"
-TMP_SCRIPT="tmp_cpptraj_wrap.in"
-
-if [[ "$use_cuda" == "true" ]] && type -P "${cmd}.cuda" >/dev/null 2>&1; then
-    cmd="${cmd}.cuda"
-    echo " => Using CUDA binary: ${cmd}"
-else
-    echo " => Using binary: ${cmd}"
-fi
 echo "------------------------------------------------"
+# Temp script
+TMP_SCRIPT=$(mktemp --dry-run ./cpptraj_wrap.temp.XXXXXX.in)
 
 for in_file in "${input_traj_files[@]}"; do
     # 1. Precondition Check
@@ -207,13 +229,15 @@ for in_file in "${input_traj_files[@]}"; do
 
     # Execute cpptraj
     if [[ "$verbose" == "true" ]]; then
-        "$cmd" -i "$TMP_SCRIPT"
+        "$CPPTRAJ_BIN" -i "$TMP_SCRIPT"
     else
-        "$cmd" -i "$TMP_SCRIPT" > /dev/null 2>&1
+        "$CPPTRAJ_BIN" -i "$TMP_SCRIPT" > /dev/null 2>&1
     fi
 
+    cpptraj_exit_code=$?
+
     # Check if the command succeeded
-    if [[ $? -eq 0 ]]; then
+    if [[ $cpptraj_exit_code -eq 0 ]]; then
         echo "SUCCESS: Wrapped trajectory saved."
 
         # Overwriting input trajectory file
@@ -226,7 +250,7 @@ for in_file in "${input_traj_files[@]}"; do
             echo "------------------------------------------------------------"
         fi
     else
-        echo "FAILED: cpptraj encountered an error. Run manually without > /dev/null to debug."
+        echo "FAILED: cpptraj encountered an error (exit code $cpptraj_exit_code). Run with verbose = true to debug"
     fi
 
     # Clean up the temporary script for the next iteration
@@ -235,8 +259,6 @@ for in_file in "${input_traj_files[@]}"; do
 done
 
 echo "Wrapping Finished"
-
-
 
 
 

@@ -78,7 +78,7 @@ set namd_cmd_list	[list "$::env(NAMD_MULTICORE)/namd3" "+p${namd_pes}"];	# more 
 set debug_mode		0;	# debug mode
 
 set ram_disk        "/tmp";     # RAM disk to use for temp files (must be tempfs for speed)
-set load_dcd_to_ram    0;       # whether to load DCD files to RAM before processing.
+set load_dcd_to_ram    1;       # whether to load DCD files to RAM before processing.
                                 # Requires large RAM and takes time, but significantly faster once loaded
 
 # =============================
@@ -1756,6 +1756,9 @@ if { [info exists comment_token] == 1 && [string trim $comment_token] ne "" } {
 	lappend comments "PME Grid Space : $pme_grid_spacing Å"
 	lappend comments "Initial Extended System File : \"$initial_ext_sys\""
 	lappend comments "-----------------------------------------------------------------"
+	if { $keepforce == 1 } {
+		lappend comments "TOTAL_FORCE is the vector sum of ELECT_FORCE and VDW_FORCE"
+	}
 	lappend comments "Units => ENERGY: 1 kcal/mol     = 6.95e-21 J/molecule = [format %.2e [expr 1/(0.0019872 * $temperature)]] KBT"
 	lappend comments "      => FORCE : 1 kcal/(mol Å) = 69.5 pN"
 	lappend comments "========================================================================="
@@ -1860,15 +1863,22 @@ while {[gets $log_file enerstring] >= 0} {
 
 		# Electrostatic Force ---------------
 		set forceindex [lsearch -regexp  $forcelist "^ELECT_FORCE"];
-		set elvec [list];
-		lappend elvec [lindex $forcelist [expr $forceindex + 1]];
-		lappend elvec [lindex $forcelist [expr $forceindex + 2]];
-		lappend elvec [lindex $forcelist [expr $forceindex + 3]];
+		set elevec [list];
+		lappend elevec [lindex $forcelist [expr $forceindex + 1]];
+		lappend elevec [lindex $forcelist [expr $forceindex + 2]];
+		lappend elevec [lindex $forcelist [expr $forceindex + 3]];
 		set elecproj 1;
-		set elecmag [expr $elecproj * [veclength $elvec]];
+		set elecmag [expr $elecproj * [veclength $elevec]];
 
-		# Total Force
-		set totforce [expr $vdwmag + $elecmag];
+		# Total Force	(as vector sum)
+# 		set totmag [expr $vdwmag + $elecmag];
+		set totvec [list];
+		foreach a $vdwvec b $elevec {
+			lappend totvec [expr {$a + $b}]
+		}
+
+		set totproj 1;
+		set totmag [expr $totproj * [veclength $totvec]];
 
 		# Add to output
         if {[regexp {all|vdw|nonb} $out_energies]} {
@@ -1876,10 +1886,10 @@ while {[gets $log_file enerstring] >= 0} {
         }
 
         if {[regexp {all|elec|nonb} $out_energies]} {
-        		lappend outputlist $elecmag;
-        	}
+			lappend outputlist $elecmag;
+		}
 
-        lappend outputlist $totforce;
+        lappend outputlist $totmag;
     }
 
 	# Formatting Output
