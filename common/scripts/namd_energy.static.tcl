@@ -346,7 +346,7 @@ if { [info exists label_] == 0 || [string trim $label_] eq "" } {
 
 # ensure tmp dir
 file mkdir $tmp_dir;
-set namd_temp_files_prefix [file join $tmp_dir "${out_file_prefix}.namd-temp"]
+set namd_temp_files_prefix [file join $tmp_dir "${out_file_prefix}.namd-temp.${time_start}"]
 
 # gloabl variable for NAMD exit code
 set namd_exit_code 0;
