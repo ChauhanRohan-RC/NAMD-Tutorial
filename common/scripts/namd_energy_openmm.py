@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+# Requirements:
+# => pip packages : numpy, openmm[cuda], mdanalysis
+# => external : catdcd (for chunking DCD to RAM)
+
 # ========================================================================
 # OpenMM and MDAnalysis implementation of NAMD PairInteraction Energy
 # ------------------------------------------------------------------------
-# OPTIMIZED FOR GPU's
+# OPTIMIZED FOR GPU
 # ----------------------
 # => calculate pairinteraction energies from NAMD simulation trajectories with CHARMM force fields
 # => STATIC and DYNAMIC selections, self and cross-interactions
@@ -42,6 +46,7 @@
 import os
 import sys
 
+
 # Helper function to find dcd files in a folder. min_num and max_num are both inclusive
 def find_files(dir_path, prefix, suffix, min_num=None, max_num=None, sort_natural=True, return_abs_path=False):
     import re; from pathlib import Path
@@ -78,7 +83,7 @@ RAM_READER_COUNT: int = 2            # Concurrent readers for RAM chunks. Auto-d
 # --------------------------------------------------------------------
 # INPUT
 # --------------------------------------------------------------------
-PARAM_FILES = [
+CHARMM_PARAM_FILES = [
     "../../common/ff/par_all36m_prot.prm",
     "../../common/ff/toppar_water_ions.prot.str"
 ]
@@ -158,6 +163,7 @@ QUEUE_FRAME_COUNT = 50                # Size of the Zero-Copy Shared Memory Ring
 RAM_CHUNK_DYNAMIC: bool = True        # Automatically shrink chunk if RAM is constrained
 RAM_CHUNK_FRAMES: int = 10000         # Max frames per chunk
 RAM_CHUNK_MIN_FRAMES: int = 2000      # Fallback to disk streaming if chunks cannot meet this size
+RAM_CHUNK_QUEUE_SIZE: int = 4         # Max num of chunks that may be loaded to RAM at once
 
 RAM_SAFETY_MARGIN_GB = 1.0            # Base free RAM margin required (GiB)
 RAM_EXTRA_MARGIN_GB = 0.1             # Extra buffer headroom (GiB)
@@ -209,24 +215,33 @@ BLUE = "\033[94m"
 MAGENTA = "\033[95m"
 CYAN = "\033[96m"
 
-def log_info(msg): print(f"{GREEN}[INFO]{NOCOL} {msg}")
-
-def log_debug(msg):
-    if DEBUG: print(f"{CYAN}[DEBUG]{NOCOL} {msg}")
-
-
-def log_warn(msg, exc=None):
+def print_exc_trace(exc):
     if exc is not None:
         import traceback
         traceback.print_exception(exc)
-    print(f"{YELLOW}[WARN]{NOCOL} {msg}")
+
+def flush_stdout(): sys.stdout.flush()
 
 
-def log_error(msg, exc=None):
-    if exc is not None:
-        import traceback
-        traceback.print_exception(exc)
-    print(f"{RED}[ERROR]{NOCOL} {msg}")
+def log(tag: str, msg: str, tag_color=BLUE, flush=True): print(f"{tag_color}[{tag}]{NOCOL} {msg}", flush=flush)
+
+
+def log_info(msg, flush=True): print(f"{GREEN}[INFO]{NOCOL} {msg}", flush=flush)
+
+
+def log_debug(msg, exc=None, flush=True):
+    if DEBUG:
+        print_exc_trace(exc)
+        print(f"{MAGENTA}[DEBUG]{NOCOL} {msg}", flush=flush)
+
+def log_warn(msg, exc=None, flush=True):
+    print_exc_trace(exc)
+    print(f"{YELLOW}[WARN]{NOCOL} {msg}", flush=flush)
+
+
+def log_error(msg, exc=None, flush=True):
+    print_exc_trace(exc)
+    print(f"{RED}[ERROR]{NOCOL} {msg}", flush=flush)
     sys.exit(1)
 
 
@@ -273,7 +288,7 @@ if USE_GPU and NUM_COMPUTE_WORKERS == 1:
 SYS_CORES = os.cpu_count() or 4
 actual_ram_reader_count = max(min(RAM_READER_COUNT, SYS_CORES - 1), 1) if RAM_LOAD_ENABLED else 1
 if actual_ram_reader_count != RAM_READER_COUNT:
-    log_warn(f"RAM READER COUNT: Changed from {RAM_READER_COUNT} => {actual_ram_reader_count} due to system limits")
+    log_warn(f"RAM READER COUNT: Changed from {RAM_READER_COUNT} => {actual_ram_reader_count}")
 
 # OpenMM Thread allocator (CPU only)
 openmm_alloc_mode = "Smart Auto"
@@ -321,6 +336,7 @@ if __name__ == '__main__':
     log_info(f" => Readers     : {f'{actual_ram_reader_count} (RAM cached mode) |' if RAM_LOAD_ENABLED else ''} 1 (DISK stream)")
     log_info(f" => CPU Threads : {assigned_mda_threads}/reader ({mda_alloc_mode})  [OMP_NUM_THREADS]")
     print("-" * 60)
+    flush_stdout()
 # ---------------------------------------------------------------------
 
 # Imports (must be after thread allocation)
@@ -334,17 +350,11 @@ import shutil
 import signal
 import atexit
 import threading
-
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, Future
 from itertools import chain
 import subprocess
 import numpy as np
-import openmm as mm
-from openmm import app, unit
-
-import warnings
-warnings.filterwarnings("ignore", message=r".*DCDReader currently makes independent timesteps.*")
-import MDAnalysis as mda
-
 import multiprocessing as mp
 try:
     # Force 'fork' to prevent catastrophic script re-execution on macOS/Windows spawn defaults
@@ -352,6 +362,15 @@ try:
 except Exception:
     pass
 from multiprocessing import shared_memory
+
+# OpenMM main import
+import openmm as mm
+from openmm import app, unit
+
+# MDAnalysis import
+import MDAnalysis as mda
+import warnings
+warnings.filterwarnings("ignore", message=r".*DCDReader currently makes independent timesteps.*")
 
 
 
@@ -386,8 +405,7 @@ class FastDynamicSelector:
         match = pattern.match(selection_string.strip())
 
         if not match:
-            raise ValueError(
-                f"Could not parse dynamic selection: '{selection_string}'. Expected format: '<base_sel> and [not] around <distance> <ref_sel>'")
+            raise ValueError(f"Could not parse dynamic selection: '{selection_string}'. Expected format: '<base_sel> and [not] around <distance> <ref_sel>'")
 
         base_str, not_str, dist_str, ref_str = match.groups()
 
@@ -399,8 +417,7 @@ class FastDynamicSelector:
         if not self.ref_sel_str:
             raise ValueError("Reference selection missing in 'around' clause.")
 
-        log_debug(
-            f"FastDynamicSelector parsed: Base='{self.base_sel_str}', Invert={self.invert}, Cutoff={self.cutoff}A, Ref='{self.ref_sel_str}'")
+        log_debug(f"FastDynamicSelector parsed: Base='{self.base_sel_str}', Invert={self.invert}, Cutoff={self.cutoff}A, Ref='{self.ref_sel_str}'")
 
         # Extract permanent indices at frame 0
         base_ag = universe.select_atoms(self.base_sel_str)
@@ -432,8 +449,7 @@ class FastDynamicSelector:
             else:
                 use_scipy = False
                 if not self._triclinic_warned:
-                    log_warn(
-                        "Triclinic box detected! SciPy cKDTree requires orthogonal boxes. Falling back to MDAnalysis capped_distance (Slower).")
+                    log_warn("Triclinic box detected! SciPy cKDTree requires orthogonal boxes. Falling back to MDAnalysis capped_distance (Slower).")
                     self._triclinic_warned = True
 
         if use_scipy:
@@ -508,7 +524,7 @@ class SharedFrameBuffer:
 
     ----------------------
     => [Consumer process]
-     ----------------------
+    ----------------------
     while not shutdown_event.is_set():
         try:
             slot_idx = shm_buffer.ready_slots.get(timeout=1.0)
@@ -869,38 +885,58 @@ t_ram_load_total = 0.0
 t_compute_total = 0.0
 t_io_wait_total = 0.0
 
+# ACTIONS
+ACTION_REGISTER_RAM_FILE = "register_ram_file"
+ACTION_UNREGISTER_RAM_FILE = "unregister_ram_file"
+ACTION_ADD_RAM_LOAD_TIME = "add_ram_load_time"
+
 # --------------------------------------------------------------------
 # Cleanup Handlers
 # --------------------------------------------------------------------
-def register_ram_file(filepath):
+
+def try_delete_file_nothrow(filepath) -> bool:
+    if not os.path.exists(filepath):
+        return True
+    try:
+        os.remove(filepath)
+        return True
+    except Exception: pass
+    return False
+
+def __remove_ram_file_internal(filepath):
+    if not os.path.exists(filepath): return
+    try:
+        os.remove(filepath)
+        log_debug(f"RAM DISK: REMOVED file '{filepath}'")
+    except Exception as e:
+        log_debug(f"RAM DISK: FAILED to remove file '{filepath}'. Error: {e}", e)
+
+
+# MUST ONLY BE CALLED FROM MAIN-PROCESS. USE ACTION QUEUE OTHERWISE
+# action_queue.put((ACTION_REGISTER_RAM_FILE, filepath))
+def __register_ram_file(filepath):
     with RAM_FILES_LOCK: ACTIVE_RAM_FILES.add(filepath)
 
 
-def unregister_ram_file(filepath):
+# MUST ONLY BE CALLED FROM MAIN-PROCESS. USE ACTION QUEUE OTHERWISE
+# action_queue.put((ACTION_UNREGISTER_RAM_FILE, filepath))
+def __unregister_ram_file(filepath):
     with RAM_FILES_LOCK:
-        if filepath in ACTIVE_RAM_FILES:
-            ACTIVE_RAM_FILES.remove(filepath)
-            if os.path.exists(filepath):
-                try:
-                    log_debug(f"Removing file from RAM DISK: {filepath}")
-                    os.remove(filepath)
-                except:
-                    pass
+        if filepath not in ACTIVE_RAM_FILES:
+            return
+        ACTIVE_RAM_FILES.discard(filepath)
+        __remove_ram_file_internal(filepath)
 
 
 def cleanup_ramdisk():
     with RAM_FILES_LOCK:
         if len(ACTIVE_RAM_FILES) == 0: return
 
-        log_info(f"Cleaning up RAM disk {RAM_DISK_PATH}")
-        for f in list(ACTIVE_RAM_FILES):
-            if os.path.exists(f):
-                try:
-                    log_debug(f"Removing file from RAM DISK: {f}")
-                    os.remove(f)
-                except:
-                    pass
-            ACTIVE_RAM_FILES.remove(f)
+        log_info(f"RAM DISK: Cleaning up RAM disk '{RAM_DISK_PATH}'")
+        ram_files = ACTIVE_RAM_FILES.copy()
+        for f in ram_files:
+            ACTIVE_RAM_FILES.discard(f)
+            __remove_ram_file_internal(f)
 
 
 def cleanup():
@@ -932,7 +968,7 @@ def handle_exit():
     print("")
     log_info(f"Exiting...")
     cleanup()
-    print("")
+    print("", flush=True)
 
 def handle_os_signal(signum, frame):
     global SHUTDOWN_REQUESTED
@@ -953,6 +989,24 @@ def handle_os_signal(signum, frame):
 # VALIDATION AND PRECONDITIONS
 # =============================================================================
 log_info(f"Starting Pair Interaction Analysis ({LABEL})")
+
+
+def check_files(file_paths: str | list[str], display_name: str):
+    if isinstance(file_paths, str):
+        file_paths = [file_paths]
+
+    if len(file_paths) == 0:
+        log_error(f"NO {display_name} supplied")
+    else:
+        for fp in file_paths:
+            if not os.path.isfile(fp):
+                log_error(f"{display_name} not found: \"{fp}\"")
+
+
+check_files(PSF_FILE, "STRUCTURE FILE")
+check_files(DCD_FILES, "DCD FILE")
+check_files(CHARMM_PARAM_FILES, "PARAMETER FILE")
+
 if not SELECTION1.strip():
     log_error("SELECTION1 cannot be empty. Please define a valid atom selection.")
 
@@ -1031,7 +1085,7 @@ if len(final_erg_components) == 0:
 # =============================================================================
 log_info("Parsing Topology and Forcefield...")
 psf = app.CharmmPsfFile(PSF_FILE)
-params = app.CharmmParameterSet(*PARAM_FILES)
+params = app.CharmmParameterSet(*CHARMM_PARAM_FILES)
 
 if PERIODIC:
     psf.setBox(10.0 * unit.nanometers, 10.0 * unit.nanometers, 10.0 * unit.nanometers)
@@ -1133,8 +1187,12 @@ for f in base_system.getForces():
 # ------------------------------------------------------------------------
 if __name__ == '__main__':
     print("\n------------------------------------------------------")
-    print(" SYSTEM INFORMATION ")
+    log_info(" SYSTEM INFORMATION ")
     print("------------------------------------------------------")
+    log_info(f"PARAM Files  : {len(CHARMM_PARAM_FILES)} {CHARMM_PARAM_FILES}")
+    log_info(f"Structure    : {PSF_FILE}")
+    log_info(f"DCD Files    : {len(DCD_FILES)} {DCD_FILES}")
+    print("-----------------")
     log_info(f"TOTAL ATOM COUNT: {N_ATOMS}")
     log_info(f"SELECTION-1  : \"{SELECTION1}\" (atom count at frame 0: {len(static_sel1_idx_set)})")
     log_info(f"UPDATE SEL-1 : {'ON' if UPDATE_SELECTION1 else 'OFF'}")
@@ -1147,6 +1205,7 @@ if __name__ == '__main__':
     if FRAME_STEP > 1:
         log_info(f"FRAME_STEP   : {FRAME_STEP}")
     print("------------------------------------------------------\n")
+    flush_stdout()
 
 # ------------------------------------------------------------------------
 # VDW and ELECTRIC Force definition
@@ -1578,11 +1637,11 @@ active_fetches = [(1 << force_group_map[c], comp_idx[c]) for c in final_erg_comp
 # =============================================================================
 # BACKGROUND PRODUCER PIPELINE
 # =============================================================================
-def parallel_reader_worker(id, shm_buffer: SharedFrameBuffer,
-                           psf: str, dcd: str,
-                           start: int, stop: int, step: int,
-                           global_offset: int,
-                           shutdown_event: mp.Event):
+def parallel_reader_worker_blocking(id, shm_buffer: SharedFrameBuffer,
+                                    psf: str, dcd: str,
+                                    start: int, stop: int, step: int,
+                                    global_offset: int,
+                                    shutdown_event: mp.Event):
     u, sel1, sel2 = None, None, None
     try:
         u = mda.Universe(psf, dcd)
@@ -1651,7 +1710,7 @@ def parallel_reader_worker(id, shm_buffer: SharedFrameBuffer,
                 t_prog_now = time.perf_counter()
                 read_fps = PROGRESS_REPORT_INTERVAL_FRAMES / max(0.001, t_prog_now - t_last_prog_report)
                 read_ms_per_frame = (1 / max(read_fps, 0.001)) * 1000
-                log_info(f"FRAME READER {id}: Speed: {read_fps:.1f} fps  ({read_ms_per_frame:.2f} ms/frame)" + (f"  {RED}[FRAME BUFFER FULL]{NOCOL}" if shm_buffer.is_full() else ""))
+                log(tag=f"FRAME READER {id}", msg=f"Speed: {read_fps:.1f} fps ({read_ms_per_frame:.2f} ms/frame)" + (f" {RED}[FRAME BUFFER FULL]{NOCOL}" if shm_buffer.is_full() else ""))
                 next_prog_report_frame += PROGRESS_REPORT_INTERVAL_FRAMES
                 t_last_prog_report = t_prog_now
     finally:
@@ -1665,65 +1724,20 @@ def parallel_reader_worker(id, shm_buffer: SharedFrameBuffer,
         gc.collect()
 
 
-def catdcd_chunk_loader(dcd_file: str, total_frames: int, chunk_frames: int, chunks_queue: queue.Queue, shutdown_event: mp.Event):
-    global t_ram_load_total
-    file_size = os.path.getsize(dcd_file)
-    bytes_per_frame = file_size / total_frames if total_frames > 0 else 0
-    frames_remaining = total_frames
-    current_start = 1
-    base_name = os.path.splitext(os.path.basename(dcd_file))[0]
-
-    while frames_remaining > 0 and not shutdown_event.is_set():
-        this_chunk_frames = min(chunk_frames, frames_remaining)
-        current_last = current_start + this_chunk_frames - 1
-        est_bytes = this_chunk_frames * bytes_per_frame
-        margin_bytes = (RAM_SAFETY_MARGIN_GB + RAM_EXTRA_MARGIN_GB) * 1024 ** 3
-
-        while not shutdown_event.is_set():
-            free_space = shutil.disk_usage(RAM_DISK_PATH).free
-            if free_space > (est_bytes + margin_bytes): break
-            time.sleep(1.0)
-
-        if shutdown_event.is_set(): break
-
-        unique_suffix = uuid.uuid4().hex[:8]
-        temp_name = os.path.join(RAM_DISK_PATH, f"{base_name}_chunk_{unique_suffix}.dcd")
-        cmd = ["catdcd", "-o", temp_name, "-first", str(current_start), "-last", str(current_last), dcd_file]
-
-        log_info(f"LOADER 2 RAM CHUNKING: Extracting frames {current_start}-{current_last} via catdcd to RAM...")
-        t0 = time.perf_counter()
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-        while proc.poll() is None:
-            if shutdown_event.is_set():
-                proc.terminate()
-                break
-            time.sleep(0.5)
-
-        if shutdown_event.is_set():
-            if os.path.exists(temp_name): os.remove(temp_name)
-            break
-
-        if proc.returncode == 0:
-            t_ram_load_total += (time.perf_counter() - t0)
-            register_ram_file(temp_name)
-            chunks_queue.put((temp_name, this_chunk_frames))
-        else:
-            log_error(f"LOADER 2: catdcd subprocess failed with return code: {proc.returncode}")
-
-        frames_remaining -= this_chunk_frames
-        current_start += this_chunk_frames
-
-    chunks_queue.put(None)
-
-
 def disk_stream_blocking(shm_buffer: SharedFrameBuffer, dcd_file: str, total_frames: int, global_frame_offset: int, shutdown_event: mp.Event):
-    parallel_reader_worker(1, shm_buffer, PSF_FILE, dcd_file, 0, total_frames, FRAME_STEP, global_frame_offset,
-                           shutdown_event)
+    parallel_reader_worker_blocking(1, shm_buffer, PSF_FILE, dcd_file, 0, total_frames, FRAME_STEP, global_frame_offset, shutdown_event)
 
 
-def ramdisk_read_blocking(shm_buffer: SharedFrameBuffer, temp_dcd: str, num_frames: int, global_frame_offset: int, shutdown_event: mp.Event):
-    threads = []
+def ramdisk_read(reader_idx: int, executor: ThreadPoolExecutor,
+                 shm_buffer: SharedFrameBuffer,
+                 temp_dcd: str, num_frames: int, global_frame_offset: int,
+                 shutdown_event: mp.Event, block: bool) -> list[Future] | None:
+    """
+    In blocking mode, we wait for all reader threads to finish,  and return None
+
+    @returns: if block=False, list of threads spawned. Else, blocks and returns None
+    """
+    futures: list[Future] = []
 
     # dynamically reduce ram readers for efficiency
     reader_count = actual_ram_reader_count
@@ -1738,26 +1752,131 @@ def ramdisk_read_blocking(shm_buffer: SharedFrameBuffer, temp_dcd: str, num_fram
         start = i * c_size
         stop = min((i + 1) * c_size, num_frames)
         if start >= stop: continue
-        t = threading.Thread(target=parallel_reader_worker,
-                             args=(i+1, shm_buffer, PSF_FILE, temp_dcd, start, stop, FRAME_STEP, global_frame_offset,
-                                   shutdown_event))
-        t.daemon = True
-        threads.append(t)
-        t.start()
 
-    for t in threads: t.join()
+        fut = executor.submit(parallel_reader_worker_blocking, reader_idx + i + 1,
+                              shm_buffer, PSF_FILE, temp_dcd,
+                              start, stop, FRAME_STEP,
+                              global_frame_offset, shutdown_event)
+        futures.append(fut)
+
+    if block:
+        concurrent.futures.wait(futures)
+        return None
+    return futures
 
 
-def master_producer(shm_buffer: SharedFrameBuffer, shutdown_event: mp.Event):
-    global t_ram_load_total
+def catdcd_chunk_loader(dcd_file: str, total_frames: int, chunk_frames: int, chunks_queue: queue.Queue, action_queue: mp.Queue, shutdown_event: mp.Event):
+    file_size = os.path.getsize(dcd_file)
+    bytes_per_frame = file_size / total_frames if total_frames > 0 else 0
+    frames_remaining = total_frames
+    current_start = 1
+    base_name = os.path.basename(dcd_file)
+    base_name_noext = os.path.splitext(base_name)[0]
+    chunk_count = 1
 
+    while frames_remaining > 0 and not shutdown_event.is_set():
+        this_chunk_frames = min(chunk_frames, frames_remaining)
+        current_last = current_start + this_chunk_frames - 1
+        est_bytes = this_chunk_frames * bytes_per_frame
+        margin_bytes = (RAM_SAFETY_MARGIN_GB + RAM_EXTRA_MARGIN_GB) * 1024 ** 3
+
+        # Wait to free the RAM
+        space_warned = False
+        while not shutdown_event.is_set():
+            free_space = shutil.disk_usage(RAM_DISK_PATH).free
+            if free_space > (est_bytes + margin_bytes):
+                if space_warned:
+                    log_info(f"{GREEN}RAM CHUNKING RESUMED [CHUNK {chunk_count}]{NOCOL}: RAM DIsk ({RAM_DISK_PATH}) now has enough free space ({free_space/(1024**3):.2f} GiB)")
+                break
+            if not space_warned:
+                log_warn(f"{YELLOW}RAM CHUNKING PAUSED [CHUNK {chunk_count}]{NOCOL}: Not enough space in RAM DIsk ({RAM_DISK_PATH}). Waiting for RAM to clear...\n "
+                         f"    [RAM DISK] Free: {free_space/(1024**3):.2f} GiB  |  "
+                         f"Required: {est_bytes + margin_bytes/(1024**3):.2f} GiB (Safety Margin: {margin_bytes/(1024**3):.2f} GiB)")
+                space_warned = True
+            time.sleep(1.0)
+
+        if shutdown_event.is_set(): break
+
+        unique_suffix = uuid.uuid4().hex[:8]
+        temp_chunk_name = f"{base_name_noext}.chunk-{chunk_count}.uuid-{unique_suffix}.dcd"
+        temp_chunk_path = os.path.join(RAM_DISK_PATH, temp_chunk_name)
+        cmd = ["catdcd", "-o", temp_chunk_path, "-first", str(current_start), "-last", str(current_last), dcd_file]
+
+        log(tag=f"CHUNK {chunk_count}", msg=f"{MAGENTA}LOADING: Frames [{current_start}, {current_last}]{NOCOL} to RAM (via catdcd) ...")
+        t0 = time.perf_counter()
+
+        action_queue.put((ACTION_REGISTER_RAM_FILE, temp_chunk_path))      # Pre-register for safety
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # Waiting for catdcd process: Sequential chunk load
+        while proc.poll() is None:
+            if shutdown_event.is_set():
+                proc.terminate()
+                break
+            time.sleep(0.5)
+
+        if shutdown_event.is_set(): break
+
+        if proc.returncode == 0:
+            t_taken = time.perf_counter() - t0
+            action_queue.put((ACTION_ADD_RAM_LOAD_TIME, t_taken))   # RAM LOAD TIME
+
+            # Output to main queue
+            chunks_queue.put((temp_chunk_path, this_chunk_frames))
+
+            # Stats
+            chunk_fps = this_chunk_frames / max(t_taken, 0.0001)
+            mib_ps = chunk_fps * bytes_per_frame / (1024 * 1024)
+            log(tag=f"CHUNK {chunk_count}", msg=f"{MAGENTA}LOADED : Frames [{current_start}, {current_last}]{NOCOL}  |  Time Taken: {t_taken:.1f} s  |  Speed: {chunk_fps:.1f} fps (~{mib_ps:.1f} MiB/s)")
+            # log_debug(f" => CHUNK FILE: {temp_name}")
+        else:
+            log_error(f"{RED}CATDCD FAILED [CHUNK {chunk_count}]{NOCOL}: Subprocess exited with return code: {proc.returncode}")
+
+        chunk_count += 1
+        frames_remaining -= this_chunk_frames
+        current_start += this_chunk_frames
+
+    chunks_queue.put(None)
+
+
+def master_producer_process(shm_buffer: SharedFrameBuffer, action_queue: mp.Queue, shutdown_event: mp.Event):
+    global_frame_offset = 0
+
+    ram_reader_tpool: ThreadPoolExecutor | None = None  # init on demand
+    ramdisk_read_futures = []       # all ramdisk_read futures
+    ram_reader_count = 0
+
+    # HELPER FUNCTIONS -----------------------------------------
+    def create_ram_reader_th_pool():
+        return ThreadPoolExecutor(max_workers=actual_ram_reader_count + 1)      # +1 so we can start reading next chunk
+
+    def _local_unregister_ram_file(filepath: str, delete: bool = True):
+        if delete: try_delete_file_nothrow(filepath)
+        action_queue.put((ACTION_UNREGISTER_RAM_FILE, filepath))  # Unregister for safety
+
+    def _handle_async_ram_read(dcd_file: str | None, futures: list[Future] | None):
+        if futures is None or len(futures) == 0:
+            if dcd_file: _local_unregister_ram_file(dcd_file)
+            return
+
+        def _worker():
+            concurrent.futures.wait(futures)
+            if dcd_file: _local_unregister_ram_file(dcd_file)
+
+        ramdisk_read_futures.extend(futures)
+        # start waiting thread to wait on these specific futures, and delete this file as soon as finished
+        threading.Thread(target=_worker).start()
+
+    # ---------------------------------------------------------
+    # MAIN BLOCK
+    # ---------------------------------------------------------
     try:
-        global_frame_offset = 0
         for dcd_file in DCD_FILES:
             if shutdown_event.is_set():
                 break
 
-            base_name = os.path.splitext(os.path.basename(dcd_file))[0]
+            base_name = os.path.basename(dcd_file)
+            base_name_noext = os.path.splitext(base_name)[0]
 
             # Find num frames from mda.Universe
             u_temp = mda.Universe(PSF_FILE, dcd_file)
@@ -1770,7 +1889,7 @@ def master_producer(shm_buffer: SharedFrameBuffer, shutdown_event: mp.Event):
 
             # Logic for determining Loader Strategy
             if not RAM_LOAD_ENABLED:
-                log_info(f"LOADER 0 DISK STREAM: RAM Loading Disabled. Streaming {base_name} from Disk...")
+                log_info(f"DISK STREAM: Streaming {CYAN}{base_name}{NOCOL} from Disk (RAM Loading Disabled) ...")
                 disk_stream_blocking(shm_buffer, dcd_file, total_frames, global_frame_offset, shutdown_event)
                 global_frame_offset += total_frames
                 continue
@@ -1784,17 +1903,27 @@ def master_producer(shm_buffer: SharedFrameBuffer, shutdown_event: mp.Event):
             # RAM direct copy mode
             if not RAM_CHUNK_MODE or total_frames <= RAM_CHUNK_FRAMES:
                 if file_fits:
-                    log_info(f"LOADER 1 FULL RAM LOAD: Loading entire {os.path.basename(dcd_file)} file to RAM ...")
-                    temp_dcd = os.path.join(RAM_DISK_PATH, f"{base_name}_copy_{uuid.uuid4().hex[:8]}.dcd")
+                    log_info(f"RAM LOAD: START loading {CYAN}{base_name}{NOCOL} file to RAM ...")
+                    temp_dcd = os.path.join(RAM_DISK_PATH, f"{base_name_noext}_copy_{uuid.uuid4().hex[:8]}.dcd")
+                    fbytes = os.path.getsize(dcd_file)
                     t0 = time.perf_counter()
-                    shutil.copy2(dcd_file, temp_dcd)
-                    t_ram_load_total += (time.perf_counter() - t0)
 
-                    register_ram_file(temp_dcd)
-                    ramdisk_read_blocking(shm_buffer, temp_dcd, total_frames, global_frame_offset, shutdown_event)
-                    unregister_ram_file(temp_dcd)
+                    action_queue.put((ACTION_REGISTER_RAM_FILE, temp_dcd))      # Pre-register for safety
+                    shutil.copy2(dcd_file, temp_dcd)
+
+                    t_taken = time.perf_counter() - t0
+                    action_queue.put((ACTION_ADD_RAM_LOAD_TIME, t_taken))  # RAM LOAD TIME
+                    mib_ps = (fbytes / max(t_taken, 0.001)) / (1024*1024)
+                    log_info(f"RAM LOAD:  DONE Loading {CYAN}{base_name}{NOCOL}  |  Time: {t_taken:.1f} s  |  Speed: {mib_ps:.1f} MiB/s")
+                    if ram_reader_tpool is None:
+                        ram_reader_tpool = create_ram_reader_th_pool()
+                    ramdisk_read(ram_reader_count, ram_reader_tpool,
+                                 shm_buffer, temp_dcd, total_frames,
+                                 global_frame_offset, shutdown_event, block=True)
+                    ram_reader_count += 1
+                    _local_unregister_ram_file(temp_dcd)
                 elif not RAM_CHUNK_MODE:
-                    log_warn( f"[LOADER 0] DISK STREAM: Insufficient RAM for direct copy of {os.path.basename(dcd_file)}. Falling back to disk streaming.")
+                    log_warn( f"DISK STREAM FALLBACK: Insufficient RAM for direct copy of {CYAN}{base_name}{NOCOL}. Falling back to disk streaming.")
                     disk_stream_blocking(shm_buffer, dcd_file, total_frames, global_frame_offset, shutdown_event)
 
                 global_frame_offset += total_frames
@@ -1806,58 +1935,70 @@ def master_producer(shm_buffer: SharedFrameBuffer, shutdown_event: mp.Event):
 
             if free_space < two_chunk_bytes:
                 if not RAM_CHUNK_DYNAMIC:
-                    log_warn(f"LOADER 2: Falling back to DISK STREAM. Insufficient RAM and Dynamic Chunking is disabled. Streaming from disk: {os.path.basename(dcd_file)}")
+                    log_warn(f"DISK STREAM FALLBACK: Insufficient RAM and Dynamic Chunking is disabled. Streaming from disk: {CYAN}{base_name}{NOCOL}")
                     disk_stream_blocking(shm_buffer, dcd_file, total_frames, global_frame_offset, shutdown_event)
                     global_frame_offset += total_frames
                     continue
 
-                log_warn(f"LOADER 2 LOW RAM: Cannot fit 2 default chunks ({active_chunk_frames} frames each).")
+                log_warn(f"LOW RAM: Cannot fit 2 default chunks ({active_chunk_frames} frames each) to RAM")
                 available_for_chunks = free_space - margin_bytes
                 resized_frames = int(available_for_chunks / (2 * bytes_per_frame)) if available_for_chunks > 0 else 0
 
                 if resized_frames < RAM_CHUNK_MIN_FRAMES:
-                    log_warn(f"LOADER 2: Dynamic chunk size ({resized_frames}) below MIN_CHUNK_FRAMES ({RAM_CHUNK_MIN_FRAMES}).")
-                    log_warn(f"LOADER 2: Falling back to Disk Streaming for {os.path.basename(dcd_file)}.")
+                    log_warn(f"FAILED DYNAMIC CHUNK SIZE: Dynamic chunk size ({resized_frames}) below MIN_CHUNK_FRAMES ({RAM_CHUNK_MIN_FRAMES}).")
+                    log_warn(f"DISK STREAM FALLBACK: Falling back to Disk Streaming for {CYAN}{base_name}{NOCOL}.")
                     disk_stream_blocking(shm_buffer, dcd_file, total_frames, global_frame_offset, shutdown_event)
                     global_frame_offset += total_frames
                     continue
 
                 active_chunk_frames = resized_frames
-                log_info(f"LOADER 2: DYNAMIC CHUNK SIZING: Reduced chunk size to {active_chunk_frames} frames.")
+                log_info(f"DYNAMIC CHUNK SIZING: Reduced chunk size to {active_chunk_frames} frames.")
 
-            log_info(f"LOADER 2: catdcd Chunking with {active_chunk_frames} frames/chunk)")
-            q_chunks = queue.Queue(maxsize=2)
+            log_info(f"CHUNKING TO RAM: {CYAN}{base_name}{NOCOL} with {active_chunk_frames} frames/chunk")
+            chunks_queue = queue.Queue(maxsize=RAM_CHUNK_QUEUE_SIZE)
             chunk_mgr_thread = threading.Thread(target=catdcd_chunk_loader,
-                                                args=(
-                                                dcd_file, total_frames, active_chunk_frames, q_chunks, shutdown_event))
+                                                args=(dcd_file, total_frames, active_chunk_frames, chunks_queue, action_queue, shutdown_event))
             chunk_mgr_thread.daemon = True
             chunk_mgr_thread.start()
 
             chunk_frame_offset = 0
             while not shutdown_event.is_set():
-                chunk_data = q_chunks.get()
+                chunk_data = chunks_queue.get()
                 if chunk_data is None: break
                 temp_dcd, n_frames = chunk_data
 
-                ramdisk_read_blocking(shm_buffer, temp_dcd, n_frames, global_frame_offset + chunk_frame_offset,
-                                      shutdown_event)
+                if ram_reader_tpool is None:
+                    ram_reader_tpool = create_ram_reader_th_pool()
+                _futs = ramdisk_read(ram_reader_count, ram_reader_tpool,
+                                             shm_buffer, temp_dcd, n_frames,
+                                             global_frame_offset + chunk_frame_offset,
+                                             shutdown_event, block=False)
+                ram_reader_count += 1
+                _handle_async_ram_read(temp_dcd, _futs)
+                # _local_unregister_ram_file(temp_dcd)
                 chunk_frame_offset += n_frames
-                unregister_ram_file(temp_dcd)
 
             chunk_mgr_thread.join()
             global_frame_offset += total_frames
+        # ----------------------------------------------------------------------------------
+
+        # All frames loaded to RAM/streamed to disk
+        # Wait for ramdisk_read workers to finsh
+        concurrent.futures.wait(ramdisk_read_futures)
 
     except Exception as exc:
         shutdown_event.set()
         log_error(f"Producer thread crashed: {exc}", exc)
     finally:
+        # shutdown ram reader pool
+        if isinstance(ram_reader_tpool, ThreadPoolExecutor):
+            try: ram_reader_tpool.shutdown(wait=True)
+            except Exception: pass
+
         # Push EOF termination tokens downstream to gracefully halt all Compute Workers
         for _ in range(NUM_COMPUTE_WORKERS):
-            try:
-                shm_buffer.ready_slots.put(None, timeout=1.0)
-            except Exception:
-                pass
-
+            try: shm_buffer.ready_slots.put(None, timeout=1.0)
+            except Exception: pass
 
 
 # =============================================================================
@@ -1872,7 +2013,7 @@ def create_comments_str() -> str:
         f"------------------------------------------------",
         f"=========   {LABEL}    ========",
         f"------------------------------------------------",
-        f"PARAM File(s): {PARAM_FILES}",
+        f"PARAM File(s): {CHARMM_PARAM_FILES}",
         f"PSF File     : {PSF_FILE}",
         f"DCD File(s)  : {DCD_FILES}",
         f"TOTAL Atom Count: {N_ATOMS}",
@@ -2317,6 +2458,29 @@ def _on_index_streamer_post_chunk_write(chunk_index: int, chunk_size: int):
 
 
 # -----------------------------------------------------------------------------
+# ACTION QUEUE Processing
+# -----------------------------------------------------------------------------
+def handle_action_queue_main_proc(action_queue: mp.Queue, block: bool = False, timeout: float = None):
+    global t_ram_load_total
+
+    while not shutdown_event.is_set():
+        try:
+            msg = action_queue.get(block=block, timeout=timeout)
+            if msg is None:
+                return
+
+            if isinstance(msg, (tuple, list)):
+                action_code = msg[0]
+                if action_code == ACTION_REGISTER_RAM_FILE:
+                    __register_ram_file(msg[1])
+                elif action_code == ACTION_UNREGISTER_RAM_FILE:
+                    __unregister_ram_file(msg[1])
+                elif action_code == ACTION_ADD_RAM_LOAD_TIME:
+                    t_ram_load_total += msg[1]
+        except queue.Empty:
+            return
+
+# -----------------------------------------------------------------------------
 # META-DATA Processing (Returned by Workers at the end)
 # -----------------------------------------------------------------------------
 def process_worker_meta_data(meta_q: mp.Queue) -> np.ndarray | None:
@@ -2347,13 +2511,16 @@ def process_worker_meta_data(meta_q: mp.Queue) -> np.ndarray | None:
             w_t_total, w_t_init, w_t_compute, w_t_io_wait = w_meta_data
             w_t_compute_active = w_t_compute - w_t_io_wait
 
+            w_io_wait_percent = w_t_io_wait / max(0.001, w_t_compute) * 100
+            w_io_wait_col = RED if w_io_wait_percent >= 20 else YELLOW if w_io_wait_percent >= 10 else GREEN
+
             print("\n" + "-" * 40)
             log_debug(f"WORKER-{w_id} STATS: ")
             print(f" Total Wall Time      : {w_t_total:.1f} s")
-            print(f"   ├─ Initialization  : {w_t_init:.1f} s  ({w_t_init / w_t_total * 100:.2f} %)")
-            print(f"   ├─ Compute Loop    : {w_t_compute:.1f} s  ({w_t_compute / w_t_total * 100:.2f} %)")
-            print(f"        ├─ Active     : {w_t_compute_active:.1f} s  ({w_t_compute_active / max(0.001, w_t_compute) * 100:.2f} %)")
-            print(f"        └─ I/O Wait   : {w_t_io_wait:.1f} s  ({w_t_io_wait / max(0.001, w_t_compute) * 100:.2f} %)")
+            print(f"   ├─ Initialization  : {w_t_init:.1f} s  ({w_t_init / w_t_total * 100:.1f} %)")
+            print(f"   ├─ Compute Loop    : {w_t_compute:.1f} s  ({w_t_compute / w_t_total * 100:.1f} %)")
+            print(f"        ├─ Active     : {w_t_compute_active:.1f} s  ({w_t_compute_active / max(0.001, w_t_compute) * 100:.1f} %)")
+            print(f"        └─ I/O Wait   : {w_io_wait_col}{w_t_io_wait:.1f} s  ({w_io_wait_percent:.1f} %){NOCOL}", flush=True)
             # print("-" * 40)
 
     # Average worker times
@@ -2393,11 +2560,16 @@ if __name__ == '__main__':
         is_creator=True
     )
 
+    ## Queues ----------------------------------------------
+    # ACTION events queue (like register_ram_file, unregister_ram_file.. etc)
+    action_q = mp.Queue()
+
     # Worker energy output queue
     out_erg_q = mp.Queue()
 
     # Worker Meta data queue
     out_meta_q = mp.Queue()
+    # -------------------------------------------------------
 
     log_info(f"Spawning {NUM_COMPUTE_WORKERS} OpenMM Contexts (compute workers)...")
     workers = []
@@ -2408,7 +2580,7 @@ if __name__ == '__main__':
         workers.append(p)
 
     log_info("Starting Background Frame Reader Pipeline...")
-    producer_process = mp.Process(target=master_producer, args=(shm_buffer_main, shutdown_event))
+    producer_process = mp.Process(target=master_producer_process, args=(shm_buffer_main, action_q, shutdown_event))
     producer_process.start()
 
     # ---------------- MAIN THREAD STRING CONSUMER ----------------
@@ -2420,8 +2592,10 @@ if __name__ == '__main__':
     t_last_progress_report = t_compute_start
 
     active_omm_workers = NUM_COMPUTE_WORKERS
-    log_info("Main Process is listening for computed frames...")
+    log_info("Main Process is listening for computed frames...\n")
     while active_omm_workers > 0 and not shutdown_event.is_set():
+        handle_action_queue_main_proc(action_q, block=False)
+
         try:
             # Poll the lightweight string queue
             msg = out_erg_q.get(timeout=1.0)
@@ -2460,7 +2634,7 @@ if __name__ == '__main__':
             q_frames = shm_buffer_main.size()
             q_frames_col = RED if q_frames < 3 else YELLOW if q_frames < 10 else GREEN
 
-            log_info(f"PROGRESS: Processed {frames_processed} frames  |  Speed: {fps_col}{fps_current:.1f} fps{NOCOL}  | Queued Frames: {q_frames_col}{q_frames}{NOCOL}")
+            log(tag="PROGRESS", tag_color=CYAN, msg=f"Processed: {frames_processed} frames  |  Speed: {fps_col}{fps_current:.1f} fps{NOCOL}  | Queued Frames: {q_frames_col}{q_frames}{NOCOL}")
             next_progress_report_frame += PROGRESS_REPORT_INTERVAL_FRAMES
             t_last_progress_report = t_now
 
@@ -2504,7 +2678,7 @@ if __name__ == '__main__':
     print(f" Status               : {status_str}")
     print(f" Frames Processed     : {frames_processed}")
     print(f" Processing Speed     : {avg_fps_col}{avg_fps:.1f} frames/sec{NOCOL} (avg)")
-    print(f" Final Output File    : {CYAN}{out_file_path}{CYAN}")
+    print(f" Final Output File    : {CYAN}{out_file_path}{NOCOL}")
     print(f" Compute Engine       : {OPENMM_PLATFORM_DISPLAY_NAME}")
     print("-" * 60)
     print(f" Total Wall Time      : {t_total:.1f} s")
@@ -2520,5 +2694,4 @@ if __name__ == '__main__':
 
     if avg_fps < 20:
         log_warn("SLOW COMPUTE PERFORMANCE: Make sure USE_GPU is enabled and increase NUM_COMPUTE_WORKERS (OpenMM Contexts)")
-
-    print("")
+    flush_stdout()
