@@ -5,7 +5,6 @@ import argparse
 import traceback
 
 import pandas as pd
-import plotext
 
 
 """
@@ -110,21 +109,31 @@ def plot_data(data_file: str,
 
     # Plot on terminal
     if plot_terminal:
-        plotext.theme("pro")
+        try:
+            import plotext
+        
+            tfig = plotext.figure
+            tfig.theme("pro")
 
-        plotext.plot(x_col, y_col)
-        plotext.xlabel(x_col_label)
-        plotext.ylabel(y_col_label)
+            tsig = tfig.signal(x_col, y_col)
+            tsig.lines()
+            tfig.draw(tsig)
+            tfig.label(x_col_label, y_col_label)
+            
+            tfig.title(title)
 
-        plotext.title(title)
-
-        print("")
-        print_full_line("#")
-        print("")
-        plotext.show()
-        print("")
-        print_full_line("#")
-        print("")
+            print("")
+            print_full_line("#")
+            print("")
+            tfig.show()
+            print("")
+            print_full_line("#")
+            print("")
+        except (ImportError, ModuleNotFoundError) as e:
+            print("ERROR: Could not import plotext. Skipping terminal plot ...")
+        except Exception as exc:
+            print(f"ERROR: Terminal PLot (Plotext) failed with error {exc}")
+            traceback.print_exc()
     else:
         print("LOG: skipping TERMINAL PLOT")
 
@@ -133,36 +142,39 @@ def plot_data(data_file: str,
     try:
         import matplotlib.pyplot as plt
         from matplotlib.figure import figaspect
-    except ImportError:
-        print("ERROR: COuld not import Matplotlib!!")
+        
+        w, h = figaspect(9/16)
+        plt.figure(figsize=(w*1.4, h*1.4))
+
+        plt.plot(x_col, y_col)
+        plt.xlabel(x_col_label)
+        plt.ylabel(y_col_label)
+
+        plt.title(title)
+        plt.minorticks_on()
+        plt.ticklabel_format(axis='both', style='sci')
+        plt.tight_layout()
+
+        ## Save Figure
+        # if is_empty(out_fig_file):
+        #     out_fig_file = os.path.splitext(data_filename)[0] + '.pdf'
+        if not is_empty(out_fig_file):
+            plt.savefig(out_fig_file)
+            print("------------------------------------------------")
+            print(f"=> Output Figure File: {out_fig_file}")
+            print("------------------------------------------------")
+
+        # Interactive Plot
+        if show_interactive_plot:
+            plt.show()
+        else:
+            print("LOG: skipping INTERACTIVE PLOT")
+    except (ImportError, ModuleNotFoundError):
+        print("ERROR: Could not import Matplotlib. Skipping plot...")
         traceback.print_exc()
         return
 
-    w, h = figaspect(9/16)
-    plt.figure(figsize=(w*1.4, h*1.4))
-
-    plt.plot(x_col, y_col)
-    plt.xlabel(x_col_label)
-    plt.ylabel(y_col_label)
-
-    plt.title(title)
-    plt.minorticks_on()
-    plt.ticklabel_format(axis='both', style='sci')
-
-    ## Save Figure
-    # if is_empty(out_fig_file):
-    #     out_fig_file = os.path.splitext(data_filename)[0] + '.pdf'
-    if not is_empty(out_fig_file):
-        plt.savefig(out_fig_file)
-        print("------------------------------------------------")
-        print(f"=> Output Figure File: {out_fig_file}")
-        print("------------------------------------------------")
-
-    # Interactive Plot
-    if show_interactive_plot:
-        plt.show()
-    else:
-        print("LOG: skipping INTERACTIVE PLOT")
+    
 
 
 if __name__ == "__main__":
