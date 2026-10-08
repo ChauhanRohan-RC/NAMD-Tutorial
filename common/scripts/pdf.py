@@ -248,36 +248,44 @@ if plot_in_terminal:
             # Handle cases where terminal size cannot be determined (e.g., not in a TTY)
             #print("Unable to determine terminal size. Printing a default line.")
             print(char * 80)  # Print a line of 80 characters as a fallback
+            
+    try:
+        import plotext
+        tfig = plotext.figure
+        tfig.theme("pro")
+        tfig.limit_size(True, False)
+        tfig.plot_size(plotext.terminal_width(), plotext.terminal_height() * 1.6)
+        tfig.subplots(2,1)
 
-    plotext.theme("pro")
-    plotext.limit_size(True, False)
-    plotext.plot_size(plotext.terminal_width(), plotext.terminal_height() * 1.6)
-    plotext.subplots(2,1)
+        # A input data plot on terminal
+        tfig.subplot(1,1)
+        tfig.plot(df[col_name_x], df[col_name_y])
+        tfig.title(f"{plot_label_y} vs {plot_label_x}")
+        tfig.label(plot_label_x, plot_label_y)
 
-    # A input data plot on terminal
-    plotext.subplot(1,1)
-    plotext.plot(df[col_name_x], df[col_name_y])
-    plotext.title(f"{plot_label_y} vs {plot_label_x}")
-    plotext.xlabel(plot_label_x)
-    plotext.ylabel(plot_label_y)
+        # A basic Histogram plot on terminal
+        tfig.subplot(2, 1)
+        tfig.hist(df[col_name_y], bins=200, fill=True)
+        tfig.title(pdf_plot_title)
+        tfig.label(pdf_plot_label_x, pdf_plot_label_y)
 
-    # A basic Histogram plot on terminal
-    plotext.subplot(2, 1)
-    plotext.hist(df[col_name_y], bins=200, fill=True)
-    plotext.title(pdf_plot_title)
-    plotext.xlabel(pdf_plot_label_x)
-    plotext.ylabel(pdf_plot_label_y)
+        # Boltzmann Inverted PMF plot on terminal
+        # tfig.subplot(3, 1)
+        # tfig.plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
+        # tfig.title(pmf_plot_title)
+        # tfig.xlabel(pmf_plot_label_x)
+        # tfig.ylabel(pmf_plot_label_y)
 
-    # Boltzmann Inverted PMF plot on terminal
-    # plotext.subplot(3, 1)
-    # plotext.plot(pdf_df[col_name_y], pdf_df[COL_NAME_PMF])
-    # plotext.title(pmf_plot_title)
-    # plotext.xlabel(pmf_plot_label_x)
-    # plotext.ylabel(pmf_plot_label_y)
-
-    print(""); print_full_line("#"); print("")
-    plotext.show()
-    print(""); print_full_line("#"); print("")
+        print(""); print_full_line("#"); print("")
+        tfig.show()
+        print(""); print_full_line("#"); print("")
+    except (ImportError, ModuleNotFoundError) as e:
+        print("ERROR: Could not import plotext. Skipping terminal plot ...")
+    except Exception as exc:
+        print(f"ERROR: Terminal PLot (Plotext) failed with error {exc}")
+        traceback.print_exc()
+else:
+    print("LOG: skipping TERMINAL PLOT")
 
 
 # -------------------------------------------------
@@ -286,14 +294,13 @@ if plot_in_terminal:
 try:
     import matplotlib.pyplot as plt
     from matplotlib.figure import figaspect
-except ImportError:
-    print("ERROR: Matplotlib is not installed !!!")
+except (ImportError, ModuleNotFoundError):
+    print("ERROR: Could not import Matplotlib. Skipping plot...")
     traceback.print_exc()
-    exit(1)
+    sys.exit(1)
 
-w, h = figaspect((9/38) if calc_pmf else (9/24))
+w, h = figaspect((9/36) if calc_pmf else (9/24))
 fig, axes = plt.subplots(1, 3 if calc_pmf else 2, figsize=(w * 1.4, h * 1.4))
-fig.tight_layout(pad=3.0)
 
 # x vs y plot
 axes[0].plot(df[col_name_x], df[col_name_y])
@@ -322,7 +329,7 @@ if calc_pmf:
     axes[2].set_xlabel(pmf_plot_label_x)
     axes[2].set_ylabel(pmf_plot_label_y)
 
-
+fig.tight_layout(pad=3.0)
 # Output Figure file
 if out_fig_file:
     plt.savefig(out_fig_file)
