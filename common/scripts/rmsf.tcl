@@ -271,7 +271,6 @@ proc try_save_ref_frame_bigdcd { i } {
 # Main function to calc rmsf using bigdcd
 proc calc_rmsf { i } {
 	global frame_index_ref frame_index_start frame_index_end num_frames;
-	global base_selection
 	global mol_id sel_ref sel_cur allatoms;
 	global res_ids rmsf_arr sel_ref_res_arr sel_cur_res_arr;
 
