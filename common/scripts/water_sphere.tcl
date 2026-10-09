@@ -26,14 +26,15 @@ set boundary		2.4;		#  [in Å] min distance to keep between solute and water. De
 # ----------------------------------
 # OUTPUT PARAMS
 # ----------------------------------
-set output_name 		"${molname}_ws";		# name of output .psf and .pdb files (defaults to adding "ws" suffix)
-set meta_file_name "${molname}_ws.comments.txt";		# name of the meta information file
+set out_file_prefix 	"${molname}_ws";		# name of output .psf and .pdb files (defaults to adding "wb" suffix)
 
 # Auto-IONIZE (to nuetralize the system) ---------------
 set auto_ionize		on;		
+set ionic_conc		0.15;		# [in mol/L] Additional Ionic concentration to add after neutrilization 
+								# (usually physiological NACL = 0.15 M). Set = 0 to only neutrilize
 set cation			"SOD";		# SOD (Na+), MG (Mg+2), POT (K+), CES (Cs+), CAL (Ca+2), ZN2 (Zn+2)  
 set anion			"CLA";		# CLA (Cl-)
-set ion_seg_name		"ION";		# New Segment name for ions 
+set ion_seg_name	"ION";		# New Segment name for ions 
 
 # BETA and OCCUPANCY -------
 set set_beta		on;		# TODO: [on/off] whether to set beta values of all atoms
@@ -46,8 +47,11 @@ set occupancy_value		0;		# occupancy value to set (if $set_occupancy is ON)
 
 
 # --------------------------------------------
-# SOLVATE
+# MAIN
 # --------------------------------------------
+set output_name 		"${out_file_prefix}";					# name of output .psf and .pdb files
+set meta_file_name 		"${out_file_prefix}.comments.txt";		# name of the meta information file
+
 set mol_id [mol new "${molname}.psf"]
 mol addfile "${molname}.pdb" molid $mol_id
 
@@ -117,18 +121,32 @@ rm "${temp_out}.psf" "${temp_out}.pdb" "${temp_out}.log"
 # ---------------------------------
 # Ionization
 # ---------------------------------
+set is_autoionize 0;
+set autoionize_cmd_dispay "";
+
 if {[string trim $auto_ionize] eq "on"} {
+	set is_autoionize 1;
+	package require autoionize;
+
 	# Copying solvated .psf and .pdb to temp files (to be used for input here)
-	set temp_file_name	"${molname}_ws_solvated_temp"
+	set temp_file_name	"${out_file_prefix}.temp-[clock seconds]";
 	cp "${output_name}.psf" "${temp_file_name}.psf"
 	cp "${output_name}.pdb" "${temp_file_name}.pdb"
 
-	puts "# -> LOG: Performing Ionization to neutralize the system...";
-	package require autoionize
-	autoionize -psf "${temp_file_name}.psf" -pdb "${temp_file_name}.pdb" -neutralize -cation $cation -anion $anion -seg $ion_seg_name -o $output_name
-	
+	if { $ionic_conc > 0 } {
+		set autoionize_cmd_dispay "NEUTRALIZE + ADD SALT";
+		puts "# -> LOG: AUTO-IONIZE: Neutralizing and adding salt concentration ${ionic_conc} mol/L ...";
+		
+		autoionize -psf "${temp_file_name}.psf" -pdb "${temp_file_name}.pdb" -sc $ionic_conc -cation $cation -anion $anion -seg $ion_seg_name -o $output_name
+	} else {
+		set autoionize_cmd_dispay "NEUTRALIZE";
+		puts "# -> LOG: AUTO-IONIZE: Neutralizing the system...";
+		
+		autoionize -psf "${temp_file_name}.psf" -pdb "${temp_file_name}.pdb" -neutralize -cation $cation -anion $anion -seg $ion_seg_name -o $output_name
+	}
+
 	# Cleaning temp files
-	rm "${temp_file_name}.psf" "${temp_file_name}.pdb"
+	file delete "${temp_file_name}.psf" "${temp_file_name}.pdb"
 }
 
 
@@ -142,8 +160,10 @@ set everyone [atomselect $mol_id all]
 set water [atomselect $mol_id "water"]
 set ion [atomselect $mol_id "ion"]
 
-set water_count [expr [$water num] / 3]
+set total_atom_count [$everyone num]
 set ion_count [$ion num]
+set water_atom_count [$water num]
+set water_mol_count [expr $water_atom_count / 3]
 
 # Geometric Center of All Atoms
 set cen_geo [measure center $everyone]
@@ -213,13 +233,25 @@ log "# -> INPUT padding: ${padding} Å"
 log "# -> INPUT MSM padding: ${msm_grid_pad} Å"
 log "# -> INPUT boundary: ${boundary} Å"
 log "# ----------------------------------------------------"
-log "# -> INPUT Auto-IONIZE: $auto_ionize | Cation: \"$cation\" | Anion: \"$anion\" | Ion segment name: \"$ion_seg_name\""
-log "# -> INPUT Set BETA: $set_beta | BETA Value: $beta_value"
-log "# -> INPUT Set OCCUPANCY: $set_occupancy | OCCUPANCY Value: $occupancy_value"
+log "# -> INPUT Auto-IONIZE : $auto_ionize"
+if { $is_autoionize == 1 } {
+	log "#    -> Mode               : ${autoionize_cmd_dispay}"
+	log "#    -> Salt Concentration : ${ionic_conc} mol/L"
+	log "#    -> Ions               : \"$cation\" (cation), \"$anion\" (anion)"
+	log "#    -> Ion Segment Name   : \"$ion_seg_name\""
+	log "# ----------------------------------------------------"
+}
+log "# -> INPUT Set BETA      : $set_beta | BETA Value      : $beta_value"
+log "# -> INPUT Set OCCUPANCY : $set_occupancy | OCCUPANCY Value : $occupancy_value"
+log "#"
 log "# ----------------------------------------------------"
-log "# -> OUTPUT solvated: \"${output_name}.psf\", \"${output_name}.pdb\""
-log "# -> OUTPUT Water Count: ${water_count} | Ion Count: ${ion_count}"
-log "#-----------"
+log "# -> OUTPUT solvated     : \"${output_name}.psf\", \"${output_name}.pdb\""
+log "# -> OUTPUT ATOM COUNT"
+log "#    -> TOTAL : $total_atom_count atoms"
+log "#    -> WATER : $water_atom_count atoms ($water_mol_count molecules)"
+log "#    -> IONS  : $ion_count atoms"
+log "#-----------------------------------------------------"
+log "#"
 log "# NOTE: All dimensions are in Å"
 log "# NOTE: Sphere COM should be used in most cases"
 log "# ---------------------------------------------------------------"
