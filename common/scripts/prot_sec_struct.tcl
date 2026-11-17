@@ -1,7 +1,7 @@
 #!/usr/bin/env -S vmd -dispdev text -e
 
 # =========================================================================================
-# Finds the secondary structure percentages of Protein over trajectory file(s)
+# Finds the secondary structure percentages of Protein for each frame of trajectory(s)
 # =========================================================================================
 
 # **REQUIRE bigdcd.tcl**
@@ -47,22 +47,22 @@ set residue_selection		"protein and name CA";		# TODO: protein residue selection
 # -----------------------
 # OUTPUT
 # -----------------------
-set out_structure_file		"prot_sec_structure.txt"
+set out_structure_file		"prot_sec_struct.csv"
 
 set out_sep 			" "
 set comment_token 		"#";	# Token used for Comments
 set comment_header		0;		# Whether to comment out the columns header
 
-set progress_log_frames 100;
+set progress_log_frames 1000;
 
 
 # -----------------------
 # MAIN
 # -----------------------
 
-puts "\n=========================================================="
-puts "=========  Protein Secondary Structure (bigdcd)  ========="
-puts "==========================================================\n"
+puts "\n==================================================================="
+puts "=========  Protein Secondary Structure per Frame (bigdcd)  ========="
+puts "====================================================================\n"
 
 set time_start [clock seconds];
 
@@ -159,7 +159,7 @@ proc cleanup { } {
 
 set out_file [open $out_structure_file w];
 
-log "${comment_token} ========= Protein Secondary Structure (bigdcd) ==========="
+log "${comment_token} ========= Protein Secondary Structure per Frame (bigdcd) ==========="
 log "${comment_token} INPUT Structure File      : \"${psf_file}\""
 log "${comment_token} INPUT Frame File(s)       : \[${frame_files}\]"
 log "${comment_token}-----------------------------------------------------------"
@@ -174,7 +174,7 @@ log "${comment_token} UNITS: Percentage (%)"
 log "${comment_token}-----------------------------------------------------------";
 
 # Header
-set out_header "Frame${out_sep}HELIX${out_sep}SHEET${out_sep}TURN${out_sep}COIL${out_sep}OTHER";
+set out_header "FRAME${out_sep}HELIX${out_sep}SHEET${out_sep}TURN${out_sep}COIL${out_sep}OTHER";
 if {$comment_header == 1} {
 	set out_header "${comment_token}${out_header}";
 }
